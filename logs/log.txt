@@ -1,0 +1,79 @@
+2026-03-04T23:54:14.975Z - Ruta visitada: /
+2026-03-04T23:54:26.278Z - Ruta visitada: /status
+2026-03-05T00:03:12.611Z - Ruta visitada: /status
+2026-03-15T00:24:18.191Z - Ruta visitada: /api/usuarios
+2026-03-15T00:29:49.153Z - Ruta visitada: /api/usuarios
+2026-03-15T00:29:49.342Z - Ruta visitada: /favicon.ico
+2026-03-15T00:50:58.345Z - Ruta visitada: /api/usuarios
+2026-03-15T00:52:43.578Z - Ruta visitada: /api/usuarios
+2026-03-15T01:04:39.978Z - Ruta visitada: /api/usuarios
+2026-03-15T01:04:41.730Z - Ruta visitada: /api/usuarios
+2026-03-15T01:08:09.989Z - Ruta visitada: /api/usuarios
+2026-03-15T01:41:14.782Z - Ruta visitada: /usuarios
+2026-03-15T01:43:44.547Z - Ruta visitada: /api/usuarios
+2026-03-15T01:44:10.443Z - Ruta visitada: /api/usuarios
+2026-03-15T01:45:39.365Z - Ruta visitada: /api/usuarios
+2026-03-15T01:46:28.288Z - Ruta visitada: /api/usuarios
+2026-03-15T01:47:01.200Z - Ruta visitada: /api/usuarios/1
+2026-03-15T01:47:39.661Z - Ruta visitada: /api/usuarios/1
+2026-03-15T01:54:28.797Z - Ruta visitada: /api/usuarios
+2026-03-15T01:55:31.739Z - Ruta visitada: /api/usuarios
+2026-03-15T02:06:45.138Z - Ruta visitada: /api/usuarios/1
+2026-03-15T02:06:57.978Z - Ruta visitada: /api/usuarios/2
+2026-03-15T02:07:26.375Z - Ruta visitada: /api/usuarios/2
+2026-03-15T04:44:48.757Z - Ruta visitada: /usuarios-transaccion
+2026-03-15T04:45:12.129Z - Ruta visitada: /usuarios-transaccion
+2026-03-15T04:46:38.910Z - Ruta visitada: /api/usuarios-transaccion
+2026-03-17T23:19:21.126Z - Ruta visitada: /favicon.ico
+2026-03-17T23:21:03.977Z - Ruta visitada: /api/usuarios
+2026-03-17T23:23:07.211Z - Ruta visitada: /api/usuarios
+2026-03-17T23:24:00.451Z - Ruta visitada: /api/usuarios
+2026-03-17T23:31:09.736Z - Ruta visitada: /api/login
+2026-03-17T23:41:24.369Z - Ruta visitada: /api/login
+2026-03-17T23:42:52.799Z - Ruta visitada: /api/login
+2026-03-17T23:43:37.474Z - Ruta visitada: /api/usuarios
+2026-03-17T23:45:08.037Z - Ruta visitada: /api/usuarios
+2026-03-17T23:45:24.021Z - Ruta visitada: /api/usuarios
+2026-03-17T23:46:01.252Z - Ruta visitada: /api/usuarios
+2026-03-17T23:46:31.572Z - Ruta visitada: /api/usuarios
+2026-03-17T23:49:30.887Z - Ruta visitada: /api/usuarios
+2026-03-17T23:50:11.376Z - Ruta visitada: /api/usuarios
+2026-03-17T23:51:23.007Z - Ruta visitada: /api/login
+2026-03-17T23:52:06.707Z - Ruta visitada: /api/login
+2026-03-17T23:56:22.641Z - Ruta visitada: /api/usuarios
+2026-03-18T01:06:02.302Z - Ruta visitada: /api/usuarios
+2026-03-18T01:06:03.573Z - Ruta visitada: /api/usuarios
+2026-03-18T01:09:10.332Z - Ruta visitada: /api/usuarios
+2026-03-18T01:09:12.211Z - Ruta visitada: /api/usuarios
+2026-03-18T01:09:12.858Z - Ruta visitada: /api/usuarios
+2026-03-18T01:09:13.045Z - Ruta visitada: /api/usuarios
+2026-03-18T01:09:13.263Z - Ruta visitada: /api/usuarios
+2026-03-18T01:09:13.472Z - Ruta visitada: /api/usuarios
+2026-03-18T01:09:15.595Z - Ruta visitada: /api/usuarios
+2026-03-18T01:09:21.656Z - Ruta visitada: /api/usuarios
+2026-03-18T01:09:37.914Z - Ruta visitada: /api/usuarios
+2026-03-18T01:09:38.648Z - Ruta visitada: /api/usuarios
+2026-03-18T01:09:38.836Z - Ruta visitada: /api/usuarios
+2026-03-18T01:09:38.994Z - Ruta visitada: /api/usuarios
+2026-03-18T01:10:43.308Z - Ruta visitada: /api/usuarios
+2026-03-18T01:10:43.523Z - Ruta visitada: /api/usuarios
+2026-03-18T01:10:55.943Z - Ruta visitada: /api/usuarios
+2026-03-18T01:10:57.880Z - Ruta visitada: /api/usuarios
+2026-03-18T01:11:22.148Z - Ruta visitada: /api/usuarios
+2026-03-18T01:11:22.785Z - Ruta visitada: /api/usuarios
+2026-03-18T01:11:22.973Z - Ruta visitada: /api/usuarios
+2026-03-18T01:11:23.679Z - Ruta visitada: /api/login
+2026-03-18T01:11:23.872Z - Ruta visitada: /api/login
+2026-03-18T01:11:24.053Z - Ruta visitada: /api/login
+2026-03-18T01:11:24.240Z - Ruta visitada: /api/login
+2026-03-18T02:20:23.226Z - POST /api/users
+2026-03-18T02:21:10.720Z - POST /auth/login
+2026-03-18T02:21:20.993Z - POST /auth/login
+2026-03-18T02:22:24.196Z - POST /api/users
+2026-03-18T02:22:45.405Z - POST /auth/login
+2026-03-18T02:27:56.764Z - POST /api/users
+2026-03-18T02:28:19.663Z - POST /auth/login
+2026-03-18T02:28:35.705Z - POST /api/users
+2026-03-18T02:28:46.350Z - POST /auth/login
+2026-03-18T02:32:38.964Z - POST /auth/login
+2026-03-18T02:32:39.072Z - GET /api/users

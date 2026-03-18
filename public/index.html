@@ -1,0 +1,367 @@
+<!DOCTYPE html> <!-- Indica que usamos HTML5 -->
+
+<html lang="es"> <!-- Idioma español -->
+
+<head>
+
+    <!-- Codificación de caracteres -->
+    <meta charset="UTF-8">
+
+    <!-- Título de la página -->
+    <title>Gestión de Usuarios PRO</title>
+
+    <!-- Bootstrap para estilos -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+
+        /* Fondo degradado */
+        body {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Tarjeta principal */
+        .card {
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            transition: 0.3s;
+        }
+
+        /* Efecto al pasar el mouse */
+        .card:hover {
+            transform: scale(1.01);
+        }
+
+        /* Botones más suaves */
+        button {
+            border-radius: 10px !important;
+        }
+
+        /* Lista moderna */
+        .list-group-item {
+            border-radius: 10px;
+            margin-bottom: 5px;
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="card p-4">
+
+        <!-- -------------------------------------------------- -->
+        <!-- USUARIO LOGUEADO -->
+        <!-- -------------------------------------------------- -->
+
+        <div class="d-flex justify-content-between align-items-center mb-3">
+
+            <!-- Muestra el usuario -->
+            <span id="usuarioInfo" class="fw-bold text-success">
+                No autenticado
+            </span>
+
+            <!-- Botón cerrar sesión -->
+            <button class="btn btn-outline-danger btn-sm" onclick="logout()">
+                Cerrar sesión
+            </button>
+
+        </div>
+
+
+        <!-- -------------------------------------------------- -->
+        <!-- LOGIN -->
+        <!-- -------------------------------------------------- -->
+
+        <h4>🔐 Login</h4>
+
+        <!-- Input email -->
+        <input type="email" id="loginEmail" class="form-control mb-2" placeholder="Email">
+
+        <!-- Input password -->
+        <input type="password" id="loginPassword" class="form-control mb-2" placeholder="Password">
+
+        <!-- Botón login -->
+        <button class="btn btn-dark w-100 mb-4" onclick="login()">Ingresar</button>
+
+        <hr>
+
+        <!-- -------------------------------------------------- -->
+        <!-- CREAR USUARIO -->
+        <!-- -------------------------------------------------- -->
+
+        <h4>Crear Usuario</h4>
+
+        <div class="row g-2 mb-3">
+
+            <div class="col-md-4">
+                <input type="text" id="nombre" class="form-control" placeholder="Nombre">
+            </div>
+
+            <div class="col-md-4">
+                <input type="email" id="email" class="form-control" placeholder="Email">
+            </div>
+
+            <div class="col-md-4">
+                <input type="password" id="password" class="form-control" placeholder="Password">
+            </div>
+
+        </div>
+
+        <!-- Botón crear -->
+        <button class="btn btn-success w-100 mb-4" onclick="crearUsuario()">Crear Usuario</button>
+
+
+        <!-- -------------------------------------------------- -->
+        <!-- LISTA USUARIOS -->
+        <!-- -------------------------------------------------- -->
+
+        <h4 class="d-flex justify-content-between">
+            Usuarios
+            <button class="btn btn-primary btn-sm" onclick="cargarUsuarios()">Cargar</button>
+        </h4>
+
+        <!-- Lista dinámica -->
+        <ul id="listaUsuarios" class="list-group mt-3"></ul>
+
+    </div>
+
+</div>
+
+<script>
+
+    // --------------------------------------------------
+    // TOKEN GLOBAL (SE RECUPERA SI EXISTE)
+    // --------------------------------------------------
+
+    let token = localStorage.getItem("token") || "";
+
+
+    // --------------------------------------------------
+    // MOSTRAR MENSAJES BONITOS
+    // --------------------------------------------------
+
+    function mostrarMensaje(mensaje, tipo = "success") {
+
+        const alerta = document.createElement("div"); // creamos div
+        alerta.className = `alert alert-${tipo} mt-2`; // estilo bootstrap
+        alerta.textContent = mensaje; // texto
+
+        document.body.prepend(alerta); // lo agregamos arriba
+
+        setTimeout(() => alerta.remove(), 3000); // se borra en 3s
+    }
+
+
+    // --------------------------------------------------
+    // MOSTRAR USUARIO LOGUEADO
+    // --------------------------------------------------
+
+    function mostrarUsuario() {
+
+        const usuarioInfo = document.getElementById("usuarioInfo");
+
+        if (token) {
+
+            try {
+                const payload = JSON.parse(atob(token.split(".")[1]));
+                usuarioInfo.textContent = "👤 " + payload.email;
+            } catch {
+                usuarioInfo.textContent = "Sesión activa";
+            }
+
+        } else {
+            usuarioInfo.textContent = "No autenticado";
+        }
+    }
+
+
+    // --------------------------------------------------
+    // LOGIN
+    // --------------------------------------------------
+
+    async function login() {
+
+        const email = document.getElementById("loginEmail").value;
+        const password = document.getElementById("loginPassword").value;
+
+        if (!email || !password) {
+            mostrarMensaje("Completa todos los campos", "danger");
+            return;
+        }
+
+        const res = await fetch("/auth/login", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({ email, password })
+        });
+
+        const data = await res.json();
+
+        if (data.status === "success") {
+
+            token = data.data.token;
+            localStorage.setItem("token", token);
+
+            mostrarMensaje("Login exitoso 🔐");
+
+            mostrarUsuario();
+            cargarUsuarios();
+
+        } else {
+            mostrarMensaje(data.message, "danger");
+        }
+    }
+
+
+    // --------------------------------------------------
+    // CREAR USUARIO
+    // --------------------------------------------------
+
+    async function crearUsuario() {
+
+        const nombre = document.getElementById("nombre").value;
+        const email = document.getElementById("email").value;
+        const password = document.getElementById("password").value;
+
+        if (!nombre || !email || !password) {
+            mostrarMensaje("Todos los campos son obligatorios", "danger");
+            return;
+        }
+
+        const res = await fetch("/api/users", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": "Bearer " + token
+            },
+            body: JSON.stringify({ nombre, email, password })
+        });
+
+        const data = await res.json();
+
+        mostrarMensaje(data.message);
+        cargarUsuarios();
+    }
+
+
+    // --------------------------------------------------
+    // CARGAR USUARIOS
+    // --------------------------------------------------
+
+    async function cargarUsuarios() {
+
+        if (!token) {
+            mostrarMensaje("Debes iniciar sesión", "warning");
+            return;
+        }
+
+        const res = await fetch("/api/users", {
+            headers: { "Authorization": "Bearer " + token }
+        });
+
+        const data = await res.json();
+
+        const lista = document.getElementById("listaUsuarios");
+        lista.innerHTML = "";
+
+        data.data.forEach(usuario => {
+
+            const li = document.createElement("li");
+
+            li.className = "list-group-item d-flex justify-content-between align-items-center";
+
+            li.innerHTML = `
+                <span>
+                    <strong>${usuario.nombre}</strong><br>
+                    <small class="text-muted">${usuario.email}</small>
+                </span>
+                <div>
+                    <button class="btn btn-warning btn-sm me-1" onclick="editar(${usuario.id})">✏️</button>
+                    <button class="btn btn-danger btn-sm" onclick="eliminar(${usuario.id})">❌</button>
+                </div>
+            `;
+
+            lista.appendChild(li);
+        });
+    }
+
+
+    // --------------------------------------------------
+    // ELIMINAR
+    // --------------------------------------------------
+
+    async function eliminar(id) {
+
+        if (!confirm("¿Eliminar usuario?")) return;
+
+        await fetch(`/api/users/${id}`, {
+            method: "DELETE",
+            headers: { "Authorization": "Bearer " + token }
+        });
+
+        mostrarMensaje("Usuario eliminado");
+        cargarUsuarios();
+    }
+
+
+    // --------------------------------------------------
+    // EDITAR
+    // --------------------------------------------------
+
+    async function editar(id) {
+
+        const nombre = prompt("Nuevo nombre:");
+        const email = prompt("Nuevo email:");
+        const password = prompt("Nuevo password:");
+
+        await fetch(`/api/users/${id}`, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": "Bearer " + token
+            },
+            body: JSON.stringify({ nombre, email, password })
+        });
+
+        mostrarMensaje("Usuario actualizado");
+        cargarUsuarios();
+    }
+
+
+    // --------------------------------------------------
+    // LOGOUT
+    // --------------------------------------------------
+
+    function logout() {
+
+        localStorage.removeItem("token"); // eliminamos token
+        token = "";
+
+        mostrarMensaje("Sesión cerrada", "warning");
+
+        setTimeout(() => location.reload(), 1000);
+    }
+
+
+    // --------------------------------------------------
+    // AUTO LOGIN
+    // --------------------------------------------------
+
+    mostrarUsuario();
+
+    if (token) {
+        cargarUsuarios();
+    }
+
+</script>
+
+</body>
+</html>
