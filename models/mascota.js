@@ -2,33 +2,33 @@
 // IMPORTAR DEPENDENCIAS
 // ------------------------------------------------------
 
-// Importamos DataTypes desde Sequelize.
-// DataTypes permite definir los tipos de datos de cada columna.
+// Importamos DataTypes desde Sequelize
+// Permite definir los tipos de datos de cada campo
 const { DataTypes } = require("sequelize");
 
-// Importamos la conexión a la base de datos.
-// sequelize es la instancia configurada en config/database.js.
+// Importamos la conexión a la base de datos
+// sequelize es la instancia configurada previamente
 const { sequelize } = require("../config/database");
 
 
 // ------------------------------------------------------
-// DEFINICIÓN DEL MODELO POST
+// DEFINICIÓN DEL MODELO MASCOTA
 // ------------------------------------------------------
 
-// Definimos el modelo "Post".
-// Este modelo representa la tabla "Posts" en PostgreSQL.
-const Post = sequelize.define("Post", {
+// Definimos el modelo "Mascota"
+// Representa la tabla "Mascotas" en PostgreSQL
+const Mascota = sequelize.define("Mascota", {
 
     // ---------------------------------
-    // ID DEL POST
+    // ID DE LA MASCOTA
     // ---------------------------------
 
     id: {
 
-        // Tipo de dato entero
+        // Tipo entero
         type: DataTypes.INTEGER,
 
-        // Define este campo como clave primaria
+        // Clave primaria
         primaryKey: true,
 
         // Se incrementa automáticamente
@@ -38,12 +38,12 @@ const Post = sequelize.define("Post", {
 
 
     // ---------------------------------
-    // TÍTULO DEL POST
+    // NOMBRE DE LA MASCOTA
     // ---------------------------------
 
-    titulo: {
+    nombre: {
 
-        // Tipo texto
+        // Texto corto (ej: "Luna")
         type: DataTypes.STRING,
 
         // Campo obligatorio
@@ -53,12 +53,57 @@ const Post = sequelize.define("Post", {
 
 
     // ---------------------------------
-    // CONTENIDO DEL POST
+    // EDAD DE LA MASCOTA
     // ---------------------------------
 
-    contenido: {
+    edad: {
 
-        // Tipo de dato TEXT (texto largo)
+        // Número entero (años)
+        type: DataTypes.INTEGER,
+
+        // Campo obligatorio
+        allowNull: false
+
+    },
+
+
+    // ---------------------------------
+    // PORTE DE LA MASCOTA
+    // ---------------------------------
+
+    porte: {
+
+        // Texto (ej: pequeño, mediano, grande)
+        type: DataTypes.STRING,
+
+        // Campo obligatorio
+        allowNull: false
+
+    },
+
+
+    // ---------------------------------
+    // NIVEL DE ENERGÍA
+    // ---------------------------------
+
+    energia: {
+
+        // Texto (ej: baja, media, alta)
+        type: DataTypes.STRING,
+
+        // Campo obligatorio
+        allowNull: false
+
+    },
+
+
+    // ---------------------------------
+    // DESCRIPCIÓN DEL PELUDITO
+    // ---------------------------------
+
+    descripcion: {
+
+        // Texto largo para describir personalidad
         type: DataTypes.TEXT,
 
         // Campo obligatorio
@@ -68,19 +113,44 @@ const Post = sequelize.define("Post", {
 
 
     // ---------------------------------
-    // RELACIÓN CON USUARIO
+    // IMAGEN DE LA MASCOTA
+    // ---------------------------------
+
+    imagen: {
+
+        // Guarda el nombre del archivo (multer)
+        type: DataTypes.STRING
+
+        // No es obligatorio
+    },
+
+
+    // ---------------------------------
+    // ESTADO DE ADOPCIÓN
+    // ---------------------------------
+
+    estado: {
+
+        // Texto (disponible / adoptado)
+        type: DataTypes.STRING,
+
+        // Valor por defecto
+        defaultValue: "disponible"
+
+    },
+
+
+    // ---------------------------------
+    // RELACIÓN CON USUARIO (RESCATISTA)
     // ---------------------------------
 
     userId: {
 
-        // Tipo entero
+        // ID del usuario que publica
         type: DataTypes.INTEGER,
 
         // Campo obligatorio
         allowNull: false
-
-        // Este campo será la clave foránea que conecta
-        // el post con el usuario que lo creó
 
     }
 
@@ -91,8 +161,8 @@ const Post = sequelize.define("Post", {
     // CONFIGURACIÓN DEL MODELO
     // --------------------------------------------------
 
-    // Activa timestamps automáticos
-    // Sequelize agregará createdAt y updatedAt
+    // Sequelize agregará:
+    // createdAt y updatedAt automáticamente
     timestamps: true
 
 });
@@ -102,6 +172,5 @@ const Post = sequelize.define("Post", {
 // EXPORTAR MODELO
 // ------------------------------------------------------
 
-// Exportamos el modelo para poder usarlo en rutas,
-// controladores y consultas con Sequelize.
-module.exports = Post;
+// Exportamos el modelo para usarlo en el proyecto
+module.exports = Mascota;

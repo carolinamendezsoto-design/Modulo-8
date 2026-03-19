@@ -10,9 +10,9 @@ const { DataTypes } = require("sequelize");
 // sequelize fue configurado previamente en config/database.js.
 const { sequelize } = require("../config/database");
 
-// Importamos el modelo Post.
-// Esto permitirá crear la relación entre usuarios y posts.
-const Post = require("./post");
+// Importamos el modelo Mascota.
+// Esto permitirá crear la relación entre usuarios y mascotas.
+const Mascota = require("./mascota");
 
 
 // ------------------------------------------------------
@@ -116,16 +116,32 @@ const User = sequelize.define("User", {
 // RELACIÓN ENTRE MODELOS
 // ------------------------------------------------------
 
-// Definimos que un usuario puede tener muchos posts.
-// Sequelize creará una columna "userId" en la tabla Posts.
-User.hasMany(Post, {
+// Definimos que un usuario puede tener muchas mascotas.
+// Sequelize utilizará "userId" como clave foránea en la tabla Mascotas.
+User.hasMany(Mascota, {
+
+    // Clave foránea
     foreignKey: "userId",
+
+    // Nombre de la relación (útil para consultas)
+    as: "mascotas",
+
+    // Si se elimina el usuario, se eliminan sus mascotas
     onDelete: "CASCADE"
+
 });
 
-// Definimos que cada post pertenece a un usuario.
-Post.belongsTo(User, {
-    foreignKey: "userId"
+
+// Definimos que cada mascota pertenece a un usuario.
+// Es decir, cada mascota tiene un dueño (rescatista).
+Mascota.belongsTo(User, {
+
+    // Clave foránea
+    foreignKey: "userId",
+
+    // Nombre de la relación inversa
+    as: "rescatista"
+
 });
 
 

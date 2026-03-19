@@ -27,7 +27,9 @@ const { connectDB, sequelize } = require("./config/database");
 
 // Importamos modelos para que Sequelize los registre
 const User = require("./models/user");
-const Post = require("./models/post");
+
+// Importamos el modelo Mascota (ya actualizado con "porte")
+const Mascota = require("./models/mascota");
 
 
 // ------------------------------------------------------
@@ -42,6 +44,9 @@ const authRoutes = require("./routes/auth");
 
 // Importamos rutas de subida de archivos
 const uploadRoutes = require("./routes/upload");
+
+// Importamos rutas de mascotas
+const mascotaRoutes = require("./routes/mascota.routes");
 
 
 // ------------------------------------------------------
@@ -110,6 +115,9 @@ app.use("/auth", authRoutes);
 // Rutas de subida de archivos
 app.use("/upload", uploadRoutes);
 
+// Rutas de mascotas (nuevo módulo principal del proyecto)
+app.use("/api/mascotas", mascotaRoutes);
+
 
 // ------------------------------------------------------
 // MIDDLEWARE DE ERRORES (SIEMPRE AL FINAL)
@@ -139,13 +147,21 @@ const startServer = async () => {
         // Conectamos a la base de datos PostgreSQL
         await connectDB();
 
-        // Sincronizamos modelos con la base de datos
-        // (crea tablas si no existen)
-        await sequelize.sync();
+        // ---------------------------------------------
+        // SINCRONIZAR MODELOS (IMPORTANTE)
+        // ---------------------------------------------
 
-        console.log("✅ Modelos sincronizados correctamente");
+        // ⚠️ force: true → elimina tablas y las recrea
+        // Esto asegura que "porte" exista en la BD
+        await sequelize.sync({ force: true });
 
-        // Iniciamos el servidor
+        console.log("✅ Modelos sincronizados correctamente (recreados)");
+
+        // ---------------------------------------------
+        // INICIAR SERVIDOR
+        // ---------------------------------------------
+
+        // Levantamos el servidor en el puerto definido
         app.listen(PORT, () => {
             console.log(`🚀 Servidor iniciado en http://localhost:${PORT}`);
         });

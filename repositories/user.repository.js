@@ -6,9 +6,9 @@
 // Representa la tabla de usuarios en la base de datos
 const User = require("../models/user");
 
-// Importamos el modelo Post
-// Para relaciones entre usuarios y posts
-const Post = require("../models/post");
+// Importamos el modelo Mascota (ANTES era Post ❌)
+// Se usa para la relación entre usuarios y mascotas
+const Mascota = require("../models/mascota");
 
 // Importamos Sequelize para transacciones
 const { sequelize } = require("../config/database");
@@ -35,20 +35,26 @@ exports.findAllUsers = async (where) => {
 
 
 // =======================================================
-// OBTENER USUARIOS CON POSTS (RELACIÓN)
+// OBTENER USUARIOS CON MASCOTAS (RELACIÓN)
 // =======================================================
 
-exports.findUsersWithPosts = async () => {
+exports.findUsersWithMascotas = async () => {
 
     return await User.findAll({
 
-        // Incluimos la relación con el modelo Post
+        // Incluimos la relación con Mascota
         include: {
-            model: Post,
-            attributes: ["id", "titulo", "contenido"]
+            model: Mascota,              // modelo relacionado
+            as: "mascotas",              // alias definido en user.js
+            attributes: [               // campos que queremos mostrar
+                "id",
+                "nombre",
+                "edad",
+                "estado"
+            ]
         },
 
-        // Ocultamos password
+        // Ocultamos password por seguridad
         attributes: { exclude: ["password"] }
 
     });
@@ -86,7 +92,7 @@ exports.findUserById = async (id) => {
 
 exports.updateUser = async (usuario, data) => {
 
-    // Actualizamos los datos del usuario
+    // Actualizamos los datos del usuario existente
     return await usuario.update(data);
 
 };
@@ -121,10 +127,10 @@ exports.createUserWithTransaction = async (data) => {
         // Simulación de otra operación (ej: log)
         console.log("Log: usuario creado ->", usuario.email);
 
-        // Confirmamos la transacción
+        // Confirmamos la transacción (todo OK)
         await t.commit();
 
-        // Retornamos el usuario
+        // Retornamos el usuario creado
         return usuario;
 
     } catch (error) {
@@ -132,6 +138,7 @@ exports.createUserWithTransaction = async (data) => {
         // Si ocurre un error, revertimos todo
         await t.rollback();
 
+        // Lanzamos el error nuevamente
         throw error;
     }
 
