@@ -1,0 +1,52 @@
+<!DOCTYPE html> <!-- HTML5 -->
+
+<html lang="es">
+
+<head>
+
+    <meta charset="UTF-8"> <!-- codificación -->
+    <title>Usuarios</title> <!-- título -->
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+</head>
+
+<body class="bg-light">
+
+<div class="container mt-4">
+
+    <!-- HEADER -->
+    <div class="d-flex justify-content-between mb-3">
+
+        <!-- Usuario logueado -->
+        <span id="usuarioInfo"></span>
+
+        <!-- Logout -->
+        <button class="btn btn-danger btn-sm" onclick="logout()">
+            Cerrar sesión
+        </button>
+
+    </div>
+
+    <!-- Título -->
+    <h4 class="d-flex justify-content-between">
+        Usuarios
+
+        <!-- Botón recargar -->
+        <button class="btn btn-primary btn-sm" onclick="cargarUsuarios()">
+            Cargar
+        </button>
+    </h4>
+
+    <!-- Lista -->
+    <ul id="listaUsuarios" class="list-group mt-3"></ul>
+
+</div>
+
+<script src="js/utils.js"></script> <!-- mensajes -->
+<script src="js/auth.js"></script> <!-- auth -->
+<script src="js/usuarios.js"></script> <!-- lógica usuarios -->
+
+</body>
+</html>
