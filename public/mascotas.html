@@ -4,7 +4,7 @@
 
 <head>
 
-    <!-- Codificación de caracteres (permite tildes, ñ, etc.) -->
+    <!-- Codificación de caracteres (permite tildes y ñ) -->
     <meta charset="UTF-8">
 
     <!-- Título de la pestaña -->
@@ -17,7 +17,7 @@
 
         /* Fondo general de la página */
         body {
-            background: #f5f6fa; /* color gris claro */
+            background: #f5f6fa;
         }
 
         /* Estilo de las tarjetas */
@@ -26,16 +26,16 @@
             transition: 0.3s; /* animación suave */
         }
 
-        /* Efecto al pasar el mouse */
+        /* Efecto hover */
         .card:hover {
-            transform: scale(1.02); /* crece levemente */
+            transform: scale(1.02);
         }
 
         /* Imagen dentro de la tarjeta */
         .card img {
             height: 200px; /* altura fija */
-            object-fit: cover; /* recorta sin deformar */
-            border-top-left-radius: 15px; /* bordes superiores */
+            object-fit: cover; /* evita deformación */
+            border-top-left-radius: 15px;
             border-top-right-radius: 15px;
         }
 
@@ -48,21 +48,31 @@
 <!-- Contenedor principal -->
 <div class="container mt-4">
 
-    <!-- HEADER (título + botones) -->
+    <!-- HEADER -->
     <div class="d-flex justify-content-between align-items-center mb-4">
 
-        <!-- Título -->
-        <h2>🐶 Mascotas en adopción</h2>
+        <!-- LADO IZQUIERDO -->
+        <div class="d-flex align-items-center gap-2">
 
-        <!-- Contenedor de botones -->
+            <!-- Título -->
+            <h2 class="m-0">🐶 Mascotas en adopción</h2>
+
+            <!-- 🔥 BOTÓN PARA CREAR MASCOTA -->
+            <a href="crear-mascota.html" class="btn btn-success btn-sm">
+                + Crear
+            </a>
+
+        </div>
+
+        <!-- LADO DERECHO -->
         <div>
 
-            <!-- Botón que lleva a la vista de usuarios -->
+            <!-- Botón para ver usuarios -->
             <a href="usuarios.html" class="btn btn-outline-dark btn-sm">
                 Usuarios
             </a>
 
-            <!-- Botón para cerrar sesión -->
+            <!-- Botón cerrar sesión -->
             <button class="btn btn-danger btn-sm" onclick="logout()">
                 Cerrar sesión
             </button>
@@ -71,119 +81,128 @@
 
     </div>
 
-    <!-- Contenedor donde se insertarán las mascotas dinámicamente -->
+    <!-- CONTENEDOR DE MASCOTAS -->
     <div class="row" id="contenedorMascotas"></div>
 
 </div>
 
 <!-- Scripts externos -->
-<script src="js/utils.js"></script> <!-- función mostrarMensaje -->
-<script src="js/auth.js"></script> <!-- logout y manejo de token -->
+<script src="js/utils.js"></script> <!-- mensajes -->
+<script src="js/auth.js"></script> <!-- login / logout -->
 
 <script>
 
     // --------------------------------------------------
-    // FUNCIÓN PARA OBTENER MASCOTAS DESDE EL BACKEND
+    // FUNCIÓN PARA CARGAR MASCOTAS DESDE BACKEND
     // --------------------------------------------------
 
     async function cargarMascotas() {
 
-        // Obtenemos el token guardado en el navegador
+        // Obtenemos token desde localStorage
         const token = localStorage.getItem("token");
 
-        // Si no hay token, no dejamos continuar
+        // Si no existe token → usuario no autenticado
         if (!token) {
-
             mostrarMensaje("Debes iniciar sesión", "danger");
-            return; // detenemos ejecución
+            return;
         }
 
         try {
 
-            // Hacemos petición GET al backend
+            // Petición GET al backend
             const res = await fetch("/api/mascotas", {
 
-                // Enviamos el token en los headers
+                // Enviamos token en headers
                 headers: {
                     "Authorization": "Bearer " + token
                 }
 
             });
 
-            // Convertimos la respuesta a JSON
+            // Convertimos respuesta a JSON
             const data = await res.json();
 
-            // Llamamos a la función que pinta las mascotas
-            mostrarMascotas(data.data);
+            // 🔥 Soporta ambos formatos:
+            // { data: [...] } o [...]
+            const mascotas = data.data || data;
+
+            // Si no hay mascotas
+            if (!mascotas || mascotas.length === 0) {
+                document.getElementById("contenedorMascotas").innerHTML =
+                    "<p>No hay mascotas aún 🐾</p>";
+                return;
+            }
+
+            // Llamamos a render
+            mostrarMascotas(mascotas);
 
         } catch (error) {
 
-            // Si ocurre error lo mostramos en consola
+            // Error en consola
             console.error(error);
 
-            // Y mostramos mensaje al usuario
+            // Mensaje al usuario
             mostrarMensaje("Error al cargar mascotas", "danger");
         }
     }
 
 
     // --------------------------------------------------
-    // FUNCIÓN PARA MOSTRAR LAS MASCOTAS EN PANTALLA
+    // FUNCIÓN PARA MOSTRAR MASCOTAS
     // --------------------------------------------------
 
     function mostrarMascotas(mascotas) {
 
-        // Obtenemos el contenedor donde irán las tarjetas
+        // Obtenemos contenedor
         const contenedor = document.getElementById("contenedorMascotas");
 
-        // Limpiamos el contenido previo
+        // Limpiamos contenido previo
         contenedor.innerHTML = "";
 
-        // Recorremos el array de mascotas
+        // Recorremos cada mascota
         mascotas.forEach(mascota => {
 
-            // Creamos una columna (Bootstrap grid)
+            // Creamos columna Bootstrap
             const col = document.createElement("div");
-
-            // Clases para diseño responsive
             col.className = "col-md-4 mb-4";
 
-            // Insertamos HTML dinámico
+            // 🔥 Imagen dinámica o fallback
+            const imageUrl = mascota.imagen
+                ? `/uploads/${mascota.imagen}`
+                : "https://place-puppy.com/300x200";
+
+            // Insertamos HTML
             col.innerHTML = `
 
-                <!-- Tarjeta -->
                 <div class="card h-100">
 
-                    <!-- Imagen (placeholder temporal) -->
-                    <img src="https://place-puppy.com/300x200" alt="Mascota">
+                    <!-- Imagen -->
+                    <img src="${imageUrl}" alt="Mascota">
 
-                    <!-- Cuerpo de la tarjeta -->
+                    <!-- Body -->
                     <div class="card-body">
 
-                        <!-- Nombre de la mascota -->
-                        <h5 class="card-title">${mascota.nombre}</h5>
+                        <h5>${mascota.nombre}</h5>
 
-                        <!-- Información básica -->
-                        <p class="card-text">
+                        <p>
                             Edad: ${mascota.edad}<br>
                             Porte: ${mascota.porte}<br>
                             Energía: ${mascota.energia}
                         </p>
 
-                        <!-- Descripción -->
                         <p>${mascota.descripcion}</p>
 
                     </div>
 
-                    <!-- Footer de la tarjeta -->
+                    <!-- Footer -->
                     <div class="card-footer d-flex justify-content-between">
 
-                        <!-- Estado de la mascota -->
+                        <!-- Estado -->
                         <span class="badge bg-success">
                             ${mascota.estado}
                         </span>
 
-                        <!-- Botón de interés -->
+                        <!-- Botón -->
                         <button class="btn btn-primary btn-sm">
                             Me interesa ❤️
                         </button>
@@ -191,20 +210,19 @@
                     </div>
 
                 </div>
-
             `;
 
-            // Agregamos la tarjeta al contenedor
+            // Agregamos al DOM
             contenedor.appendChild(col);
         });
     }
 
 
     // --------------------------------------------------
-    // AUTO EJECUCIÓN AL CARGAR LA PÁGINA
+    // AUTO EJECUCIÓN
     // --------------------------------------------------
 
-    cargarMascotas(); // ejecuta la carga automáticamente
+    cargarMascotas();
 
 </script>
 

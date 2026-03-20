@@ -2,22 +2,57 @@
 // IMPORTAR REPOSITORY
 // ------------------------------------------------------
 
-// Importamos el repository de mascotas.
-// El repository es el encargado de comunicarse con la base de datos.
+// Importamos el repository de mascotas
+// Este se encarga de comunicarse con la base de datos
 const mascotaRepository = require("../repositories/mascota.repository");
 
 
 // =======================================================
-// OBTENER TODAS LAS MASCOTAS
+// OBTENER TODAS LAS MASCOTAS (CON FILTROS PRO)
 // =======================================================
 
-// Función que obtiene todas las mascotas
-// Recibe query params (filtros opcionales desde el controller)
 const getMascotas = async (query) => {
 
-    // Llamamos al repository y le pasamos los filtros
-    return await mascotaRepository.getMascotas(query);
+    // --------------------------------------------------
+    // CREAR OBJETO DE FILTROS
+    // --------------------------------------------------
 
+    // Creamos un objeto vacío donde guardaremos filtros válidos
+    const filtros = {};
+
+    // --------------------------------------------------
+    // FILTRO POR ESTADO
+    // --------------------------------------------------
+
+    // Si viene ?estado=disponible
+    if (query.estado) {
+        filtros.estado = query.estado;
+    }
+
+    // --------------------------------------------------
+    // FILTRO POR ENERGÍA
+    // --------------------------------------------------
+
+    // Si viene ?energia=Media
+    if (query.energia) {
+        filtros.energia = query.energia;
+    }
+
+    // --------------------------------------------------
+    // FILTRO POR PORTE
+    // --------------------------------------------------
+
+    // Si viene ?porte=Pequeña
+    if (query.porte) {
+        filtros.porte = query.porte;
+    }
+
+    // --------------------------------------------------
+    // LLAMAR AL REPOSITORY
+    // --------------------------------------------------
+
+    // Enviamos solo los filtros válidos
+    return await mascotaRepository.getMascotas(filtros);
 };
 
 
@@ -25,15 +60,18 @@ const getMascotas = async (query) => {
 // OBTENER MASCOTA POR ID
 // =======================================================
 
-// Función que obtiene una mascota específica por su ID
 const getMascotaById = async (params) => {
 
-    // Extraemos el id desde los parámetros
+    // Extraemos el id desde params
     const { id } = params;
+
+    // Validamos que exista id
+    if (!id) {
+        throw new Error("ID requerido");
+    }
 
     // Llamamos al repository con ese id
     return await mascotaRepository.getMascotaById(id);
-
 };
 
 
@@ -41,12 +79,32 @@ const getMascotaById = async (params) => {
 // CREAR MASCOTA
 // =======================================================
 
-// Función que crea una nueva mascota
 const createMascota = async (data) => {
 
-    // Enviamos los datos al repository para guardarlos en la base de datos
-    return await mascotaRepository.createMascota(data);
+    // --------------------------------------------------
+    // VALIDACIONES
+    // --------------------------------------------------
 
+    // Validamos nombre
+    if (!data.nombre) {
+        throw new Error("El nombre es obligatorio");
+    }
+
+    // Validamos edad
+    if (!data.edad) {
+        throw new Error("La edad es obligatoria");
+    }
+
+    // Validamos descripción
+    if (!data.descripcion || data.descripcion.length < 10) {
+        throw new Error("La descripción debe tener al menos 10 caracteres");
+    }
+
+    // --------------------------------------------------
+    // ENVIAR AL REPOSITORY
+    // --------------------------------------------------
+
+    return await mascotaRepository.createMascota(data);
 };
 
 
@@ -54,14 +112,15 @@ const createMascota = async (data) => {
 // ACTUALIZAR MASCOTA
 // =======================================================
 
-// Función que actualiza una mascota existente
 const updateMascota = async ({ id, data }) => {
 
-    // Llamamos al repository enviando:
-    // - id de la mascota
-    // - datos nuevos a actualizar
-    return await mascotaRepository.updateMascota(id, data);
+    // Validamos que venga id
+    if (!id) {
+        throw new Error("ID requerido para actualizar");
+    }
 
+    // Llamamos al repository con id + datos
+    return await mascotaRepository.updateMascota(id, data);
 };
 
 
@@ -69,15 +128,74 @@ const updateMascota = async ({ id, data }) => {
 // ELIMINAR MASCOTA
 // =======================================================
 
-// Función que elimina una mascota
 const deleteMascota = async (params) => {
 
     // Extraemos el id desde params
     const { id } = params;
 
-    // Llamamos al repository para eliminarla
-    return await mascotaRepository.deleteMascota(id);
+    // Validamos que exista id
+    if (!id) {
+        throw new Error("ID requerido para eliminar");
+    }
 
+    // Llamamos al repository
+    return await mascotaRepository.deleteMascota(id);
+};
+
+
+// =======================================================
+// MATCH DE MASCOTAS (🔥 NIVEL PRO)
+// =======================================================
+
+const getMatchMascotas = async (preferencias) => {
+
+    // --------------------------------------------------
+    // OBTENER TODAS LAS MASCOTAS
+    // --------------------------------------------------
+
+    // Traemos todas las mascotas disponibles
+    const mascotas = await mascotaRepository.getMascotas({ estado: "disponible" });
+
+    // --------------------------------------------------
+    // CALCULAR COMPATIBILIDAD
+    // --------------------------------------------------
+
+    const resultado = mascotas.map(mascota => {
+
+        // Inicializamos puntaje
+        let score = 0;
+
+        // --------------------------------------------------
+        // MATCH POR ENERGÍA
+        // --------------------------------------------------
+
+        if (preferencias.energia && mascota.energia === preferencias.energia) {
+            score += 1;
+        }
+
+        // --------------------------------------------------
+        // MATCH POR PORTE
+        // --------------------------------------------------
+
+        if (preferencias.porte && mascota.porte === preferencias.porte) {
+            score += 1;
+        }
+
+        // --------------------------------------------------
+        // RETORNAR RESULTADO
+        // --------------------------------------------------
+
+        return {
+            ...mascota,   // datos de la mascota
+            match: score  // puntaje de compatibilidad
+        };
+    });
+
+    // --------------------------------------------------
+    // ORDENAR POR MEJOR MATCH
+    // --------------------------------------------------
+
+    return resultado.sort((a, b) => b.match - a.match);
 };
 
 
@@ -85,11 +203,11 @@ const deleteMascota = async (params) => {
 // EXPORTAR SERVICE
 // ------------------------------------------------------
 
-// Exportamos todas las funciones para usarlas en el controller
 module.exports = {
     getMascotas,
     getMascotaById,
     createMascota,
     updateMascota,
-    deleteMascota
+    deleteMascota,
+    getMatchMascotas // 👈 NUEVO
 };

@@ -12,7 +12,6 @@ const authService = require("../services/auth.service");
 // ------------------------------------------------------
 
 // Maneja la petición POST /auth/login
-// "next" permite enviar errores al middleware global
 const login = async (req, res, next) => {
 
     try {
@@ -21,17 +20,20 @@ const login = async (req, res, next) => {
         // LLAMADA AL SERVICE
         // --------------------------------------------------
 
-        // Enviamos el body (email y password) al service
+        // Enviamos email y password al service
         const result = await authService.login(req.body);
 
 
         // --------------------------------------------------
-        // RESPUESTA
+        // RESPUESTA ESTÁNDAR (PRO 🔥)
         // --------------------------------------------------
 
-        // Respondemos con el resultado del service
-        res.json(result);
-
+        // Respondemos con estructura consistente
+        res.status(200).json({
+            status: "success",
+            message: "Login exitoso",
+            data: result
+        });
 
     } catch (error) {
 
@@ -39,7 +41,7 @@ const login = async (req, res, next) => {
         // MANEJO DE ERRORES
         // --------------------------------------------------
 
-        // Enviamos el error al middleware global
+        // Delegamos el error al middleware global
         next(error);
     }
 };

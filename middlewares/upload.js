@@ -5,71 +5,49 @@
 // Importamos multer para manejar subida de archivos
 const multer = require("multer");
 
-// Importamos path para manejar rutas correctamente
+// Importamos path para trabajar con extensiones
 const path = require("path");
 
-// Importamos fs para verificar/crear carpetas
-const fs = require("fs");
-
 
 // ------------------------------------------------------
-// ASEGURAR CARPETA UPLOADS
-// ------------------------------------------------------
-
-// Definimos la ruta de la carpeta uploads
-const uploadPath = path.join(__dirname, "../public/uploads");
-
-// Si la carpeta no existe, la creamos automáticamente
-if (!fs.existsSync(uploadPath)) {
-  fs.mkdirSync(uploadPath, { recursive: true });
-}
-
-
-// ------------------------------------------------------
-// CONFIGURACIÓN DE STORAGE
+// CONFIGURAR ALMACENAMIENTO
 // ------------------------------------------------------
 
 const storage = multer.diskStorage({
 
-  // Definimos dónde se guardarán los archivos
-  destination: (req, file, cb) => {
+    // Carpeta donde se guardarán los archivos
+    destination: (req, file, cb) => {
+        cb(null, "uploads/");
+    },
 
-    // Usamos la ruta segura creada arriba
-    cb(null, uploadPath);
-  },
+    // Nombre del archivo
+    filename: (req, file, cb) => {
 
-  // Definimos el nombre del archivo
-  filename: (req, file, cb) => {
+        // Creamos nombre único con timestamp
+        const uniqueName = Date.now() + path.extname(file.originalname);
 
-    // Obtenemos la extensión del archivo (.jpg, .png, etc.)
-    const ext = path.extname(file.originalname);
-
-    // Creamos nombre único (timestamp + extensión)
-    const uniqueName = Date.now() + ext;
-
-    // Guardamos el archivo con ese nombre
-    cb(null, uniqueName);
-  }
+        cb(null, uniqueName);
+    }
 });
 
 
 // ------------------------------------------------------
-// FILTRO DE ARCHIVOS
+// VALIDAR TIPO DE ARCHIVO
 // ------------------------------------------------------
 
 const fileFilter = (req, file, cb) => {
 
-  // Validamos que sea una imagen
-  if (file.mimetype.startsWith("image/")) {
+    // Tipos permitidos
+    const allowedTypes = ["image/jpeg", "image/png", "image/jpg"];
 
-    // Aceptamos archivo
-    cb(null, true);
+    // Si el tipo está permitido
+    if (allowedTypes.includes(file.mimetype)) {
+        cb(null, true);
+    } else {
 
-  } else {
-
-    // Rechazamos archivo con error (lo manejará el middleware global)
-    cb(new Error("Solo se permiten imágenes"));
-  }
+        // Rechazamos archivo
+        cb(new Error("Solo se permiten imágenes (jpg, jpeg, png)"), false);
+    }
 };
 
 
@@ -79,18 +57,15 @@ const fileFilter = (req, file, cb) => {
 
 const upload = multer({
 
-  // Configuración de almacenamiento
-  storage,
+    storage: storage, // configuración de almacenamiento
 
-  // Filtro de archivos
-  fileFilter,
+    fileFilter: fileFilter, // validación de tipo
 
-  // Límites
-  limits: {
+    limits: {
 
-    // Tamaño máximo: 2MB
-    fileSize: 2 * 1024 * 1024
-  }
+        // Tamaño máximo (2MB)
+        fileSize: 2 * 1024 * 1024
+    }
 });
 
 

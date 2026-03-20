@@ -28,7 +28,7 @@ const { connectDB, sequelize } = require("./config/database");
 // Importamos modelos para que Sequelize los registre
 const User = require("./models/user");
 
-// Importamos el modelo Mascota (ya actualizado con "porte")
+// Importamos el modelo Mascota
 const Mascota = require("./models/mascota");
 
 
@@ -61,10 +61,10 @@ const app = express();
 // MIDDLEWARES
 // ------------------------------------------------------
 
-// Middleware para poder recibir JSON en las peticiones (POST, PUT, etc.)
+// Middleware para poder recibir JSON en las peticiones
 app.use(express.json());
 
-// Middleware logger (registra cada petición que llega al servidor)
+// Middleware logger (registra cada petición)
 app.use(logger);
 
 
@@ -72,32 +72,33 @@ app.use(logger);
 // SERVIR ARCHIVOS ESTÁTICOS
 // ------------------------------------------------------
 
-// Servimos archivos estáticos desde la carpeta public (HTML, CSS, JS)
+// Servimos archivos desde /public (HTML, CSS, JS)
 app.use(express.static(path.join(__dirname, "public")));
 
-// Servimos archivos subidos (imagenes, etc.)
-app.use("/uploads", express.static(path.join(__dirname, "public/uploads")));
+// Servimos imágenes desde /uploads
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 
 // ------------------------------------------------------
 // RUTA PRINCIPAL
 // ------------------------------------------------------
 
-// Cuando el usuario entra a "/", se carga automáticamente index.html
+// Cuando el usuario entra a "/", se carga index.html
 app.get("/", (req, res) => {
     res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
 
 // ------------------------------------------------------
-// RUTA STATUS (para verificar servidor)
+// RUTA STATUS
 // ------------------------------------------------------
 
-// Ruta simple para comprobar que el servidor está funcionando
+// Ruta para verificar que el servidor funciona
 app.get("/status", (req, res) => {
     res.json({
-        status: "OK",
-        message: "Servidor activo"
+        status: "success",
+        message: "Servidor activo",
+        data: null
     });
 });
 
@@ -115,15 +116,15 @@ app.use("/auth", authRoutes);
 // Rutas de subida de archivos
 app.use("/upload", uploadRoutes);
 
-// Rutas de mascotas (nuevo módulo principal del proyecto)
+// Rutas de mascotas
 app.use("/api/mascotas", mascotaRoutes);
 
 
 // ------------------------------------------------------
-// MIDDLEWARE DE ERRORES (SIEMPRE AL FINAL)
+// MIDDLEWARE DE ERRORES
 // ------------------------------------------------------
 
-// Este middleware captura todos los errores de la app
+// Captura todos los errores de la app
 app.use(errorMiddleware);
 
 
@@ -131,7 +132,7 @@ app.use(errorMiddleware);
 // CONFIGURAR PUERTO
 // ------------------------------------------------------
 
-// Puerto definido en .env o 3000 por defecto
+// Puerto desde .env o 3000
 const PORT = process.env.PORT || 3000;
 
 
@@ -139,40 +140,38 @@ const PORT = process.env.PORT || 3000;
 // INICIAR SERVIDOR
 // ------------------------------------------------------
 
-// Función async para iniciar todo el sistema
 const startServer = async () => {
 
     try {
 
-        // Conectamos a la base de datos PostgreSQL
+        // Conectamos a la base de datos
         await connectDB();
 
         // ---------------------------------------------
-        // SINCRONIZAR MODELOS (IMPORTANTE)
+        // 🔥 IMPORTANTE PARA EL ROL (SOLO UNA VEZ)
         // ---------------------------------------------
 
-        // ⚠️ force: true → elimina tablas y las recrea
-        // Esto asegura que "porte" exista en la BD
+        // ⚠️ TEMPORAL:
+        // Usa force:true SOLO UNA VEZ para crear el campo "rol"
+        // Luego debes volver a sync() normal
         await sequelize.sync({ force: true });
 
-        console.log("✅ Modelos sincronizados correctamente (recreados)");
+        console.log("✅ Base de datos sincronizada con rol");
 
         // ---------------------------------------------
         // INICIAR SERVIDOR
         // ---------------------------------------------
 
-        // Levantamos el servidor en el puerto definido
         app.listen(PORT, () => {
             console.log(`🚀 Servidor iniciado en http://localhost:${PORT}`);
         });
 
     } catch (error) {
 
-        // Si ocurre un error al iniciar el servidor
         console.error("❌ Error al iniciar el servidor:", error.message);
     }
 };
 
 
-// Ejecutamos la función para iniciar el servidor
+// Ejecutamos servidor
 startServer();

@@ -1,0 +1,204 @@
+<!DOCTYPE html> <!-- Indicamos que usamos HTML5 -->
+
+<html lang="es"> <!-- Idioma español -->
+
+<head>
+
+    <!-- Codificación de caracteres -->
+    <meta charset="UTF-8">
+
+    <!-- Título -->
+    <title>Crear Mascota</title>
+
+    <!-- Bootstrap para estilos -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+</head>
+
+<body class="bg-light"> <!-- Fondo claro -->
+
+<!-- CONTENEDOR PRINCIPAL -->
+<div class="container mt-5">
+
+    <!-- TARJETA -->
+    <div class="card p-4">
+
+        <!-- TÍTULO -->
+        <h3>Crear Mascota 🐶</h3>
+
+        <!-- FORMULARIO -->
+        <form id="formMascota">
+
+            <!-- INPUT NOMBRE -->
+            <input 
+                type="text" 
+                id="nombre" 
+                class="form-control mb-2" 
+                placeholder="Nombre"
+                required
+            >
+
+            <!-- INPUT EDAD -->
+            <input 
+                type="number" 
+                id="edad" 
+                class="form-control mb-2" 
+                placeholder="Edad"
+                required
+            >
+
+            <!-- INPUT PORTE -->
+            <input 
+                type="text" 
+                id="porte" 
+                class="form-control mb-2" 
+                placeholder="Porte (Ej: Pequeña, Mediana, Grande)"
+            >
+
+            <!-- INPUT ENERGÍA -->
+            <input 
+                type="text" 
+                id="energia" 
+                class="form-control mb-2" 
+                placeholder="Energía (Ej: Baja, Media, Alta)"
+            >
+
+            <!-- TEXTAREA DESCRIPCIÓN -->
+            <textarea 
+                id="descripcion" 
+                class="form-control mb-2" 
+                placeholder="Descripción (mínimo 10 caracteres)"
+                required
+            ></textarea>
+
+            <!-- INPUT IMAGEN -->
+            <input 
+                type="file" 
+                id="imagen" 
+                class="form-control mb-3"
+            >
+
+            <!-- BOTÓN CREAR -->
+            <button class="btn btn-success w-100">
+                Crear Mascota
+            </button>
+
+            <!-- BOTÓN VOLVER -->
+            <a href="mascotas.html" class="btn btn-secondary w-100 mt-2">
+                Volver
+            </a>
+
+        </form>
+
+    </div>
+
+</div>
+
+<script>
+
+    // --------------------------------------------------
+    // OBTENER FORMULARIO
+    // --------------------------------------------------
+
+    const form = document.getElementById("formMascota");
+
+
+    // --------------------------------------------------
+    // EVENTO SUBMIT (cuando se envía el formulario)
+    // --------------------------------------------------
+
+    form.addEventListener("submit", async (e) => {
+
+        // Evita que la página se recargue
+        e.preventDefault();
+
+
+        // --------------------------------------------------
+        // OBTENER TOKEN
+        // --------------------------------------------------
+
+        const token = localStorage.getItem("token");
+
+        // Si no hay token → no autorizado
+        if (!token) {
+            alert("Debes iniciar sesión");
+            return;
+        }
+
+
+        // --------------------------------------------------
+        // CREAR FORMDATA (IMPORTANTE PARA IMÁGENES)
+        // --------------------------------------------------
+
+        const formData = new FormData();
+
+        // Agregamos cada campo al FormData
+        formData.append("nombre", document.getElementById("nombre").value);
+        formData.append("edad", document.getElementById("edad").value);
+        formData.append("porte", document.getElementById("porte").value);
+        formData.append("energia", document.getElementById("energia").value);
+        formData.append("descripcion", document.getElementById("descripcion").value);
+
+        // --------------------------------------------------
+        // IMAGEN
+        // --------------------------------------------------
+
+        const file = document.getElementById("imagen").files[0];
+
+        // Si el usuario seleccionó imagen
+        if (file) {
+            formData.append("imagen", file);
+        }
+
+
+        // --------------------------------------------------
+        // PETICIÓN AL BACKEND
+        // --------------------------------------------------
+
+        try {
+
+            const res = await fetch("/api/mascotas", {
+
+                method: "POST", // método POST para crear
+
+                headers: {
+                    // Enviamos token JWT
+                    "Authorization": "Bearer " + token
+                },
+
+                // IMPORTANTE: enviamos FormData (no JSON)
+                body: formData
+            });
+
+            const data = await res.json();
+
+
+            // --------------------------------------------------
+            // RESPUESTA
+            // --------------------------------------------------
+
+            if (res.ok) {
+
+                alert("Mascota creada correctamente 🐶");
+
+                // Redirigimos a la lista
+                window.location.href = "mascotas.html";
+
+            } else {
+
+                alert(data.message || "Error al crear mascota");
+            }
+
+        } catch (error) {
+
+            console.error(error);
+
+            alert("Error del servidor");
+        }
+
+    });
+
+</script>
+
+</body>
+</html>

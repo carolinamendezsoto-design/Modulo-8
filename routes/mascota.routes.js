@@ -5,26 +5,21 @@
 // Importamos Express para poder crear rutas HTTP
 const express = require("express");
 
-// Creamos una instancia del router de Express
-// Esto permite definir rutas separadas del archivo principal (index.js)
+// Creamos una instancia del router
 const router = express.Router();
 
 
 // ------------------------------------------------------
-// IMPORTAR MIDDLEWARE DE AUTENTICACIÓN
+// IMPORTAR MIDDLEWARES
 // ------------------------------------------------------
 
-// Importamos el middleware que valida el token JWT
-// Este middleware protegerá las rutas privadas
+// Middleware de autenticación (JWT)
 const auth = require("../middlewares/auth");
 
+// 🔥 Middleware para validar ADMIN
+const isAdmin = require("../middlewares/isAdmin");
 
-// ------------------------------------------------------
-// IMPORTAR MIDDLEWARE DE SUBIDA DE ARCHIVOS
-// ------------------------------------------------------
-
-// Importamos multer configurado (upload)
-// Se usará para subir imágenes de mascotas
+// Middleware de subida de archivos (multer)
 const upload = require("../middlewares/upload");
 
 
@@ -33,7 +28,6 @@ const upload = require("../middlewares/upload");
 // ------------------------------------------------------
 
 // Importamos el controlador de mascotas
-// Aquí se encuentra la lógica de cada endpoint
 const mascotaController = require("../controllers/mascota.controller");
 
 
@@ -43,69 +37,76 @@ const mascotaController = require("../controllers/mascota.controller");
 
 
 // ------------------------------------------------------
-// RUTA: OBTENER TODAS LAS MASCOTAS (PROTEGIDA)
+// MATCH DE MASCOTAS (🔥 NUEVO)
 // ------------------------------------------------------
 
-// Endpoint final: GET /api/mascotas
-// Retorna todas las mascotas registradas
+// Endpoint: GET /api/mascotas/match
+// Ej: /match?energia=Media&porte=Pequeña
 router.get(
-    "/",                        // ruta base
-    auth,                       // middleware que valida el token
-    mascotaController.getMascotas // controlador que obtiene los datos
+    "/match",
+    auth, // debe estar logueado
+    mascotaController.getMatchMascotas
 );
 
 
 // ------------------------------------------------------
-// RUTA: OBTENER MASCOTA POR ID (PROTEGIDA)
+// OBTENER TODAS LAS MASCOTAS
 // ------------------------------------------------------
 
-// Endpoint final: GET /api/mascotas/:id
-// Retorna una mascota específica según su ID
 router.get(
-    "/:id",                     // parámetro dinámico (id)
-    auth,                       // protección con token
-    mascotaController.getMascotaById // controlador
+    "/",
+    auth,
+    mascotaController.getMascotas
 );
 
 
 // ------------------------------------------------------
-// RUTA: CREAR MASCOTA (PROTEGIDA)
+// OBTENER MASCOTA POR ID
 // ------------------------------------------------------
 
-// Endpoint final: POST /api/mascotas
-// Crea una nueva mascota en la base de datos
+router.get(
+    "/:id",
+    auth,
+    mascotaController.getMascotaById
+);
+
+
+// ------------------------------------------------------
+// CREAR MASCOTA
+// ------------------------------------------------------
+
 router.post(
-    "/",                        // ruta base
-    auth,                       // usuario debe estar autenticado
-    upload.single("imagen"),    // middleware para subir imagen (campo "imagen")
-    mascotaController.createMascota // controlador que crea la mascota
+    "/",
+    auth,
+    upload.single("imagen"),
+    mascotaController.createMascota
 );
 
 
 // ------------------------------------------------------
-// RUTA: ACTUALIZAR MASCOTA (PROTEGIDA)
+// ACTUALIZAR MASCOTA
 // ------------------------------------------------------
 
-// Endpoint final: PUT /api/mascotas/:id
-// Actualiza una mascota existente según su ID
+// 🔥 SOLO ADMIN
 router.put(
-    "/:id",                     // id de la mascota
-    auth,                       // protección con token
-    upload.single("imagen"),    // permite actualizar imagen
-    mascotaController.updateMascota // controlador
+    "/:id",
+    auth,
+    isAdmin, // 👈 protección por rol
+    upload.single("imagen"),
+    mascotaController.updateMascota
 );
 
 
 // ------------------------------------------------------
-// RUTA: ELIMINAR MASCOTA (PROTEGIDA)
+// ELIMINAR MASCOTA
 // ------------------------------------------------------
 
-// Endpoint final: DELETE /api/mascotas/:id
-// Elimina una mascota de la base de datos
+// 🔥 SOLO ADMIN
 router.delete(
-    "/:id",                     // id de la mascota
-    auth,                       // protección con token
-    mascotaController.deleteMascota // controlador
+    "/:id",
+    auth,
+    isAdmin, // 👈 protección por rol
+    mascotaController.deleteMascota
 );
 
 
@@ -113,5 +114,4 @@ router.delete(
 // EXPORTAR ROUTER
 // ------------------------------------------------------
 
-// Exportamos el router para poder usarlo en index.js
 module.exports = router;

@@ -22,25 +22,28 @@ const authMiddleware = (req, res, next) => {
 
     // Si no viene el header → error 401 (no autorizado)
     if (!authHeader) {
-        const error = new Error("Acceso denegado. Token requerido");
-        error.statusCode = 401;
-        return next(error);
+        return res.status(401).json({
+            status: "error",
+            message: "Acceso denegado. Token requerido",
+            data: null
+        });
     }
 
 
     // --------------------------------------------------
-    // FORMATO BEARER TOKEN
+    // VALIDAR FORMATO BEARER TOKEN
     // --------------------------------------------------
 
     // El formato esperado es: "Bearer TOKEN"
-    // Separamos en 2 partes
     const parts = authHeader.split(" ");
 
-    // Validamos formato correcto
+    // Validamos que tenga 2 partes y que empiece con Bearer
     if (parts.length !== 2 || parts[0] !== "Bearer") {
-        const error = new Error("Formato de token inválido");
-        error.statusCode = 400;
-        return next(error);
+        return res.status(400).json({
+            status: "error",
+            message: "Formato de token inválido",
+            data: null
+        });
     }
 
     // Extraemos el token real
@@ -61,18 +64,20 @@ const authMiddleware = (req, res, next) => {
         // --------------------------------------------------
 
         // Guardamos los datos del usuario en req.user
-        // Esto permite usarlo en controllers (ej: req.user.id)
+        // Aquí debería venir: id y rol
         req.user = decoded;
 
-        // Continuamos al siguiente middleware o controller
+        // Continuamos al siguiente middleware
         next();
 
     } catch (err) {
 
         // Si el token es inválido o expiró → error 401
-        const error = new Error("Token inválido o expirado");
-        error.statusCode = 401;
-        next(error);
+        return res.status(401).json({
+            status: "error",
+            message: "Token inválido o expirado",
+            data: null
+        });
     }
 };
 
