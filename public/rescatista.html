@@ -1,0 +1,255 @@
+<!DOCTYPE html> <!-- HTML5 -->
+
+<html lang="es">
+
+<head>
+
+    <!-- Codificación -->
+    <meta charset="UTF-8">
+
+    <!-- Responsive -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- TÍTULO -->
+    <title>🐾 Mis Mascotas</title>
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Fuente -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+
+    <style>
+
+        /* FONDO */
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-image: url("img/Huellitas_de_Amor.jpg");
+            background-size: cover;
+            background-attachment: fixed;
+        }
+
+        /* OVERLAY */
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            background: linear-gradient(
+                rgba(0,0,0,0.7),
+                rgba(0,0,0,0.5)
+            );
+            z-index: -1;
+        }
+
+        /* HEADER */
+        .header {
+            color: white;
+            margin-bottom: 20px;
+        }
+
+        /* TARJETAS */
+        .card {
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 15px;
+            background: rgba(255,255,255,0.15);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: white;
+        }
+
+        /* SUB TARJETAS */
+        .mini {
+            background: rgba(255,255,255,0.1);
+            padding: 10px;
+            border-radius: 10px;
+            margin-top: 10px;
+        }
+
+        /* BOTONES */
+        .btn-success {
+            border-radius: 10px;
+            background: linear-gradient(135deg, #28a745, #20c997);
+            border: none;
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+<div class="container mt-4">
+
+    <!-- HEADER -->
+    <div class="header d-flex justify-content-between align-items-center">
+
+        <h3>🐶 Mis Mascotas</h3>
+
+        <button class="btn btn-danger btn-sm" onclick="logout()">
+            Cerrar sesión
+        </button>
+
+    </div>
+
+    <!-- CONTENEDOR -->
+    <div id="contenedorMascotas"></div>
+
+</div>
+
+<script src="js/auth.js"></script>
+
+<script>
+
+    // TOKEN Y USUARIO
+    const token = localStorage.getItem("token");
+    const user = JSON.parse(localStorage.getItem("user")) || {};
+
+    // PROTEGER
+    if (!user || user.rol !== "rescatista") {
+
+        alert("Acceso solo rescatista");
+
+        window.location.href = "mascotas.html";
+    }
+
+    // --------------------------------------------------
+    // CARGAR MASCOTAS DEL USUARIO
+    // --------------------------------------------------
+
+    async function cargarMisMascotas() {
+
+        const res = await fetch("/api/mascotas", {
+            headers: {
+                Authorization: "Bearer " + token
+            }
+        });
+
+        const data = await res.json();
+
+        const mascotas = data.data || data;
+
+        // 🔥 FILTRO
+        const misMascotas = mascotas.filter(m => m.userId === user.id);
+
+        mostrarMascotas(misMascotas);
+    }
+
+    // --------------------------------------------------
+    // MOSTRAR
+    // --------------------------------------------------
+
+    function mostrarMascotas(mascotas) {
+
+        const cont = document.getElementById("contenedorMascotas");
+
+        cont.innerHTML = "";
+
+        mascotas.forEach(m => {
+
+            cont.innerHTML += `
+                <div class="card">
+
+                    <h4>${m.nombre} 🐶</h4>
+
+                    <p>${m.descripcion}</p>
+
+                    <!-- BOTÓN -->
+                    <button 
+                        onclick="verSolicitudes(${m.id})"
+                        class="btn btn-primary btn-sm"
+                    >
+                        Ver solicitudes
+                    </button>
+
+                    <!-- CONTENEDOR -->
+                    <div id="solicitudes-${m.id}"></div>
+
+                </div>
+            `;
+        });
+    }
+
+    // --------------------------------------------------
+    // VER SOLICITUDES
+    // --------------------------------------------------
+
+    async function verSolicitudes(id) {
+
+        const res = await fetch(`/api/solicitudes/mascota/${id}`, {
+            headers: {
+                Authorization: "Bearer " + token
+            }
+        });
+
+        const data = await res.json();
+
+        const solicitudes = data.data;
+
+        const cont = document.getElementById(`solicitudes-${id}`);
+
+        if (!solicitudes.length) {
+
+            cont.innerHTML = "<p>No hay solicitudes</p>";
+
+            return;
+        }
+
+        cont.innerHTML = "";
+
+        solicitudes.forEach(s => {
+
+            cont.innerHTML += `
+                <div class="mini">
+
+                    <strong>${s.adoptante.nombre}</strong><br>
+                    ${s.adoptante.email}<br>
+
+                    <p>${s.mensaje || ""}</p>
+
+                    <button 
+                        class="btn btn-success btn-sm"
+                        onclick="elegir(${s.id})"
+                    >
+                        Seleccionar ✅
+                    </button>
+
+                </div>
+            `;
+        });
+    }
+
+    // --------------------------------------------------
+    // ELEGIR
+    // --------------------------------------------------
+
+    async function elegir(id) {
+
+        const res = await fetch(`/api/solicitudes/seleccionar/${id}`, {
+
+            method: "PUT",
+
+            headers: {
+                Authorization: "Bearer " + token
+            }
+        });
+
+        if (res.ok) {
+
+            alert("Adopción completada 🎉");
+
+            location.reload();
+
+        } else {
+
+            alert("Error");
+        }
+    }
+
+    // INICIO
+    cargarMisMascotas();
+
+</script>
+
+</body>
+</html>

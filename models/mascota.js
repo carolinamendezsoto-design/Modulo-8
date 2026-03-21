@@ -2,169 +2,106 @@
 // IMPORTAR DEPENDENCIAS
 // ------------------------------------------------------
 
-// Importamos DataTypes desde Sequelize
-// Permite definir los tipos de datos de cada campo
+// Importamos los tipos de datos de Sequelize (STRING, INTEGER, etc.)
 const { DataTypes } = require("sequelize");
 
-// Importamos la conexión a la base de datos
-// sequelize es la instancia configurada previamente
+// Importamos la instancia de conexión a la base de datos
 const { sequelize } = require("../config/database");
+
+// Importamos modelos relacionados para crear relaciones
+const User = require("./user");
+const Solicitud = require("./solicitud");
 
 
 // ------------------------------------------------------
 // DEFINICIÓN DEL MODELO MASCOTA
 // ------------------------------------------------------
 
-// Definimos el modelo "Mascota"
-// Representa la tabla "Mascotas" en PostgreSQL
+// Definimos el modelo Mascota (tabla en la base de datos)
 const Mascota = sequelize.define("Mascota", {
 
-    // ---------------------------------
-    // ID DE LA MASCOTA
-    // ---------------------------------
-
+    // ID único de cada mascota
     id: {
-
-        // Tipo entero
-        type: DataTypes.INTEGER,
-
-        // Clave primaria
-        primaryKey: true,
-
-        // Se incrementa automáticamente
-        autoIncrement: true
-
+        type: DataTypes.INTEGER,      // tipo numérico
+        primaryKey: true,             // clave primaria
+        autoIncrement: true           // autoincremental
     },
 
-
-    // ---------------------------------
-    // NOMBRE DE LA MASCOTA
-    // ---------------------------------
-
+    // Nombre de la mascota
     nombre: {
-
-        // Texto corto (ej: "Luna")
-        type: DataTypes.STRING,
-
-        // Campo obligatorio
-        allowNull: false
-
+        type: DataTypes.STRING,       // texto corto
+        allowNull: false              // obligatorio
     },
 
-
-    // ---------------------------------
-    // EDAD DE LA MASCOTA
-    // ---------------------------------
-
+    // Edad de la mascota
     edad: {
-
-        // Número entero (años)
-        type: DataTypes.INTEGER,
-
-        // Campo obligatorio
-        allowNull: false
-
+        type: DataTypes.INTEGER,      // número entero
+        allowNull: false              // obligatorio
     },
 
-
-    // ---------------------------------
-    // PORTE DE LA MASCOTA
-    // ---------------------------------
-
+    // Tamaño o porte
     porte: {
-
-        // Texto (ej: pequeño, mediano, grande)
-        type: DataTypes.STRING,
-
-        // Campo obligatorio
-        allowNull: false
-
+        type: DataTypes.STRING,       // texto
+        allowNull: false              // obligatorio
     },
 
-
-    // ---------------------------------
-    // NIVEL DE ENERGÍA
-    // ---------------------------------
-
+    // Nivel de energía
     energia: {
-
-        // Texto (ej: baja, media, alta)
-        type: DataTypes.STRING,
-
-        // Campo obligatorio
-        allowNull: false
-
+        type: DataTypes.STRING,       // texto
+        allowNull: false              // obligatorio
     },
 
-
-    // ---------------------------------
-    // DESCRIPCIÓN DEL PELUDITO
-    // ---------------------------------
-
+    // Descripción de la mascota
     descripcion: {
-
-        // Texto largo para describir personalidad
-        type: DataTypes.TEXT,
-
-        // Campo obligatorio
-        allowNull: false
-
+        type: DataTypes.TEXT,         // texto largo
+        allowNull: false              // obligatorio
     },
 
-
-    // ---------------------------------
-    // IMAGEN DE LA MASCOTA
-    // ---------------------------------
-
+    // Imagen (nombre del archivo subido con multer)
     imagen: {
-
-        // Guarda el nombre del archivo (multer)
-        type: DataTypes.STRING
-
-        // No es obligatorio
+        type: DataTypes.STRING        // opcional
     },
 
-
-    // ---------------------------------
-    // ESTADO DE ADOPCIÓN
-    // ---------------------------------
-
+    // Estado de adopción
     estado: {
-
-        // Texto (disponible / adoptado)
-        type: DataTypes.STRING,
-
-        // Valor por defecto
-        defaultValue: "disponible"
-
+        type: DataTypes.STRING,       // texto
+        defaultValue: "disponible",   // valor inicial
+        validate: {
+            isIn: [["disponible", "adoptado"]] // valores permitidos
+        }
     },
 
-
-    // ---------------------------------
-    // RELACIÓN CON USUARIO (RESCATISTA)
-    // ---------------------------------
-
+    // ID del usuario (rescatista que publica)
     userId: {
-
-        // ID del usuario que publica
-        type: DataTypes.INTEGER,
-
-        // Campo obligatorio
-        allowNull: false
-
+        type: DataTypes.INTEGER,      // número
+        allowNull: false              // obligatorio
     }
 
-},
+}, {
+    timestamps: true // agrega createdAt y updatedAt automáticamente
+});
 
-{
-    // --------------------------------------------------
-    // CONFIGURACIÓN DEL MODELO
-    // --------------------------------------------------
 
-    // Sequelize agregará:
-    // createdAt y updatedAt automáticamente
-    timestamps: true
+// ------------------------------------------------------
+// RELACIONES
+// ------------------------------------------------------
 
+// Una mascota pertenece a un usuario (rescatista)
+Mascota.belongsTo(User, {
+    foreignKey: "userId",   // clave foránea
+    as: "rescatista"        // alias para consultas
+});
+
+// Un usuario puede tener muchas mascotas
+User.hasMany(Mascota, {
+    foreignKey: "userId",
+    as: "mascotas"
+});
+
+// Una mascota puede tener muchas solicitudes
+Mascota.hasMany(Solicitud, {
+    foreignKey: "mascotaId",
+    as: "solicitudes"
 });
 
 
@@ -172,5 +109,5 @@ const Mascota = sequelize.define("Mascota", {
 // EXPORTAR MODELO
 // ------------------------------------------------------
 
-// Exportamos el modelo para usarlo en el proyecto
+// Exportamos el modelo para usarlo en controllers y services
 module.exports = Mascota;

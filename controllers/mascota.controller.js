@@ -2,8 +2,7 @@
 // IMPORTAR SERVICE
 // ------------------------------------------------------
 
-// Importamos el servicio de mascotas
-// Aquí está la lógica de negocio (intermediario con repository)
+// Importamos el servicio donde vive la lógica de negocio
 const mascotaService = require("../services/mascota.service");
 
 
@@ -13,11 +12,10 @@ const mascotaService = require("../services/mascota.service");
 
 const getMascotas = async (req, res, next) => {
     try {
-
-        // Llamamos al service pasando posibles filtros (query params)
+        // Llamamos al service enviando filtros (query params)
         const result = await mascotaService.getMascotas(req.query);
 
-        // Respondemos con formato estándar
+        // Respuesta estándar API (como pide la consigna)
         res.status(200).json({
             status: "success",
             message: "Mascotas obtenidas correctamente",
@@ -25,7 +23,7 @@ const getMascotas = async (req, res, next) => {
         });
 
     } catch (error) {
-        next(error);
+        next(error); // delegamos al middleware global
     }
 };
 
@@ -36,9 +34,19 @@ const getMascotas = async (req, res, next) => {
 
 const getMascotaById = async (req, res, next) => {
     try {
+        const { id } = req.params;
 
-        // Enviamos los parámetros (id) al service
-        const result = await mascotaService.getMascotaById(req.params);
+        // Llamamos al service
+        const result = await mascotaService.getMascotaById({ id });
+
+        // Validación si no existe
+        if (!result) {
+            return res.status(404).json({
+                status: "error",
+                message: "Mascota no encontrada",
+                data: null
+            });
+        }
 
         res.status(200).json({
             status: "success",
@@ -64,24 +72,21 @@ const createMascota = async (req, res, next) => {
         if (!req.body.nombre) {
             return res.status(400).json({
                 status: "error",
-                message: "El nombre es obligatorio",
-                data: null
+                message: "El nombre es obligatorio"
             });
         }
 
         if (!req.body.edad) {
             return res.status(400).json({
                 status: "error",
-                message: "La edad es obligatoria",
-                data: null
+                message: "La edad es obligatoria"
             });
         }
 
         if (!req.body.descripcion || req.body.descripcion.length < 10) {
             return res.status(400).json({
                 status: "error",
-                message: "La descripción debe tener al menos 10 caracteres",
-                data: null
+                message: "La descripción debe tener al menos 10 caracteres"
             });
         }
 
@@ -93,11 +98,12 @@ const createMascota = async (req, res, next) => {
             porte: req.body.porte,
             energia: req.body.energia,
             descripcion: req.body.descripcion,
-            estado: "disponible",
-            userId: req.user.id,
+            estado: "disponible", // siempre inicia disponible
+            userId: req.user.id, // usuario autenticado
             imagen: req.file ? req.file.filename : null
         };
 
+        // Guardamos en DB
         const result = await mascotaService.createMascota(data);
 
         res.status(201).json({
@@ -119,13 +125,16 @@ const createMascota = async (req, res, next) => {
 const updateMascota = async (req, res, next) => {
     try {
 
+        const { id } = req.params;
+
+        // Construimos objeto dinámico
         const data = {
             ...req.body,
             ...(req.file && { imagen: req.file.filename })
         };
 
         const result = await mascotaService.updateMascota({
-            id: req.params.id,
+            id,
             data
         });
 
@@ -147,8 +156,9 @@ const updateMascota = async (req, res, next) => {
 
 const deleteMascota = async (req, res, next) => {
     try {
+        const { id } = req.params;
 
-        const result = await mascotaService.deleteMascota(req.params);
+        const result = await mascotaService.deleteMascota({ id });
 
         res.status(200).json({
             status: "success",
@@ -162,37 +172,24 @@ const deleteMascota = async (req, res, next) => {
 };
 
 
-// =======================================================
-// 🔥 MATCH DE MASCOTAS (NUEVO - NIVEL PRO)
-// =======================================================
+// ------------------------------------------------------
+// MATCH DE MASCOTAS
+// ------------------------------------------------------
 
 const getMatchMascotas = async (req, res, next) => {
     try {
 
-        // --------------------------------------------------
-        // OBTENER PREFERENCIAS DESDE QUERY
-        // --------------------------------------------------
-
-        // Ejemplo:
-        // /match?energia=Media&porte=Pequeña
+        // Preferencias desde query
         const preferencias = {
             energia: req.query.energia,
             porte: req.query.porte
         };
 
-        // --------------------------------------------------
-        // LLAMAR AL SERVICE
-        // --------------------------------------------------
-
         const result = await mascotaService.getMatchMascotas(preferencias);
-
-        // --------------------------------------------------
-        // RESPUESTA
-        // --------------------------------------------------
 
         res.status(200).json({
             status: "success",
-            message: "Match de mascotas calculado correctamente",
+            message: "Match calculado correctamente",
             data: result
         });
 
@@ -202,15 +199,12 @@ const getMatchMascotas = async (req, res, next) => {
 };
 
 
-// ------------------------------------------------------
-// EXPORTAR CONTROLADOR
-// ------------------------------------------------------
-
+// Exportamos todo
 module.exports = {
     getMascotas,
     getMascotaById,
     createMascota,
     updateMascota,
     deleteMascota,
-    getMatchMascotas // 👈 NUEVO
+    getMatchMascotas
 };

@@ -2,116 +2,52 @@
 // IMPORTAR DEPENDENCIAS
 // ------------------------------------------------------
 
-// Importamos Express para poder crear rutas HTTP
 const express = require("express");
-
-// Creamos una instancia del router
 const router = express.Router();
 
-
-// ------------------------------------------------------
-// IMPORTAR MIDDLEWARES
-// ------------------------------------------------------
-
-// Middleware de autenticación (JWT)
-const auth = require("../middlewares/auth");
-
-// 🔥 Middleware para validar ADMIN
-const isAdmin = require("../middlewares/isAdmin");
-
-// Middleware de subida de archivos (multer)
-const upload = require("../middlewares/upload");
-
-
-// ------------------------------------------------------
-// IMPORTAR CONTROLLER
-// ------------------------------------------------------
-
-// Importamos el controlador de mascotas
+// Controlador
 const mascotaController = require("../controllers/mascota.controller");
 
+// Middleware auth
+const auth = require("../middlewares/auth.middleware");
 
-// =======================================================
-// RUTAS RESTFUL DE MASCOTAS
-// =======================================================
-
-
-// ------------------------------------------------------
-// MATCH DE MASCOTAS (🔥 NUEVO)
-// ------------------------------------------------------
-
-// Endpoint: GET /api/mascotas/match
-// Ej: /match?energia=Media&porte=Pequeña
-router.get(
-    "/match",
-    auth, // debe estar logueado
-    mascotaController.getMatchMascotas
-);
+// Multer
+const upload = require("../middlewares/upload.middleware");
 
 
 // ------------------------------------------------------
-// OBTENER TODAS LAS MASCOTAS
+// RUTAS
 // ------------------------------------------------------
 
-router.get(
-    "/",
-    auth,
-    mascotaController.getMascotas
-);
+// Obtener todas
+router.get("/", mascotaController.getMascotas);
 
+// Obtener por ID
+router.get("/:id", mascotaController.getMascotaById);
 
-// ------------------------------------------------------
-// OBTENER MASCOTA POR ID
-// ------------------------------------------------------
-
-router.get(
-    "/:id",
-    auth,
-    mascotaController.getMascotaById
-);
-
-
-// ------------------------------------------------------
-// CREAR MASCOTA
-// ------------------------------------------------------
-
+// Crear mascota (con imagen 🔥)
 router.post(
     "/",
     auth,
-    upload.single("imagen"),
+    upload.single("imagen"), // multer
     mascotaController.createMascota
 );
 
-
-// ------------------------------------------------------
-// ACTUALIZAR MASCOTA
-// ------------------------------------------------------
-
-// 🔥 SOLO ADMIN
+// Actualizar mascota (puede cambiar imagen)
 router.put(
     "/:id",
     auth,
-    isAdmin, // 👈 protección por rol
     upload.single("imagen"),
     mascotaController.updateMascota
 );
 
+// Eliminar
+router.delete("/:id", auth, mascotaController.deleteMascota);
 
-// ------------------------------------------------------
-// ELIMINAR MASCOTA
-// ------------------------------------------------------
-
-// 🔥 SOLO ADMIN
-router.delete(
-    "/:id",
-    auth,
-    isAdmin, // 👈 protección por rol
-    mascotaController.deleteMascota
-);
+// Match
+router.get("/match/filtro", mascotaController.getMatchMascotas);
 
 
-// ------------------------------------------------------
-// EXPORTAR ROUTER
 // ------------------------------------------------------
 
 module.exports = router;

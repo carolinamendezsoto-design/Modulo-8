@@ -2,22 +2,25 @@
 // IMPORTAR DEPENDENCIAS
 // ------------------------------------------------------
 
-// Importamos Express (framework para crear el servidor)
+// Importamos Express (framework principal del servidor)
 const express = require("express");
 
-// Importamos path para manejar rutas de archivos correctamente
+// Importamos path para manejar rutas del sistema de archivos
 const path = require("path");
 
-// Importamos dotenv para usar variables de entorno (.env)
+// 🔥 IMPORTAMOS CORS (SOLUCIÓN AL ERROR FRONTEND)
+const cors = require("cors");
+
+// Cargamos variables de entorno desde el archivo .env
 require("dotenv").config();
 
-// Importamos middleware de logs (para registrar peticiones)
+// Importamos middleware personalizado para logs de peticiones
 const logger = require("./middlewares/logger");
 
-// Importamos middleware global de manejo de errores
+// Importamos middleware global para manejo de errores
 const errorMiddleware = require("./middlewares/error.middleware");
 
-// Importamos conexión a base de datos (PostgreSQL)
+// Importamos conexión a base de datos y sequelize
 const { connectDB, sequelize } = require("./config/database");
 
 
@@ -25,35 +28,40 @@ const { connectDB, sequelize } = require("./config/database");
 // IMPORTAR MODELOS
 // ------------------------------------------------------
 
-// Importamos modelos para que Sequelize los registre
-const User = require("./models/user");
+// ⚠️ IMPORTANTE:
+// Estos require NO se guardan en variables porque solo sirven
+// para que Sequelize registre los modelos internamente
 
-// Importamos el modelo Mascota
-const Mascota = require("./models/mascota");
+require("./models/user");        // Modelo de usuarios
+require("./models/mascota");     // Modelo de mascotas
+require("./models/solicitud");   // Modelo de solicitudes
 
 
 // ------------------------------------------------------
 // IMPORTAR RUTAS
 // ------------------------------------------------------
 
-// Importamos rutas de usuarios
+// Rutas relacionadas a usuarios (CRUD + roles)
 const userRoutes = require("./routes/users");
 
-// Importamos rutas de autenticación
+// Rutas de autenticación (login)
 const authRoutes = require("./routes/auth");
 
-// Importamos rutas de subida de archivos
+// Rutas para subida de archivos (imágenes de mascotas)
 const uploadRoutes = require("./routes/upload");
 
-// Importamos rutas de mascotas
+// Rutas de mascotas
 const mascotaRoutes = require("./routes/mascota.routes");
+
+// Rutas de solicitudes de adopción
+const solicitudRoutes = require("./routes/solicitud.routes");
 
 
 // ------------------------------------------------------
 // CREAR APP
 // ------------------------------------------------------
 
-// Creamos la aplicación de Express
+// Inicializamos la aplicación Express
 const app = express();
 
 
@@ -61,10 +69,14 @@ const app = express();
 // MIDDLEWARES
 // ------------------------------------------------------
 
-// Middleware para poder recibir JSON en las peticiones
+// Middleware para poder leer JSON desde el body
 app.use(express.json());
 
-// Middleware logger (registra cada petición)
+// 🔥 CORS DEBE IR AQUÍ (ANTES DE LAS RUTAS)
+// Permite que frontend (puerto 5500) se comunique con backend (3000)
+app.use(cors());
+
+// Middleware logger (muestra requests en consola)
 app.use(logger);
 
 
@@ -72,10 +84,10 @@ app.use(logger);
 // SERVIR ARCHIVOS ESTÁTICOS
 // ------------------------------------------------------
 
-// Servimos archivos desde /public (HTML, CSS, JS)
+// Servimos el frontend desde la carpeta "public"
 app.use(express.static(path.join(__dirname, "public")));
 
-// Servimos imágenes desde /uploads
+// Servimos imágenes desde carpeta "uploads"
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 
@@ -83,17 +95,17 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 // RUTA PRINCIPAL
 // ------------------------------------------------------
 
-// Cuando el usuario entra a "/", se carga index.html
+// Cuando el usuario entra a "/", enviamos index.html
 app.get("/", (req, res) => {
     res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
 
 // ------------------------------------------------------
-// RUTA STATUS
+// RUTA DE TEST (STATUS)
 // ------------------------------------------------------
 
-// Ruta para verificar que el servidor funciona
+// Endpoint para verificar que el servidor está activo
 app.get("/status", (req, res) => {
     res.json({
         status: "success",
@@ -107,24 +119,30 @@ app.get("/status", (req, res) => {
 // RUTAS API
 // ------------------------------------------------------
 
-// Rutas de usuarios
+// ⚠️ Todas las rutas tienen prefijo /api
+
+// Usuarios
 app.use("/api/users", userRoutes);
 
-// Rutas de autenticación
-app.use("/auth", authRoutes);
+// Autenticación
+app.use("/api/auth", authRoutes);
 
-// Rutas de subida de archivos
-app.use("/upload", uploadRoutes);
+// Subida de archivos
+app.use("/api/upload", uploadRoutes);
 
-// Rutas de mascotas
+// Mascotas
 app.use("/api/mascotas", mascotaRoutes);
+
+// Solicitudes
+app.use("/api/solicitudes", solicitudRoutes);
 
 
 // ------------------------------------------------------
 // MIDDLEWARE DE ERRORES
 // ------------------------------------------------------
 
-// Captura todos los errores de la app
+// ⚠️ SIEMPRE AL FINAL
+// Captura errores de toda la aplicación
 app.use(errorMiddleware);
 
 
@@ -132,12 +150,12 @@ app.use(errorMiddleware);
 // CONFIGURAR PUERTO
 // ------------------------------------------------------
 
-// Puerto desde .env o 3000
+// Usamos el puerto del .env o 3000 por defecto
 const PORT = process.env.PORT || 3000;
 
 
 // ------------------------------------------------------
-// INICIAR SERVIDOR
+// FUNCIÓN PRINCIPAL PARA INICIAR SERVIDOR
 // ------------------------------------------------------
 
 const startServer = async () => {
@@ -147,31 +165,26 @@ const startServer = async () => {
         // Conectamos a la base de datos
         await connectDB();
 
-        // ---------------------------------------------
-        // 🔥 IMPORTANTE PARA EL ROL (SOLO UNA VEZ)
-        // ---------------------------------------------
+        // Sincronizamos modelos (crea tablas si no existen)
+        await sequelize.sync();
 
-        // ⚠️ TEMPORAL:
-        // Usa force:true SOLO UNA VEZ para crear el campo "rol"
-        // Luego debes volver a sync() normal
-        await sequelize.sync({ force: true });
+        console.log("✅ Base de datos sincronizada correctamente");
 
-        console.log("✅ Base de datos sincronizada con rol");
-
-        // ---------------------------------------------
-        // INICIAR SERVIDOR
-        // ---------------------------------------------
-
+        // Iniciamos servidor
         app.listen(PORT, () => {
             console.log(`🚀 Servidor iniciado en http://localhost:${PORT}`);
         });
 
     } catch (error) {
 
+        // Error al iniciar servidor
         console.error("❌ Error al iniciar el servidor:", error.message);
     }
 };
 
 
-// Ejecutamos servidor
-startServer();
+// ------------------------------------------------------
+// EJECUTAR SERVIDOR
+// ------------------------------------------------------
+
+startServer(); // Ejecutamos la app

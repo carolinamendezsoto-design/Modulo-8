@@ -1,45 +1,41 @@
-// Importamos express para crear las rutas
-const express = require("express");
+// ------------------------------------------------------
+// IMPORTAR DEPENDENCIAS
+// ------------------------------------------------------
 
-// Creamos el router de Express
+const express = require("express");
 const router = express.Router();
 
-// Importamos el middleware de subida de archivos
-const upload = require("../middlewares/upload");
+// Importamos multer
+const upload = require("../middlewares/upload.middleware");
 
-// Creamos el endpoint POST /upload
-router.post(
-  "/",
 
-  // Middleware que procesa un solo archivo con el nombre "file"
-  upload.single("file"),
+// ------------------------------------------------------
+// RUTA SUBIR ARCHIVO
+// ------------------------------------------------------
 
-  // Controlador de la ruta
-  (req, res) => {
-    try {
+// POST /api/upload
+router.post("/", upload.single("imagen"), (req, res) => {
 
-      // Respondemos con un JSON estructurado (formato profesional)
-      res.json({
+    // Si no viene archivo
+    if (!req.file) {
+        return res.status(400).json({
+            status: "error",
+            message: "No se subió ningún archivo"
+        });
+    }
+
+    // Respuesta exitosa
+    res.json({
         status: "success",
         message: "Archivo subido correctamente",
-
-        // Enviamos información del archivo subido
         data: {
-          filename: req.file.filename, // nombre del archivo guardado
-          path: req.file.path         // ruta donde quedó almacenado
+            filename: req.file.filename,
+            path: `/uploads/${req.file.filename}`
         }
-      });
+    });
+});
 
-    } catch (error) {
 
-      // En caso de error, enviamos respuesta con estado 500
-      res.status(500).json({
-        status: "error",
-        message: error.message
-      });
-    }
-  }
-);
+// ------------------------------------------------------
 
-// Exportamos el router para usarlo en index.js
 module.exports = router;

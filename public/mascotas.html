@@ -1,42 +1,55 @@
-<!DOCTYPE html> <!-- Indicamos que usamos HTML5 -->
+<!DOCTYPE html> <!-- HTML5 -->
 
-<html lang="es"> <!-- Idioma español -->
+<html lang="es">
 
 <head>
 
-    <!-- Codificación de caracteres (permite tildes y ñ) -->
     <meta charset="UTF-8">
-
-    <!-- Título de la pestaña -->
-    <title>Mascotas</title>
-
-    <!-- Importamos Bootstrap para estilos rápidos -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🐾 Mascotas</title>
 
     <style>
 
-        /* Fondo general de la página */
         body {
-            background: #f5f6fa;
+            font-family: Arial, sans-serif;
+            background: #1e1e2f;
+            color: white;
+            margin: 0;
+            padding: 20px;
         }
 
-        /* Estilo de las tarjetas */
+        h1 {
+            text-align: center;
+        }
+
+        .contenedor {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
         .card {
-            border-radius: 15px; /* bordes redondeados */
-            transition: 0.3s; /* animación suave */
+            background: #2c2c3e;
+            padding: 15px;
+            border-radius: 15px;
         }
 
-        /* Efecto hover */
-        .card:hover {
-            transform: scale(1.02);
+        button {
+            margin-top: 10px;
+            padding: 8px;
+            border-radius: 10px;
+            border: none;
+            cursor: pointer;
         }
 
-        /* Imagen dentro de la tarjeta */
-        .card img {
-            height: 200px; /* altura fija */
-            object-fit: cover; /* evita deformación */
-            border-top-left-radius: 15px;
-            border-top-right-radius: 15px;
+        .adoptar {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .postulantes {
+            background: #2196F3;
+            color: white;
         }
 
     </style>
@@ -45,186 +58,131 @@
 
 <body>
 
-<!-- Contenedor principal -->
-<div class="container mt-4">
+<h1>🐶 Mascotas disponibles</h1>
 
-    <!-- HEADER -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-
-        <!-- LADO IZQUIERDO -->
-        <div class="d-flex align-items-center gap-2">
-
-            <!-- Título -->
-            <h2 class="m-0">🐶 Mascotas en adopción</h2>
-
-            <!-- 🔥 BOTÓN PARA CREAR MASCOTA -->
-            <a href="crear-mascota.html" class="btn btn-success btn-sm">
-                + Crear
-            </a>
-
-        </div>
-
-        <!-- LADO DERECHO -->
-        <div>
-
-            <!-- Botón para ver usuarios -->
-            <a href="usuarios.html" class="btn btn-outline-dark btn-sm">
-                Usuarios
-            </a>
-
-            <!-- Botón cerrar sesión -->
-            <button class="btn btn-danger btn-sm" onclick="logout()">
-                Cerrar sesión
-            </button>
-
-        </div>
-
-    </div>
-
-    <!-- CONTENEDOR DE MASCOTAS -->
-    <div class="row" id="contenedorMascotas"></div>
-
-</div>
-
-<!-- Scripts externos -->
-<script src="js/utils.js"></script> <!-- mensajes -->
-<script src="js/auth.js"></script> <!-- login / logout -->
+<div id="contenedor" class="contenedor"></div>
 
 <script>
 
+    // URL dinámica (PRO)
+    const API_URL = `${window.location.origin}/api/mascotas`;
+
+    const contenedor = document.getElementById("contenedor");
+
+    const token = localStorage.getItem("token");
+
+    const user = JSON.parse(localStorage.getItem("user")) || {};
+
+
+
     // --------------------------------------------------
-    // FUNCIÓN PARA CARGAR MASCOTAS DESDE BACKEND
+    // CARGAR MASCOTAS
     // --------------------------------------------------
 
-    async function cargarMascotas() {
-
-        // Obtenemos token desde localStorage
-        const token = localStorage.getItem("token");
-
-        // Si no existe token → usuario no autenticado
-        if (!token) {
-            mostrarMensaje("Debes iniciar sesión", "danger");
-            return;
-        }
+    const obtenerMascotas = async () => {
 
         try {
 
-            // Petición GET al backend
-            const res = await fetch("/api/mascotas", {
+            const res = await fetch(API_URL);
 
-                // Enviamos token en headers
-                headers: {
-                    "Authorization": "Bearer " + token
-                }
-
-            });
-
-            // Convertimos respuesta a JSON
             const data = await res.json();
 
-            // 🔥 Soporta ambos formatos:
-            // { data: [...] } o [...]
-            const mascotas = data.data || data;
+            const mascotas = data.data || [];
 
-            // Si no hay mascotas
-            if (!mascotas || mascotas.length === 0) {
-                document.getElementById("contenedorMascotas").innerHTML =
-                    "<p>No hay mascotas aún 🐾</p>";
-                return;
-            }
+            contenedor.innerHTML = "";
 
-            // Llamamos a render
-            mostrarMascotas(mascotas);
+            mascotas.forEach(mascota => {
+
+                const card = document.createElement("div");
+                card.classList.add("card");
+
+                const esAdoptado = mascota.estado === "adoptado";
+
+                card.innerHTML = `
+                    <h3>${mascota.nombre}</h3>
+                    <p>Edad: ${mascota.edad}</p>
+                    <p>${mascota.descripcion}</p>
+
+                    <p>
+                        Estado: 
+                        <strong style="color:${esAdoptado ? "red" : "green"};">
+                            ${mascota.estado}
+                        </strong>
+                    </p>
+
+                    <button 
+                        class="adoptar"
+                        onclick="adoptar(${mascota.id})"
+                        ${esAdoptado ? "disabled" : ""}
+                    >
+                        ❤️ Adoptar
+                    </button>
+
+                    ${user.rol === "rescatista" ? `
+                        <button 
+                            class="postulantes"
+                            onclick="verPostulantes(${mascota.id})"
+                        >
+                            👀 Ver postulantes
+                        </button>
+                    ` : ""}
+                `;
+
+                contenedor.appendChild(card);
+            });
 
         } catch (error) {
-
-            // Error en consola
             console.error(error);
-
-            // Mensaje al usuario
-            mostrarMensaje("Error al cargar mascotas", "danger");
         }
-    }
+    };
+
 
 
     // --------------------------------------------------
-    // FUNCIÓN PARA MOSTRAR MASCOTAS
+    // ADOPTAR
     // --------------------------------------------------
 
-    function mostrarMascotas(mascotas) {
+    const adoptar = async (mascotaId) => {
 
-        // Obtenemos contenedor
-        const contenedor = document.getElementById("contenedorMascotas");
+        if (!token) {
+            alert("Debes iniciar sesión");
+            return;
+        }
 
-        // Limpiamos contenido previo
-        contenedor.innerHTML = "";
-
-        // Recorremos cada mascota
-        mascotas.forEach(mascota => {
-
-            // Creamos columna Bootstrap
-            const col = document.createElement("div");
-            col.className = "col-md-4 mb-4";
-
-            // 🔥 Imagen dinámica o fallback
-            const imageUrl = mascota.imagen
-                ? `/uploads/${mascota.imagen}`
-                : "https://place-puppy.com/300x200";
-
-            // Insertamos HTML
-            col.innerHTML = `
-
-                <div class="card h-100">
-
-                    <!-- Imagen -->
-                    <img src="${imageUrl}" alt="Mascota">
-
-                    <!-- Body -->
-                    <div class="card-body">
-
-                        <h5>${mascota.nombre}</h5>
-
-                        <p>
-                            Edad: ${mascota.edad}<br>
-                            Porte: ${mascota.porte}<br>
-                            Energía: ${mascota.energia}
-                        </p>
-
-                        <p>${mascota.descripcion}</p>
-
-                    </div>
-
-                    <!-- Footer -->
-                    <div class="card-footer d-flex justify-content-between">
-
-                        <!-- Estado -->
-                        <span class="badge bg-success">
-                            ${mascota.estado}
-                        </span>
-
-                        <!-- Botón -->
-                        <button class="btn btn-primary btn-sm">
-                            Me interesa ❤️
-                        </button>
-
-                    </div>
-
-                </div>
-            `;
-
-            // Agregamos al DOM
-            contenedor.appendChild(col);
+        await fetch(`/api/solicitudes`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify({ mascotaId })
         });
-    }
+
+        alert("Solicitud enviada");
+    };
+
 
 
     // --------------------------------------------------
-    // AUTO EJECUCIÓN
+    // VER POSTULANTES
     // --------------------------------------------------
 
-    cargarMascotas();
+    const verPostulantes = (id) => {
+
+        // Redirige con parámetro
+        window.location.href = `/postulantes.html?mascotaId=${id}`;
+    };
+
+
+
+    // --------------------------------------------------
+    // INICIO
+    // --------------------------------------------------
+
+    obtenerMascotas();
 
 </script>
 
 </body>
+
 </html>

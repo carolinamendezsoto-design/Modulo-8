@@ -1,0 +1,262 @@
+<!DOCTYPE html> <!-- Declaramos HTML5 -->
+
+<html lang="es"> <!-- Idioma del documento -->
+
+<head>
+
+    <!-- Permite caracteres especiales (tildes, emojis, etc) -->
+    <meta charset="UTF-8">
+
+    <!-- Hace la página responsive -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Título de la pestaña -->
+    <title>🐾 Huellitas de Amor - Admin</title>
+
+    <!-- Bootstrap para estilos -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Fuente moderna -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+
+    <style>
+
+        /* -------------------------------------------------- */
+        /* CONFIGURACIÓN GLOBAL */
+        /* -------------------------------------------------- */
+
+        body {
+
+            font-family: 'Poppins', sans-serif; /* tipografía */
+
+            background-image: url("img/Huellitas_de_Amor.jpg"); /* imagen fondo */
+
+            background-size: cover; /* cubre pantalla */
+
+            background-attachment: fixed; /* fondo fijo */
+
+            padding: 30px; /* espacio */
+
+            position: relative; /* necesario para overlay */
+
+            z-index: 1; /* contenido sobre overlay */
+        }
+
+        /* -------------------------------------------------- */
+        /* OVERLAY OSCURO (ARREGLADO) */
+        /* -------------------------------------------------- */
+
+        body::before {
+
+            content: ""; /* obligatorio */
+
+            position: fixed; /* ocupa pantalla */
+
+            inset: 0; /* cubre todo */
+
+            background: linear-gradient(
+                rgba(0,0,0,0.45), /* suavizado */
+                rgba(0,0,0,0.25)
+            );
+
+            z-index: -1; /* queda atrás */
+        }
+
+        /* -------------------------------------------------- */
+        /* HEADER */
+        /* -------------------------------------------------- */
+
+        .header {
+
+            display: flex; /* horizontal */
+
+            justify-content: space-between; /* separa */
+
+            align-items: center; /* centra */
+
+            margin-bottom: 30px; /* espacio */
+
+            color: white; /* texto */
+        }
+
+        /* -------------------------------------------------- */
+        /* TARJETAS */
+        /* -------------------------------------------------- */
+
+        .card {
+
+            border-radius: 25px; /* bordes */
+
+            padding: 25px; /* espacio */
+
+            text-align: center; /* centrado */
+
+            background: rgba(255,255,255,0.15); /* glass */
+
+            backdrop-filter: blur(12px); /* blur */
+
+            border: 1px solid rgba(255,255,255,0.2); /* borde */
+
+            color: white; /* texto */
+
+            transition: 0.3s; /* animación */
+
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3); /* sombra */
+
+            opacity: 0; /* 🔥 inicia invisible */
+
+            animation: fadeIn 0.6s ease forwards; /* 🔥 FIX PARPADEO */
+        }
+
+        /* HOVER */
+        .card:hover {
+
+            transform: translateY(-10px) scale(1.03);
+        }
+
+        /* ICONOS */
+        .icon {
+
+            font-size: 40px;
+
+            margin-bottom: 10px;
+        }
+
+        /* BOTONES */
+        .btn {
+
+            border-radius: 12px;
+        }
+
+        /* -------------------------------------------------- */
+        /* ANIMACIÓN CORRECTA */
+        /* -------------------------------------------------- */
+
+        @keyframes fadeIn {
+
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+<div class="container"> <!-- Contenedor principal -->
+
+    <!-- -------------------------------------------------- -->
+    <!-- HEADER -->
+    <!-- -------------------------------------------------- -->
+
+    <div class="header">
+
+        <!-- TÍTULO -->
+        <h2>🐾 Panel Admin</h2>
+
+        <!-- BOTÓN LOGOUT -->
+        <button class="btn btn-danger" onclick="logout()">
+            Cerrar sesión
+        </button>
+
+    </div>
+
+    <!-- -------------------------------------------------- -->
+    <!-- DASHBOARD -->
+    <!-- -------------------------------------------------- -->
+
+    <div class="row"> <!-- fila bootstrap -->
+
+        <!-- TARJETA USUARIOS -->
+        <div class="col-md-4 mb-4">
+
+            <div class="card">
+
+                <div class="icon">👥</div>
+
+                <h4>Usuarios</h4>
+
+                <p>Gestiona los usuarios del sistema</p>
+
+                <a href="usuarios.html" class="btn btn-primary">
+                    Ver usuarios
+                </a>
+
+            </div>
+
+        </div>
+
+        <!-- TARJETA MASCOTAS -->
+        <div class="col-md-4 mb-4">
+
+            <div class="card">
+
+                <div class="icon">🐶</div>
+
+                <h4>Mascotas</h4>
+
+                <p>Administra las mascotas</p>
+
+                <a href="mascotas.html" class="btn btn-success">
+                    Ver mascotas
+                </a>
+
+            </div>
+
+        </div>
+
+        <!-- TARJETA SOLICITUDES -->
+        <div class="col-md-4 mb-4">
+
+            <div class="card">
+
+                <div class="icon">💌</div>
+
+                <h4>Solicitudes</h4>
+
+                <p>Revisa postulaciones</p>
+
+                <a href="postulantes.html" class="btn btn-warning">
+                    Ver solicitudes
+                </a>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- SCRIPT DE AUTENTICACIÓN -->
+<script src="js/auth.js"></script>
+
+<script>
+
+    // --------------------------------------------------
+    // PROTECCIÓN ADMIN
+    // --------------------------------------------------
+
+    // Obtenemos usuario guardado
+    const user = JSON.parse(localStorage.getItem("user"));
+
+    // Validamos acceso
+    if (!user || user.rol !== "admin") {
+
+        alert("Acceso solo admin"); // mensaje
+
+        window.location.href = "index.html"; // redirige
+    }
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,308 @@
+<!DOCTYPE html> <!-- Define que usamos HTML5 -->
+
+<html lang="es"> <!-- Idioma español -->
+
+<head>
+
+    <!-- Codificación de caracteres -->
+    <meta charset="UTF-8">
+
+    <!-- Responsive para móviles -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Título de la pestaña -->
+    <title>🐾 Postulantes</title>
+
+    <!-- Bootstrap (para estilos rápidos) -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Estilos personalizados -->
+    <style>
+
+        /* Fondo general */
+        body {
+            background: #1e1e2f;
+            color: white;
+            padding: 20px;
+        }
+
+        /* Tarjetas */
+        .card {
+            background: #2c2c3e;
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        /* Botón */
+        button {
+            margin-top: 10px;
+            padding: 8px;
+            border-radius: 10px;
+            border: none;
+            cursor: pointer;
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+<!-- Título principal -->
+<h2>💌 Postulantes de la mascota</h2>
+
+<!-- Contenedor donde se mostrarán las solicitudes -->
+<div id="contenedor"></div>
+
+
+<script>
+
+    // --------------------------------------------------
+    // OBTENER TOKEN Y USUARIO
+    // --------------------------------------------------
+
+    // Recuperamos el token del localStorage
+    const token = localStorage.getItem("token");
+
+    // Recuperamos el usuario guardado (convertido de JSON)
+    const user = JSON.parse(localStorage.getItem("user")) || {};
+
+
+
+    // --------------------------------------------------
+    // PROTECCIÓN DE RUTA (SOLO RESCATISTA)
+    // --------------------------------------------------
+
+    // Si no existe usuario o no es rescatista
+    if (!user || user.rol !== "rescatista") {
+
+        // Mostramos alerta
+        alert("Solo rescatistas pueden acceder");
+
+        // Redirigimos al inicio
+        window.location.href = "index.html";
+    }
+
+
+
+    // --------------------------------------------------
+    // OBTENER ID DESDE LA URL
+    // --------------------------------------------------
+
+    // Creamos objeto para leer parámetros (?mascotaId=1)
+    const params = new URLSearchParams(window.location.search);
+
+    // Obtenemos el ID de la mascota
+    const mascotaId = params.get("mascotaId");
+
+    // Validación si no existe
+    if (!mascotaId) {
+        alert("Falta el ID de la mascota");
+    }
+
+
+
+    // --------------------------------------------------
+    // REFERENCIA AL CONTENEDOR
+    // --------------------------------------------------
+
+    // Obtenemos el div donde renderizaremos
+    const contenedor = document.getElementById("contenedor");
+
+
+
+    // --------------------------------------------------
+    // FUNCIÓN: COLOR SEGÚN ESTADO
+    // --------------------------------------------------
+
+    // Devuelve color dependiendo del estado
+    function getColorEstado(estado) {
+
+        if (estado === "aprobado") return "green";   // aprobado → verde
+        if (estado === "rechazado") return "red";    // rechazado → rojo
+
+        return "orange"; // pendiente → naranja
+    }
+
+
+
+    // --------------------------------------------------
+    // FUNCIÓN: CARGAR SOLICITUDES
+    // --------------------------------------------------
+
+    const cargar = async () => {
+
+        try {
+
+            // Petición al backend con el ID de la mascota
+            const res = await fetch(`/api/solicitudes/mascota/${mascotaId}`, {
+
+                // Enviamos token para autenticación
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
+
+            // Convertimos la respuesta a JSON
+            const data = await res.json();
+
+            // Extraemos el array de solicitudes
+            const solicitudes = data.data || [];
+
+
+
+            // --------------------------------------------------
+            // SI NO HAY POSTULANTES
+            // --------------------------------------------------
+
+            if (!solicitudes.length) {
+
+                contenedor.innerHTML = "<p>No hay postulantes 😢</p>";
+                return;
+            }
+
+
+
+            // --------------------------------------------------
+            // DETECTAR SI YA HAY UNO APROBADO
+            // --------------------------------------------------
+
+            const yaAprobado = solicitudes.some(s => s.estado === "aprobado");
+
+
+
+            // Limpiamos contenedor
+            contenedor.innerHTML = "";
+
+
+
+            // --------------------------------------------------
+            // RENDER DE SOLICITUDES
+            // --------------------------------------------------
+
+            solicitudes.forEach(s => {
+
+                // Obtenemos color del estado
+                const color = getColorEstado(s.estado);
+
+                // Creamos tarjeta
+                const card = document.createElement("div");
+
+                // Agregamos clase
+                card.classList.add("card");
+
+                // Insertamos contenido dinámico
+                card.innerHTML = `
+
+                    <!-- Nombre del adoptante -->
+                    <h5>👤 ${s.adoptante?.nombre}</h5>
+
+                    <!-- Email -->
+                    <p>${s.adoptante?.email}</p>
+
+                    <!-- Mensaje -->
+                    <p>${s.mensaje || "Sin mensaje"}</p>
+
+                    <!-- Estado con color -->
+                    <p>
+                        Estado: 
+                        <span style="color:${color}; font-weight:bold;">
+                            ${s.estado}
+                        </span>
+                    </p>
+
+                    <!-- Botón seleccionar -->
+                    <button 
+                        onclick="seleccionar(${s.id})"
+
+                        <!-- Desactivar si ya hay adoptado -->
+                        ${yaAprobado || s.estado === "aprobado" ? "disabled" : ""}
+                    >
+                        ✅ Elegir adoptante
+                    </button>
+                `;
+
+                // Agregamos al DOM
+                contenedor.appendChild(card);
+            });
+
+        } catch (error) {
+
+            // Error en consola
+            console.error(error);
+
+            // Mensaje en pantalla
+            contenedor.innerHTML = "Error cargando postulantes";
+        }
+    };
+
+
+
+    // --------------------------------------------------
+    // FUNCIÓN: SELECCIONAR ADOPTANTE
+    // --------------------------------------------------
+
+    const seleccionar = async (id) => {
+
+        try {
+
+            // Confirmación antes de ejecutar
+            const confirmar = confirm("¿Seguro que deseas seleccionar este adoptante?");
+
+            if (!confirmar) return;
+
+
+
+            // Enviamos petición PUT al backend
+            const res = await fetch(`/api/solicitudes/seleccionar/${id}`, {
+
+                method: "PUT",
+
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
+
+            // Convertimos respuesta
+            const data = await res.json();
+
+
+
+            // Validamos error
+            if (!res.ok) {
+                throw new Error(data.message);
+            }
+
+
+
+            // Mensaje éxito
+            alert("🎉 Adoptante seleccionado correctamente");
+
+
+
+            // Recargamos lista
+            cargar();
+
+        } catch (error) {
+
+            console.error(error);
+
+            alert("Error al seleccionar adoptante");
+        }
+    };
+
+
+
+    // --------------------------------------------------
+    // INICIO
+    // --------------------------------------------------
+
+    // Ejecutamos la función al cargar la página
+    cargar();
+
+</script>
+
+</body>
+
+</html>

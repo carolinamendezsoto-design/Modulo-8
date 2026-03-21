@@ -2,56 +2,73 @@
 // IMPORTAR DEPENDENCIAS
 // ------------------------------------------------------
 
-// Importamos Sequelize
 const { DataTypes } = require("sequelize");
-
-// Importamos la conexión a la base de datos
 const { sequelize } = require("../config/database");
+
+// Importamos bcrypt para encriptar contraseña
+const bcrypt = require("bcrypt");
 
 
 // ------------------------------------------------------
-// DEFINIR MODELO USER
+// DEFINICIÓN DEL MODELO USER
 // ------------------------------------------------------
 
 const User = sequelize.define("User", {
 
-    // ID del usuario (clave primaria)
+    // ID único del usuario
     id: {
-        type: DataTypes.INTEGER,
-        primaryKey: true,
-        autoIncrement: true
+        type: DataTypes.INTEGER,       // número
+        primaryKey: true,              // clave primaria
+        autoIncrement: true            // autoincremental
     },
 
     // Nombre del usuario
     nombre: {
         type: DataTypes.STRING,
-        allowNull: false
+        allowNull: false               // obligatorio
     },
 
-    // Email del usuario
+    // Email único
     email: {
         type: DataTypes.STRING,
         allowNull: false,
-        unique: true
+        unique: true,                 // no se puede repetir
+        validate: {
+            isEmail: true             // validación automática
+        }
     },
 
-    // Contraseña encriptada
+    // Contraseña (encriptada)
     password: {
         type: DataTypes.STRING,
         allowNull: false
     },
 
-    // --------------------------------------------------
-    // 🔥 NUEVO CAMPO: ROL
-    // --------------------------------------------------
+    // Teléfono
+    telefono: {
+        type: DataTypes.STRING,
+        allowNull: false
+    },
 
+    // Rol del usuario
     rol: {
-        type: DataTypes.STRING, // tipo texto
-        defaultValue: "usuario" // por defecto será usuario normal
+        type: DataTypes.ENUM("admin", "rescatista", "adoptante"), // ENUM pro
+        defaultValue: "adoptante"
     }
 
 }, {
-    tableName: "users"
+    tableName: "users",
+    timestamps: true
+});
+
+
+// ------------------------------------------------------
+// HOOK: ENCRIPTAR PASSWORD ANTES DE GUARDAR
+// ------------------------------------------------------
+
+User.beforeCreate(async (user) => {
+    const salt = await bcrypt.genSalt(10);      // generamos salt
+    user.password = await bcrypt.hash(user.password, salt); // hash
 });
 
 

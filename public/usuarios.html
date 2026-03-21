@@ -4,49 +4,171 @@
 
 <head>
 
-    <meta charset="UTF-8"> <!-- codificación -->
-    <title>Usuarios</title> <!-- título -->
+    <!-- Codificación -->
+    <meta charset="UTF-8">
+
+    <!-- Responsive -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- TÍTULO -->
+    <title>🐾 Usuarios</title>
 
     <!-- Bootstrap -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 
+    <!-- Fuente -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+
+    <style>
+
+        /* FONDO */
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-image: url("img/Huellitas_de_Amor.jpg");
+            background-size: cover;
+            background-attachment: fixed;
+        }
+
+        /* OVERLAY */
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            background: linear-gradient(
+                rgba(0,0,0,0.7),
+                rgba(0,0,0,0.5)
+            );
+            z-index: -1;
+        }
+
+        /* HEADER */
+        .header {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            padding: 15px 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            color: white;
+        }
+
+        /* TARJETA */
+        .card {
+            border-radius: 20px;
+            padding: 20px;
+            background: rgba(255,255,255,0.15);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: white;
+        }
+
+        /* ITEM */
+        .user-item {
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            background: rgba(255,255,255,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* BOTONES */
+        .btn {
+            border-radius: 10px;
+        }
+
+    </style>
+
 </head>
 
-<body class="bg-light">
+<body>
 
 <div class="container mt-4">
 
     <!-- HEADER -->
-    <div class="d-flex justify-content-between mb-3">
+    <div class="header d-flex justify-content-between align-items-center">
 
-        <!-- Usuario logueado -->
-        <span id="usuarioInfo"></span>
+        <h4>👤 Gestión de Usuarios</h4>
 
-        <!-- Logout -->
         <button class="btn btn-danger btn-sm" onclick="logout()">
             Cerrar sesión
         </button>
 
     </div>
 
-    <!-- Título -->
-    <h4 class="d-flex justify-content-between">
-        Usuarios
+    <!-- TARJETA -->
+    <div class="card">
 
-        <!-- Botón recargar -->
-        <button class="btn btn-primary btn-sm" onclick="cargarUsuarios()">
-            Cargar
+        <!-- BOTÓN -->
+        <button class="btn btn-primary mb-3" onclick="cargarUsuarios()">
+            Cargar usuarios
         </button>
-    </h4>
 
-    <!-- Lista -->
-    <ul id="listaUsuarios" class="list-group mt-3"></ul>
+        <!-- LISTA -->
+        <div id="listaUsuarios"></div>
+
+    </div>
 
 </div>
 
-<script src="js/utils.js"></script> <!-- mensajes -->
-<script src="js/auth.js"></script> <!-- auth -->
-<script src="js/usuarios.js"></script> <!-- lógica usuarios -->
+<script src="js/utils.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/usuarios.js"></script>
+
+<script>
+
+    // USUARIO
+    const user = JSON.parse(localStorage.getItem("user")) || {};
+
+    // PROTEGER
+    if (!user || user.rol !== "admin") {
+        alert("Acceso solo admin");
+        window.location.href = "mascotas.html";
+    }
+
+    // --------------------------------------------------
+    // RENDER PERSONALIZADO (🔥 MEJOR UI)
+    // --------------------------------------------------
+
+    function renderUsuarios(lista) {
+
+        const cont = document.getElementById("listaUsuarios");
+
+        cont.innerHTML = "";
+
+        lista.forEach(u => {
+
+            cont.innerHTML += `
+                <div class="user-item">
+
+                    <div>
+                        <strong>${u.nombre}</strong><br>
+                        <small>${u.email}</small><br>
+                        <span class="badge bg-info">${u.rol}</span>
+                    </div>
+
+                    <div>
+                        <button 
+                            class="btn btn-warning btn-sm"
+                            onclick="cambiarRol(${u.id})"
+                        >
+                            Cambiar rol
+                        </button>
+
+                        <button 
+                            class="btn btn-danger btn-sm"
+                            onclick="eliminarUsuario(${u.id})"
+                        >
+                            Eliminar
+                        </button>
+                    </div>
+
+                </div>
+            `;
+        });
+    }
+
+</script>
 
 </body>
 </html>

@@ -1,27 +1,20 @@
 // ------------------------------------------------------
-// MIDDLEWARE: VALIDAR ADMIN
+// MIDDLEWARE: SOLO ADMIN
 // ------------------------------------------------------
 
-const isAdmin = (req, res, next) => {
+// Exportamos middleware
+module.exports = (req, res, next) => {
 
-    // req.user viene del middleware de autenticación (JWT)
-    // ahí está el usuario decodificado
+    // Verificamos rol del usuario autenticado
+    if (req.user.rol !== "admin") {
 
-    // Si no existe usuario o no tiene rol admin
-    if (!req.user || req.user.rol !== "admin") {
-
-        // Bloqueamos acceso
+        // Si no es admin → acceso denegado
         return res.status(403).json({
             status: "error",
-            message: "Acceso denegado: solo administradores",
-            data: null
+            message: "Acceso solo para administradores"
         });
     }
 
     // Si es admin → continúa
     next();
 };
-
-
-// Exportamos el middleware
-module.exports = isAdmin;
