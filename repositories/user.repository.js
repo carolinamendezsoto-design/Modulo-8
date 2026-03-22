@@ -4,11 +4,11 @@
 
 // Importamos el modelo User
 // Representa la tabla de usuarios en la base de datos
-const User = require("../models/user");
+const User = require("../models/user.models");
 
 // Importamos el modelo Mascota (ANTES era Post ❌)
 // Se usa para la relación entre usuarios y mascotas
-const Mascota = require("../models/mascota");
+const Mascota = require("../models/mascota.models");
 
 // Importamos Sequelize para transacciones
 const { sequelize } = require("../config/database");

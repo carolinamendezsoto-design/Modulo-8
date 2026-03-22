@@ -9,8 +9,8 @@ const { DataTypes } = require("sequelize");
 const { sequelize } = require("../config/database");
 
 // Importamos modelos relacionados para crear relaciones
-const User = require("./user");
-const Solicitud = require("./solicitud");
+const User = require("./user.models");
+const Solicitud = require("./solicitud.models");
 
 
 // ------------------------------------------------------

@@ -1,5 +1,5 @@
 const User = require("./user");
-const Mascota = require("./mascota");
+const Mascota = require("./mascota.models");
 const Solicitud = require("./solicitud");
 
 
