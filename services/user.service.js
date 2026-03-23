@@ -5,7 +5,7 @@
 // Librería para encriptar contraseñas
 const bcrypt = require("bcryptjs");
 
-// Repository (acceso a DB)
+// Repository para acceso a base de datos
 const userRepository = require("../repositories/user.repository");
 
 
@@ -15,7 +15,14 @@ const userRepository = require("../repositories/user.repository");
 
 const getUsers = async (query = {}) => {
 
-    // Objeto de filtros
+    // Validamos que query sea objeto
+    if (typeof query !== "object") {
+        const error = new Error("Filtros inválidos");
+        error.statusCode = 400;
+        throw error;
+    }
+
+    // Creamos objeto where limpio
     const where = {};
 
     // Filtro por nombre
@@ -28,18 +35,20 @@ const getUsers = async (query = {}) => {
         where.rol = query.rol;
     }
 
-    // Consultamos DB
-    return await userRepository.findAllUsers(where);
+    // Llamamos repository
+    const users = await userRepository.findAllUsers(where);
+
+    return users;
 };
 
 
 // =======================================================
-// OBTENER USUARIOS CON MASCOTAS (🔥 CORREGIDO)
+// OBTENER USUARIOS CON MASCOTAS
 // =======================================================
 
 const getUsersWithMascotas = async () => {
 
-    // Llamamos al repository correcto
+    // Llamada directa al repository
     return await userRepository.findUsersWithMascotas();
 };
 
@@ -51,14 +60,18 @@ const getUsersWithMascotas = async () => {
 const createUser = async (data) => {
 
     // --------------------------------------------------
-    // VALIDACIÓN
+    // VALIDACIONES
     // --------------------------------------------------
 
-    if (!data.nombre || !data.email || !data.password) {
+    if (!data || typeof data !== "object") {
+        const error = new Error("Datos inválidos");
+        error.statusCode = 400;
+        throw error;
+    }
 
+    if (!data.nombre || !data.email || !data.password) {
         const error = new Error("Nombre, email y password son obligatorios");
         error.statusCode = 400;
-
         throw error;
     }
 
@@ -68,25 +81,22 @@ const createUser = async (data) => {
 
     const rolesValidos = ["admin", "adoptante", "rescatista"];
 
-    // Si no viene rol → default
+    // Default
     if (!data.rol) {
         data.rol = "adoptante";
     }
 
     if (!rolesValidos.includes(data.rol)) {
-
         const error = new Error("Rol inválido");
         error.statusCode = 400;
-
         throw error;
     }
 
     // --------------------------------------------------
-    // ENCRIPTAR PASSWORD 🔐
+    // ENCRIPTAR PASSWORD
     // --------------------------------------------------
 
     const hashedPassword = await bcrypt.hash(data.password, 10);
-
     data.password = hashedPassword;
 
     // --------------------------------------------------
@@ -95,7 +105,7 @@ const createUser = async (data) => {
 
     const usuario = await userRepository.createUser(data);
 
-    // Retornamos objeto limpio (SIN password)
+    // Retornamos sin password (seguridad)
     return {
         id: usuario.id,
         nombre: usuario.nombre,
@@ -113,20 +123,16 @@ const createUser = async (data) => {
 const getUserById = async ({ id }) => {
 
     if (!id) {
-
         const error = new Error("ID requerido");
         error.statusCode = 400;
-
         throw error;
     }
 
     const usuario = await userRepository.findUserById(id);
 
     if (!usuario) {
-
         const error = new Error("Usuario no encontrado");
         error.statusCode = 404;
-
         throw error;
     }
 
@@ -141,52 +147,42 @@ const getUserById = async ({ id }) => {
 const updateUser = async ({ id, data }) => {
 
     if (!id) {
-
         const error = new Error("ID requerido");
         error.statusCode = 400;
+        throw error;
+    }
 
+    if (!data || typeof data !== "object") {
+        const error = new Error("Datos inválidos");
+        error.statusCode = 400;
         throw error;
     }
 
     const usuario = await userRepository.findUserById(id);
 
     if (!usuario) {
-
         const error = new Error("Usuario no encontrado");
         error.statusCode = 404;
-
         throw error;
     }
 
-    // --------------------------------------------------
-    // ENCRIPTAR PASSWORD SI VIENE
-    // --------------------------------------------------
-
+    // Encriptar password si viene
     if (data.password) {
-
         const hashedPassword = await bcrypt.hash(data.password, 10);
-
         data.password = hashedPassword;
     }
 
-    // --------------------------------------------------
-    // VALIDAR ROL
-    // --------------------------------------------------
-
+    // Validar rol
     if (data.rol) {
-
         const rolesValidos = ["admin", "adoptante", "rescatista"];
 
         if (!rolesValidos.includes(data.rol)) {
-
             const error = new Error("Rol inválido");
             error.statusCode = 400;
-
             throw error;
         }
     }
 
-    // Actualizamos
     await userRepository.updateUser(usuario, data);
 
     return {
@@ -202,20 +198,16 @@ const updateUser = async ({ id, data }) => {
 const deleteUser = async ({ id }) => {
 
     if (!id) {
-
         const error = new Error("ID requerido");
         error.statusCode = 400;
-
         throw error;
     }
 
     const usuario = await userRepository.findUserById(id);
 
     if (!usuario) {
-
         const error = new Error("Usuario no encontrado");
         error.statusCode = 404;
-
         throw error;
     }
 
@@ -233,11 +225,14 @@ const deleteUser = async ({ id }) => {
 
 const createUserTransaction = async (data) => {
 
-    // Encriptamos password si viene
+    if (!data || typeof data !== "object") {
+        const error = new Error("Datos inválidos");
+        error.statusCode = 400;
+        throw error;
+    }
+
     if (data.password) {
-
         const hashedPassword = await bcrypt.hash(data.password, 10);
-
         data.password = hashedPassword;
     }
 
@@ -253,13 +248,10 @@ const createUserTransaction = async (data) => {
 };
 
 
-// ------------------------------------------------------
-// EXPORTAR
-// ------------------------------------------------------
-
+// EXPORT
 module.exports = {
     getUsers,
-    getUsersWithMascotas, // 🔥 corregido
+    getUsersWithMascotas,
     createUser,
     getUserById,
     updateUser,

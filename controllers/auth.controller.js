@@ -2,7 +2,8 @@
 // IMPORTAR SERVICIO
 // ------------------------------------------------------
 
-// Aquí vive la lógica de autenticación (validar usuario, generar token, etc.)
+// Importamos el service donde vive la lógica de autenticación
+// (validación de usuario, generación de token, etc.)
 const authService = require("../services/auth.service");
 
 
@@ -15,12 +16,17 @@ const login = async (req, res, next) => {
     try {
 
         // --------------------------------------------------
-        // VALIDACIONES BÁSICAS
+        // EXTRAER DATOS DEL BODY
         // --------------------------------------------------
 
+        // Obtenemos email y password enviados por el cliente
         const { email, password } = req.body;
 
-        // Validación de campos obligatorios
+        // --------------------------------------------------
+        // VALIDACIONES
+        // --------------------------------------------------
+
+        // Validamos que ambos campos existan
         if (!email || !password) {
             return res.status(400).json({
                 status: "error",
@@ -29,7 +35,7 @@ const login = async (req, res, next) => {
             });
         }
 
-        // Validación básica de formato email (mejora nivel pro)
+        // Validamos formato de email (regex básica)
         const emailRegex = /\S+@\S+\.\S+/;
 
         if (!emailRegex.test(email)) {
@@ -41,9 +47,10 @@ const login = async (req, res, next) => {
         }
 
         // --------------------------------------------------
-        // LLAMADA AL SERVICE
+        // LLAMAR AL SERVICE
         // --------------------------------------------------
 
+        // El service se encarga de validar credenciales y generar token
         const result = await authService.login({ email, password });
 
         // --------------------------------------------------
@@ -53,16 +60,16 @@ const login = async (req, res, next) => {
         return res.status(200).json({
             status: "success",
             message: "Login exitoso",
-            data: result // token + user info
+            data: result // incluye token + usuario
         });
 
     } catch (error) {
 
         // --------------------------------------------------
-        // MANEJO DE ERRORES CONTROLADO
+        // MANEJO DE ERRORES
         // --------------------------------------------------
 
-        // Si el service envió error con statusCode → lo respetamos
+        // Si el error viene controlado desde el service
         if (error.statusCode) {
             return res.status(error.statusCode).json({
                 status: "error",
@@ -71,7 +78,7 @@ const login = async (req, res, next) => {
             });
         }
 
-        // Error inesperado
+        // Error inesperado del servidor
         return res.status(500).json({
             status: "error",
             message: "Error interno en login",

@@ -10,16 +10,17 @@ const jwt = require("jsonwebtoken");
 // MIDDLEWARE DE AUTENTICACIÓN
 // ------------------------------------------------------
 
+// Este middleware protege rutas verificando el token JWT
 const authMiddleware = (req, res, next) => {
 
     // --------------------------------------------------
     // OBTENER HEADER AUTHORIZATION
     // --------------------------------------------------
 
-    // Intentamos obtener el header Authorization
+    // Intentamos obtener el header Authorization enviado por el cliente
     const authHeader = req.headers["authorization"];
 
-    // Si no viene token → acceso denegado
+    // Si no existe → el usuario no está autenticado
     if (!authHeader) {
         return res.status(401).json({
             status: "error",
@@ -32,9 +33,10 @@ const authMiddleware = (req, res, next) => {
     // VALIDAR FORMATO DEL TOKEN
     // --------------------------------------------------
 
-    // Formato esperado: "Bearer TOKEN"
+    // El formato correcto es: "Bearer TOKEN"
     const parts = authHeader.split(" ");
 
+    // Validamos estructura del header
     if (parts.length !== 2 || parts[0] !== "Bearer") {
         return res.status(400).json({
             status: "error",
@@ -43,7 +45,7 @@ const authMiddleware = (req, res, next) => {
         });
     }
 
-    // Extraemos el token
+    // Extraemos el token real
     const token = parts[1];
 
     // --------------------------------------------------
@@ -52,23 +54,23 @@ const authMiddleware = (req, res, next) => {
 
     try {
 
-        // Verificamos el token usando la clave secreta
+        // Decodificamos el token usando la clave secreta
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
         // Guardamos los datos del usuario en la request
-        // Esto permite usar req.user en cualquier controller
+        // Esto permite usar req.user en controllers y otros middlewares
         req.user = decoded;
 
-        // Continuamos flujo
+        // Continuamos al siguiente middleware/controlador
         next();
 
     } catch (error) {
 
         // --------------------------------------------------
-        // MANEJO DE ERRORES JWT (MEJORADO)
+        // MANEJO DE ERRORES JWT
         // --------------------------------------------------
 
-        // Token expirado
+        // Si el token expiró
         if (error.name === "TokenExpiredError") {
             return res.status(401).json({
                 status: "error",
@@ -77,7 +79,7 @@ const authMiddleware = (req, res, next) => {
             });
         }
 
-        // Token inválido
+        // Si el token es inválido
         return res.status(401).json({
             status: "error",
             message: "Token inválido",

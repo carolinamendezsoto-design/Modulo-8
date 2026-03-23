@@ -1,181 +1,251 @@
 # 🐾 Huellitas de Amor API
 
-Backend desarrollado con Node.js y Express para gestionar la adopción de mascotas 💛
+API RESTful desarrollada con Node.js y Express para la gestión de adopción de mascotas.
+Permite administrar usuarios, mascotas y solicitudes de adopción con autenticación segura mediante JWT.
 
 ---
 
-## 🌸 Sobre el proyecto
+## 🚀 Tecnologías utilizadas
 
-**Huellitas de Amor** es una API que permite:
-
-- Registrar e iniciar sesión de usuarios
-- Publicar mascotas en adopción
-- Postular a mascotas
-- Gestionar solicitudes de adopción
-- Subir imágenes de mascotas
-
-Este proyecto fue desarrollado como parte del módulo final de backend, integrando todo lo aprendido 💻✨
-
----
-
-## 🛠️ Tecnologías usadas
-
-- Node.js
-- Express
-- Sequelize
-- PostgreSQL
-- JWT (autenticación)
-- Multer (subida de imágenes)
-- bcryptjs
-- dotenv
-- CORS
+* Node.js
+* Express.js
+* Sequelize (ORM)
+* PostgreSQL
+* JSON Web Tokens (JWT)
+* Multer (subida de archivos)
+* Bcrypt (encriptación)
+* HTML + CSS + JS (frontend básico)
 
 ---
 
 ## 📁 Estructura del proyecto
 
-
+```
 src/
-├── config/
-├── controllers/
-├── middlewares/
-├── models/
-├── routes/
-├── services/
-├── uploads/
-├── public/
-├── app.js
-├── server.js
-
+├── controllers/     # Controladores (manejan request/response)
+├── services/        # Lógica de negocio
+├── repositories/    # Acceso a base de datos
+├── models/          # Modelos Sequelize
+├── routes/          # Definición de rutas
+├── middlewares/     # JWT, roles, errores, multer
+├── config/          # Configuración DB
+├── uploads/         # Imágenes subidas
+├── logs/            # Logs del sistema
+└── app.js           # Configuración principal
+```
 
 ---
 
 ## ⚙️ Instalación
 
-1. Clonar repositorio:
+1. Clonar el repositorio:
 
-
+```bash
 git clone https://github.com/carolinamendezsoto-design/Modulo-8.git
-
 cd Modulo-8
-
+```
 
 2. Instalar dependencias:
 
-
+```bash
 npm install
-
+```
 
 3. Crear archivo `.env`:
 
-
+```env
 PORT=3000
-DB_NAME=tu_base
+DB_NAME=tu_db
 DB_USER=tu_usuario
 DB_PASSWORD=tu_password
 DB_HOST=localhost
-JWT_SECRET=secreto
+JWT_SECRET=tu_secreto_super_seguro
+```
 
+4. Ejecutar el servidor:
 
----
-
-## ▶️ Ejecutar proyecto
-
-
+```bash
 npm run dev
-
-
-Servidor en:
-
-
-http://localhost:3000
-
+```
 
 ---
 
-## 🔐 Autenticación
+## 🔐 Autenticación (JWT)
 
 ### Login
 
-
+```http
 POST /api/auth/login
+```
 
-
-Body:
+**Body:**
 
 ```json
 {
-  "email": "correo@email.com",
+  "email": "correo@ejemplo.com",
   "password": "123456"
 }
+```
 
-Respuesta:
+**Respuesta:**
 
+```json
 {
   "status": "success",
   "message": "Login exitoso",
   "data": {
-    "token": "TU_TOKEN"
+    "token": "JWT_TOKEN",
+    "user": {
+      "id": 1,
+      "email": "correo@ejemplo.com",
+      "rol": "admin"
+    }
   }
 }
-🔑 Uso del token
+```
 
-Agregar en headers:
+👉 Usa el token en headers:
 
+```
 Authorization: Bearer TU_TOKEN
-📡 Endpoints principales
-👤 Usuarios
-GET /api/users
-POST /api/users
-DELETE /api/users/:id
-🐶 Mascotas
-GET /api/mascotas
-POST /api/mascotas
-PUT /api/mascotas/:id
-DELETE /api/mascotas/:id
-📄 Solicitudes
-POST /api/solicitudes
-GET /api/solicitudes
-PUT /api/solicitudes/:id
-📤 Subida de imágenes
+```
+
+---
+
+## 👤 Roles del sistema
+
+* **admin** → acceso total
+* **rescatista** → gestiona mascotas
+* **adoptante** → solicita adopciones
+
+---
+
+## 🐶 Endpoints principales
+
+### 👤 Usuarios
+
+| Método | Endpoint       | Descripción            |
+| ------ | -------------- | ---------------------- |
+| GET    | /api/users     | Obtener usuarios       |
+| GET    | /api/users/:id | Obtener usuario por ID |
+| POST   | /api/users     | Crear usuario          |
+| PUT    | /api/users/:id | Actualizar usuario     |
+| DELETE | /api/users/:id | Eliminar usuario       |
+
+---
+
+### 🐾 Mascotas
+
+| Método | Endpoint          | Descripción     |
+| ------ | ----------------- | --------------- |
+| GET    | /api/mascotas     | Listar mascotas |
+| GET    | /api/mascotas/:id | Obtener mascota |
+| POST   | /api/mascotas     | Crear mascota   |
+| PUT    | /api/mascotas/:id | Actualizar      |
+| DELETE | /api/mascotas/:id | Eliminar        |
+
+📌 Permite subir imagen con multer
+
+---
+
+### ❤️ Solicitudes de adopción
+
+| Método | Endpoint                      | Descripción     |
+| ------ | ----------------------------- | --------------- |
+| POST   | /api/solicitudes              | Crear solicitud |
+| GET    | /api/solicitudes/mis          | Mis solicitudes |
+| GET    | /api/solicitudes/mascota/:id  | Ver postulantes |
+| PUT    | /api/solicitudes/:id/aprobar  | Aprobar         |
+| PUT    | /api/solicitudes/:id/rechazar | Rechazar        |
+
+---
+
+## 📸 Subida de archivos
+
+```http
 POST /api/upload
-Tipo: multipart/form-data
-Campo: imagen
-Máximo: 5MB
-Formatos: JPG, PNG, WEBP
-🛡️ Seguridad
-Autenticación con JWT
-Rutas protegidas
-Control de roles
-Validación de archivos
-Manejo global de errores
-⚠️ Manejo de errores
+```
 
-Todas las respuestas tienen formato:
+* Tipos permitidos: JPG, PNG, WEBP
+* Tamaño máximo: 5MB
 
+---
+
+## 🛡️ Seguridad
+
+* Autenticación con JWT
+* Protección de rutas privadas
+* Middleware de roles
+* Validación de archivos
+* Encriptación de contraseñas
+
+---
+
+## 📊 Formato de respuestas
+
+Todas las respuestas siguen estructura estándar:
+
+```json
 {
-  "status": "error",
-  "message": "Descripción del error",
-  "data": null
+  "status": "success | error",
+  "message": "Descripción",
+  "data": {}
 }
-💡 Lo que aprendí
+```
 
-En este proyecto aprendí a:
+---
 
-Crear una API RESTful
-Usar Sequelize y relaciones entre tablas
-Implementar autenticación con JWT
-Subir archivos con Multer
-Organizar un backend en capas (routes, controllers, services)
-💛 Autor
+## 🧠 Arquitectura
 
-Carolina Méndez Soto
+El proyecto sigue una arquitectura modular:
 
-Proyecto final módulo 8
+* **Controllers** → manejan HTTP
+* **Services** → lógica de negocio
+* **Repositories** → acceso a DB
+* **Middlewares** → seguridad y validaciones
 
+---
 
-🐾 Estado del proyecto
+## 🧪 Testing
 
-✔ Funcional
-✔ API completa
-✔ Lista para conectar con frontend
+Se recomienda usar:
+
+* Postman
+* Thunder Client
+
+---
+
+## 💡 Funcionalidades destacadas
+
+* Sistema de roles
+* Flujo completo de adopción
+* Match de mascotas según preferencias
+* Subida de imágenes
+* Arquitectura escalable
+
+---
+
+## 👩‍💻 Autor
+
+**Carolina Méndez Soto**
+
+Proyecto desarrollado como trabajo final del módulo backend (Node.js + Express).
+
+---
+
+## ⭐ Estado del proyecto
+
+✅ Funcional
+✅ API REST completa
+✅ Lista para frontend o consumo externo
+
+---
+
+## 🚀 Mejoras futuras
+
+* Documentación con Swagger
+* Refresh tokens
+* Tests automatizados
+* Deploy en producción
+
+---

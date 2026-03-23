@@ -2,8 +2,7 @@
 // IMPORTAR SERVICE
 // ------------------------------------------------------
 
-// Importamos la capa de lógica de negocio (service)
-// Aquí vive TODA la lógica, el controller solo coordina
+// Importamos la lógica de negocio de mascotas
 const mascotaService = require("../services/mascota.service");
 
 
@@ -11,22 +10,15 @@ const mascotaService = require("../services/mascota.service");
 // OBTENER TODAS LAS MASCOTAS
 // =======================================================
 
-const getMascotas = async (req, res) => {
+const getMascotas = async (req, res, next) => {
 
     try {
 
-        // --------------------------------------------------
-        // LLAMAR SERVICE CON QUERY PARAMS
-        // --------------------------------------------------
-
-        // Pasamos filtros desde la URL (?estado=disponible, etc.)
+        // Llamamos al service pasando filtros (?estado=...)
         const mascotas = await mascotaService.getMascotas(req.query);
 
-        // --------------------------------------------------
-        // RESPUESTA EXITOSA (FORMATO ESTÁNDAR)
-        // --------------------------------------------------
-
-        res.status(200).json({
+        // Respuesta estándar
+        return res.status(200).json({
             status: "success",
             message: "Mascotas obtenidas correctamente",
             data: mascotas
@@ -34,14 +26,8 @@ const getMascotas = async (req, res) => {
 
     } catch (error) {
 
-        // --------------------------------------------------
-        // MANEJO DE ERROR CENTRALIZADO
-        // --------------------------------------------------
-
-        res.status(error.statusCode || 500).json({
-            status: "error",
-            message: error.message || "Error al obtener mascotas"
-        });
+        // Delegamos al middleware global
+        next(error);
     }
 };
 
@@ -51,46 +37,32 @@ const getMascotas = async (req, res) => {
 // OBTENER MASCOTA POR ID
 // =======================================================
 
-const getMascotaById = async (req, res) => {
+const getMascotaById = async (req, res, next) => {
 
     try {
 
-        // --------------------------------------------------
-        // EXTRAER ID DESDE PARAMS
-        // --------------------------------------------------
-
+        // Extraemos ID desde params
         const { id } = req.params;
 
-        // Validación básica
+        // Validación
         if (!id) {
             return res.status(400).json({
                 status: "error",
-                message: "El id es obligatorio"
+                message: "El id es obligatorio",
+                data: null
             });
         }
 
-        // --------------------------------------------------
-        // LLAMAR SERVICE
-        // --------------------------------------------------
-
         const mascota = await mascotaService.getMascotaById({ id });
 
-        // --------------------------------------------------
-        // RESPUESTA
-        // --------------------------------------------------
-
-        res.status(200).json({
+        return res.status(200).json({
             status: "success",
             message: "Mascota obtenida correctamente",
             data: mascota
         });
 
     } catch (error) {
-
-        res.status(error.statusCode || 500).json({
-            status: "error",
-            message: error.message || "Error al obtener mascota"
-        });
+        next(error);
     }
 };
 
@@ -100,61 +72,39 @@ const getMascotaById = async (req, res) => {
 // CREAR MASCOTA
 // =======================================================
 
-const createMascota = async (req, res) => {
+const createMascota = async (req, res, next) => {
 
     try {
 
-        // --------------------------------------------------
-        // EXTRAER DATA DEL BODY
-        // --------------------------------------------------
-
         const data = req.body;
 
-        // Validación mínima (puedes mejorarla después)
+        // Validación básica
         if (!data.nombre || !data.tipo) {
             return res.status(400).json({
                 status: "error",
-                message: "Nombre y tipo son obligatorios"
+                message: "Nombre y tipo son obligatorios",
+                data: null
             });
         }
 
-        // --------------------------------------------------
-        // AGREGAR USER ID (DESDE TOKEN)
-        // --------------------------------------------------
-
-        // El middleware auth ya inyecta req.user
+        // Agregamos usuario autenticado
         data.userId = req.user.id;
 
-        // --------------------------------------------------
-        // AGREGAR IMAGEN SI EXISTE
-        // --------------------------------------------------
-
+        // Si viene imagen (multer)
         if (req.file) {
             data.imagen = req.file.filename;
         }
 
-        // --------------------------------------------------
-        // LLAMAR SERVICE
-        // --------------------------------------------------
-
         const mascota = await mascotaService.createMascota(data);
 
-        // --------------------------------------------------
-        // RESPUESTA
-        // --------------------------------------------------
-
-        res.status(201).json({
+        return res.status(201).json({
             status: "success",
             message: "Mascota creada correctamente",
             data: mascota
         });
 
     } catch (error) {
-
-        res.status(error.statusCode || 500).json({
-            status: "error",
-            message: error.message || "Error al crear mascota"
-        });
+        next(error);
     }
 };
 
@@ -164,13 +114,9 @@ const createMascota = async (req, res) => {
 // ACTUALIZAR MASCOTA
 // =======================================================
 
-const updateMascota = async (req, res) => {
+const updateMascota = async (req, res, next) => {
 
     try {
-
-        // --------------------------------------------------
-        // EXTRAER ID Y DATA
-        // --------------------------------------------------
 
         const { id } = req.params;
         const data = req.body;
@@ -178,40 +124,25 @@ const updateMascota = async (req, res) => {
         if (!id) {
             return res.status(400).json({
                 status: "error",
-                message: "El id es obligatorio"
+                message: "El id es obligatorio",
+                data: null
             });
         }
-
-        // --------------------------------------------------
-        // AGREGAR IMAGEN SI VIENE NUEVA
-        // --------------------------------------------------
 
         if (req.file) {
             data.imagen = req.file.filename;
         }
 
-        // --------------------------------------------------
-        // LLAMAR SERVICE
-        // --------------------------------------------------
-
         const mascota = await mascotaService.updateMascota({ id, data });
 
-        // --------------------------------------------------
-        // RESPUESTA
-        // --------------------------------------------------
-
-        res.status(200).json({
+        return res.status(200).json({
             status: "success",
             message: "Mascota actualizada correctamente",
             data: mascota
         });
 
     } catch (error) {
-
-        res.status(error.statusCode || 500).json({
-            status: "error",
-            message: error.message || "Error al actualizar mascota"
-        });
+        next(error);
     }
 };
 
@@ -221,44 +152,30 @@ const updateMascota = async (req, res) => {
 // ELIMINAR MASCOTA
 // =======================================================
 
-const deleteMascota = async (req, res) => {
+const deleteMascota = async (req, res, next) => {
 
     try {
-
-        // --------------------------------------------------
-        // EXTRAER ID
-        // --------------------------------------------------
 
         const { id } = req.params;
 
         if (!id) {
             return res.status(400).json({
                 status: "error",
-                message: "El id es obligatorio"
+                message: "El id es obligatorio",
+                data: null
             });
         }
 
-        // --------------------------------------------------
-        // LLAMAR SERVICE
-        // --------------------------------------------------
-
         await mascotaService.deleteMascota({ id });
 
-        // --------------------------------------------------
-        // RESPUESTA
-        // --------------------------------------------------
-
-        res.status(200).json({
+        return res.status(200).json({
             status: "success",
-            message: "Mascota eliminada correctamente"
+            message: "Mascota eliminada correctamente",
+            data: null
         });
 
     } catch (error) {
-
-        res.status(error.statusCode || 500).json({
-            status: "error",
-            message: error.message || "Error al eliminar mascota"
-        });
+        next(error);
     }
 };
 
@@ -268,48 +185,32 @@ const deleteMascota = async (req, res) => {
 // MATCH DE MASCOTAS
 // =======================================================
 
-const getMatchMascotas = async (req, res) => {
+const getMatchMascotas = async (req, res, next) => {
 
     try {
 
-        // --------------------------------------------------
-        // LLAMAR SERVICE CON PREFERENCIAS
-        // --------------------------------------------------
-
         const mascotas = await mascotaService.getMatchMascotas(req.query);
 
-        // --------------------------------------------------
-        // RESPUESTA
-        // --------------------------------------------------
-
-        res.status(200).json({
+        return res.status(200).json({
             status: "success",
             message: "Match de mascotas obtenido correctamente",
             data: mascotas
         });
 
     } catch (error) {
-
-        res.status(error.statusCode || 500).json({
-            status: "error",
-            message: error.message || "Error en match de mascotas"
-        });
+        next(error);
     }
 };
 
 
 
 // =======================================================
-// CAMBIAR ESTADO (ADOPCIÓN)
+// CAMBIAR ESTADO
 // =======================================================
 
-const cambiarEstadoMascota = async (req, res) => {
+const cambiarEstadoMascota = async (req, res, next) => {
 
     try {
-
-        // --------------------------------------------------
-        // EXTRAER DATOS
-        // --------------------------------------------------
 
         const { id } = req.params;
         const { estado } = req.body;
@@ -317,44 +218,29 @@ const cambiarEstadoMascota = async (req, res) => {
         if (!id || !estado) {
             return res.status(400).json({
                 status: "error",
-                message: "Id y estado son obligatorios"
+                message: "Id y estado son obligatorios",
+                data: null
             });
         }
-
-        // --------------------------------------------------
-        // LLAMAR SERVICE
-        // --------------------------------------------------
 
         const mascota = await mascotaService.cambiarEstadoMascota({
             id,
             estado
         });
 
-        // --------------------------------------------------
-        // RESPUESTA
-        // --------------------------------------------------
-
-        res.status(200).json({
+        return res.status(200).json({
             status: "success",
             message: "Estado actualizado correctamente",
             data: mascota
         });
 
     } catch (error) {
-
-        res.status(error.statusCode || 500).json({
-            status: "error",
-            message: error.message || "Error al cambiar estado"
-        });
+        next(error);
     }
 };
 
 
-
-// ------------------------------------------------------
-// EXPORTAR CONTROLLER
-// ------------------------------------------------------
-
+// EXPORT
 module.exports = {
     getMascotas,
     getMascotaById,
