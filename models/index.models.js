@@ -2,78 +2,106 @@
 // IMPORTAR MODELOS
 // ------------------------------------------------------
 
-// Importamos modelo de usuario
-const User = require("./user.models");
+// 🔥 IMPORTANTE: nombres consistentes (sin .models si no lo usas en todos)
 
-// Importamos modelo de mascota
-const Mascota = require("./mascota.models");
+// Modelo de usuarios
+const User = require("./user");
 
-// Importamos modelo de solicitud
-const Solicitud = require("./solicitud.models");
+// Modelo de mascotas
+const Mascota = require("./mascota");
+
+// Modelo de solicitudes (tabla intermedia)
+const Solicitud = require("./solicitud");
 
 
 // ------------------------------------------------------
-// RELACIÓN 1:N (USUARIO → MASCOTAS)
+// RELACIÓN 1:N → USER (RESCATISTA) → MASCOTAS
 // ------------------------------------------------------
 
-// Un usuario (rescatista) puede tener muchas mascotas
+// Un usuario puede tener muchas mascotas
 User.hasMany(Mascota, {
-    foreignKey: "userId", // clave foránea en Mascota
-    as: "mascotas"        // alias para consultas
+    foreignKey: "userId",   // FK en Mascota
+    as: "mascotas",         // alias para includes
+    onDelete: "CASCADE",    // si se elimina usuario → elimina mascotas
+    onUpdate: "CASCADE"
 });
 
-// Una mascota pertenece a un usuario
+// Cada mascota pertenece a un usuario (rescatista)
 Mascota.belongsTo(User, {
-    foreignKey: "userId", // clave foránea
-    as: "rescatista"      // alias
+    foreignKey: "userId",
+    as: "rescatista",
+    onDelete: "CASCADE",
+    onUpdate: "CASCADE"
 });
 
 
 // ------------------------------------------------------
-// RELACIÓN N:M (ADOPTANTES ↔ MASCOTAS)
+// RELACIÓN N:M → ADOPTANTE ↔ MASCOTAS (VÍA SOLICITUD)
 // ------------------------------------------------------
 
-// Un usuario (adoptante) puede postular a muchas mascotas
+// Usuario (adoptante) puede postular a muchas mascotas
 User.belongsToMany(Mascota, {
-    through: Solicitud,        // tabla intermedia
-    foreignKey: "adoptanteId", // FK en Solicitud
-    otherKey: "mascotaId",     // FK inversa
-    as: "postulaciones"        // alias
+    through: Solicitud,         // tabla intermedia
+    foreignKey: "adoptanteId",  // FK en Solicitud
+    otherKey: "mascotaId",      // FK inversa
+    as: "postulaciones",        // alias
+    onDelete: "CASCADE"
 });
 
-// Una mascota puede tener muchos adoptantes interesados
+// Mascota puede tener muchos adoptantes interesados
 Mascota.belongsToMany(User, {
-    through: Solicitud,        // tabla intermedia
-    foreignKey: "mascotaId",   // FK en Solicitud
-    otherKey: "adoptanteId",   // FK inversa
-    as: "interesados"          // alias
+    through: Solicitud,
+    foreignKey: "mascotaId",
+    otherKey: "adoptanteId",
+    as: "interesados",
+    onDelete: "CASCADE"
 });
 
 
 // ------------------------------------------------------
-// RELACIONES DIRECTAS (SOLICITUD)
+// RELACIONES DIRECTAS (MUY IMPORTANTE)
 // ------------------------------------------------------
 
-// Cada solicitud pertenece a un usuario (adoptante)
+// 🔥 Esto permite hacer includes directos y queries más claros
+
+// Solicitud → Usuario (adoptante)
 Solicitud.belongsTo(User, {
-    foreignKey: "adoptanteId", // FK
-    as: "adoptante",           // alias
-    onDelete: "CASCADE"        // elimina solicitudes si se borra usuario
+    foreignKey: "adoptanteId",
+    as: "adoptante",
+    onDelete: "CASCADE",
+    onUpdate: "CASCADE"
 });
 
-// Cada solicitud pertenece a una mascota
+// Usuario → Solicitudes
+User.hasMany(Solicitud, {
+    foreignKey: "adoptanteId",
+    as: "solicitudes",
+    onDelete: "CASCADE"
+});
+
+
+// Solicitud → Mascota
 Solicitud.belongsTo(Mascota, {
-    foreignKey: "mascotaId",   // FK
-    as: "mascota",             // alias
-    onDelete: "CASCADE"        // elimina solicitudes si se borra mascota
+    foreignKey: "mascotaId",
+    as: "mascota",
+    onDelete: "CASCADE",
+    onUpdate: "CASCADE"
+});
+
+// Mascota → Solicitudes
+Mascota.hasMany(Solicitud, {
+    foreignKey: "mascotaId",
+    as: "solicitudes",
+    onDelete: "CASCADE"
 });
 
 
 // ------------------------------------------------------
-// EXPORTAR MODELOS
+// EXPORTAR MODELOS CENTRALIZADOS
 // ------------------------------------------------------
 
-// Exportamos todos los modelos centralizados
+// 🔥 Esto permite importar TODO desde un solo lugar
+
 module.exports = {
     User,
     Mascota,

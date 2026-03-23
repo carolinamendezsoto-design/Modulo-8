@@ -2,65 +2,56 @@
 // IMPORTAR DEPENDENCIAS
 // ------------------------------------------------------
 
-// Importamos Express para definir rutas HTTP
 const express = require("express");
-
-// Creamos una instancia del router
 const router = express.Router();
 
 
 // ------------------------------------------------------
-// IMPORTAR CONTROLADOR DE AUTENTICACIÓN
+// IMPORTAR CONTROLADOR
 // ------------------------------------------------------
 
-// Controlador donde está la lógica de login
-const authController = require("../controllers/authController");
+// ⚠️ CORRECCIÓN IMPORTANTE → nombre consistente
+const authController = require("../controllers/auth.controller");
 
 
 // ------------------------------------------------------
-// IMPORTAR MIDDLEWARE DE AUTENTICACIÓN
+// IMPORTAR MIDDLEWARE
 // ------------------------------------------------------
 
-// Middleware que valida el token JWT
-// 🔥 Esto lo usamos para verificar sesión
 const auth = require("../middlewares/auth.middleware");
 
 
 // =======================================================
-// RUTAS DE AUTENTICACIÓN
+// 🔐 RUTAS DE AUTENTICACIÓN
 // =======================================================
 
 
-// =======================================================
-// LOGIN DE USUARIO
-// =======================================================
+// ------------------------------------------------------
+// LOGIN
+// ------------------------------------------------------
 
-// Endpoint: POST /api/auth/login
-// Permite autenticar un usuario y generar JWT
+// POST /api/auth/login
 router.post(
-    "/login",              // ruta relativa
-    authController.login   // controller
+    "/login",
+    authController.login
 );
 
 
-// =======================================================
-// VERIFICAR TOKEN (🔥 NIVEL PRO)
-// =======================================================
+// ------------------------------------------------------
+// VERIFICAR TOKEN
+// ------------------------------------------------------
 
-// Endpoint: GET /api/auth/verify
-// Permite comprobar si el token es válido
+// GET /api/auth/verify
 router.get(
-    "/verify",             // ruta específica
-    auth,                  // requiere token válido
+    "/verify",
+    auth,
     (req, res) => {
 
-        // Si pasa el middleware, el token es válido
-        // y req.user contiene la info del usuario
-
-        res.json({
+        // Si pasa auth → token válido
+        res.status(200).json({
             status: "success",
             message: "Token válido",
-            data: req.user // datos decodificados del JWT
+            data: req.user
         });
     }
 );
@@ -70,5 +61,4 @@ router.get(
 // EXPORTAR ROUTER
 // ------------------------------------------------------
 
-// Exportamos el router para usarlo en index.js
 module.exports = router;

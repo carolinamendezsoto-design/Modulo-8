@@ -2,13 +2,13 @@
 // IMPORTAR DEPENDENCIAS
 // ------------------------------------------------------
 
-// Importamos tipos de datos de Sequelize
+// Tipos de datos de Sequelize
 const { DataTypes } = require("sequelize");
 
-// Importamos la conexión a la base de datos
+// Conexión a la base de datos
 const { sequelize } = require("../config/database");
 
-// Importamos bcrypt para encriptar contraseñas
+// Librería para encriptar contraseñas
 const bcrypt = require("bcrypt");
 
 
@@ -16,126 +16,161 @@ const bcrypt = require("bcrypt");
 // DEFINICIÓN DEL MODELO USER
 // ------------------------------------------------------
 
-// Definimos el modelo User (tabla en la BD)
 const User = sequelize.define("User", {
 
     // --------------------------------------------------
-    // ID
+    // ID (CLAVE PRIMARIA)
     // --------------------------------------------------
 
-    // Identificador único del usuario
     id: {
-        type: DataTypes.INTEGER,   // número entero
-        primaryKey: true,          // clave primaria
-        autoIncrement: true        // autoincremental
+        type: DataTypes.INTEGER,        // número entero
+        primaryKey: true,               // clave primaria
+        autoIncrement: true             // autoincremental
     },
+
 
     // --------------------------------------------------
     // NOMBRE
     // --------------------------------------------------
 
-    // Nombre del usuario
     nombre: {
-        type: DataTypes.STRING,    // texto corto
-        allowNull: false,          // obligatorio
+        type: DataTypes.STRING,
+        allowNull: false,
         validate: {
-            notEmpty: true         // no permite vacío
+            notEmpty: {
+                msg: "El nombre no puede estar vacío"
+            },
+            len: {
+                args: [2, 50],
+                msg: "El nombre debe tener entre 2 y 50 caracteres"
+            }
         }
     },
+
 
     // --------------------------------------------------
     // EMAIL
     // --------------------------------------------------
 
-    // Email del usuario (único)
     email: {
-        type: DataTypes.STRING,    // texto
-        allowNull: false,          // obligatorio
-        unique: true,              // no se puede repetir
+        type: DataTypes.STRING,
+        allowNull: false,
+        unique: true, // evita duplicados
         validate: {
-            isEmail: true,         // validación automática
-            notEmpty: true
+            isEmail: {
+                msg: "Debe ser un email válido"
+            },
+            notEmpty: {
+                msg: "El email es obligatorio"
+            }
         }
     },
+
 
     // --------------------------------------------------
     // PASSWORD
     // --------------------------------------------------
 
-    // Contraseña (se guarda encriptada)
     password: {
-        type: DataTypes.STRING,    // texto
-        allowNull: false,          // obligatorio
+        type: DataTypes.STRING,
+        allowNull: false,
         validate: {
-            len: [6, 100]          // mínimo 6 caracteres
+            len: {
+                args: [6, 100],
+                msg: "La contraseña debe tener al menos 6 caracteres"
+            }
         }
     },
+
 
     // --------------------------------------------------
     // TELÉFONO
     // --------------------------------------------------
 
-    // Número de contacto del usuario
     telefono: {
-        type: DataTypes.STRING,    // texto
-        allowNull: false,          // obligatorio
+        type: DataTypes.STRING,
+        allowNull: false,
         validate: {
-            notEmpty: true
+            notEmpty: {
+                msg: "El teléfono es obligatorio"
+            },
+            len: {
+                args: [8, 15],
+                msg: "El teléfono debe tener entre 8 y 15 caracteres"
+            }
         }
     },
+
 
     // --------------------------------------------------
     // ROL
     // --------------------------------------------------
 
-    // Rol del usuario dentro del sistema
     rol: {
-        type: DataTypes.ENUM("admin", "rescatista", "adoptante"), // ENUM profesional
-        defaultValue: "adoptante" // valor por defecto
+        type: DataTypes.ENUM("admin", "rescatista", "adoptante"),
+        defaultValue: "adoptante"
     }
 
 }, {
 
     // --------------------------------------------------
-    // CONFIGURACIÓN DEL MODELO
+    // CONFIGURACIÓN
     // --------------------------------------------------
 
-    tableName: "users", // nombre de tabla en BD
+    tableName: "users",
+    timestamps: true,
 
-    timestamps: true // createdAt y updatedAt
+    // 🔥 ÍNDICE PRO (mejora búsquedas por email)
+    indexes: [
+        {
+            unique: true,
+            fields: ["email"]
+        }
+    ]
 });
 
 
 // ------------------------------------------------------
-// HOOK: ENCRIPTAR PASSWORD ANTES DE GUARDAR
+// HOOK: ENCRIPTAR PASSWORD
 // ------------------------------------------------------
 
-// Antes de crear un usuario en la BD
 User.beforeCreate(async (user) => {
 
-    // Generamos un "salt" (nivel de seguridad)
+    // Normalizar email
+    user.email = user.email.toLowerCase().trim();
+
+    // Generar salt
     const salt = await bcrypt.genSalt(10);
 
-    // Encriptamos la contraseña usando bcrypt
+    // Encriptar password
     user.password = await bcrypt.hash(user.password, salt);
 });
 
 
+// 🔥 IMPORTANTE (nivel pro real)
+// También en update si cambia password
+User.beforeUpdate(async (user) => {
+
+    if (user.changed("password")) {
+
+        const salt = await bcrypt.genSalt(10);
+        user.password = await bcrypt.hash(user.password, salt);
+    }
+});
+
+
 // ------------------------------------------------------
-// MÉTODO PERSONALIZADO (🔥 PRO)
+// MÉTODO PERSONALIZADO
 // ------------------------------------------------------
 
-// Método para comparar contraseñas (login)
 User.prototype.comparePassword = async function (password) {
 
-    // Comparamos password ingresado con el hash almacenado
     return await bcrypt.compare(password, this.password);
 };
 
 
 // ------------------------------------------------------
-// EXPORTAR MODELO
+// EXPORTAR
 // ------------------------------------------------------
 
-// Exportamos modelo para usar en services/controllers
 module.exports = User;

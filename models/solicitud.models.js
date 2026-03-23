@@ -12,21 +12,14 @@ const { sequelize } = require("../config/database");
 
 const Solicitud = sequelize.define("Solicitud", {
 
-    // --------------------------------------------------
     // ID
-    // --------------------------------------------------
-
     id: {
         type: DataTypes.INTEGER,
         primaryKey: true,
         autoIncrement: true
     },
 
-
-    // --------------------------------------------------
-    // MASCOTA ID (FK)
-    // --------------------------------------------------
-
+    // FK MASCOTA
     mascotaId: {
         type: DataTypes.INTEGER,
         allowNull: false,
@@ -37,11 +30,7 @@ const Solicitud = sequelize.define("Solicitud", {
         }
     },
 
-
-    // --------------------------------------------------
-    // ADOPTANTE ID (FK)
-    // --------------------------------------------------
-
+    // FK ADOPTANTE
     adoptanteId: {
         type: DataTypes.INTEGER,
         allowNull: false,
@@ -52,11 +41,7 @@ const Solicitud = sequelize.define("Solicitud", {
         }
     },
 
-
-    // --------------------------------------------------
     // MENSAJE
-    // --------------------------------------------------
-
     mensaje: {
         type: DataTypes.TEXT,
         allowNull: true,
@@ -68,11 +53,7 @@ const Solicitud = sequelize.define("Solicitud", {
         }
     },
 
-
-    // --------------------------------------------------
     // ESTADO
-    // --------------------------------------------------
-
     estado: {
         type: DataTypes.ENUM("pendiente", "aprobado", "rechazado"),
         defaultValue: "pendiente"
@@ -80,40 +61,30 @@ const Solicitud = sequelize.define("Solicitud", {
 
 }, {
 
-    // --------------------------------------------------
-    // CONFIGURACIÓN
-    // --------------------------------------------------
-
     tableName: "solicitudes",
     timestamps: true,
-
-    // --------------------------------------------------
-    // ÍNDICES (🔥 CLAVE PARA EL 7)
-    // --------------------------------------------------
 
     indexes: [
         {
             unique: true,
-            fields: ["mascotaId", "adoptanteId"] // evita duplicados
+            fields: ["mascotaId", "adoptanteId"]
         },
         {
-            fields: ["estado"] // mejora consultas
+            fields: ["estado"]
         }
     ]
 });
 
 
 // ------------------------------------------------------
-// HOOKS (🔥 NIVEL PRO)
+// HOOKS
 // ------------------------------------------------------
 
 Solicitud.beforeCreate((solicitud) => {
 
-    // Normalizar mensaje (si existe)
     if (solicitud.mensaje) {
         solicitud.mensaje = solicitud.mensaje.trim();
     }
-
 });
 
 

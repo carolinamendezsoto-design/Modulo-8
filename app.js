@@ -2,11 +2,11 @@
 // IMPORTAR DEPENDENCIAS
 // ------------------------------------------------------
 
-const express = require("express"); // Framework backend
-const path = require("path");       // Manejo de rutas
-const cors = require("cors");       // Permite conexión frontend-backend
+const express = require("express");     // Framework backend
+const path = require("path");           // Manejo de rutas del sistema
+const cors = require("cors");           // Permite conexión frontend-backend
 
-// Cargar variables de entorno
+// Variables de entorno (.env)
 require("dotenv").config();
 
 
@@ -14,15 +14,15 @@ require("dotenv").config();
 // IMPORTAR MIDDLEWARES
 // ------------------------------------------------------
 
-const logger = require("./middlewares/logger"); // Logger de requests
+const logger = require("./middlewares/logger");              // Logger de requests
 const errorMiddleware = require("./middlewares/error.middleware"); // Manejo global de errores
 
 
 // ------------------------------------------------------
-// IMPORTAR MODELOS
+// IMPORTAR MODELOS (REGISTRO EN SEQUELIZE)
 // ------------------------------------------------------
 
-// Se importan solo para registrar en Sequelize
+// 🔥 Esto asegura que Sequelize cargue los modelos
 require("./models/user");
 require("./models/mascota");
 require("./models/solicitud");
@@ -40,20 +40,31 @@ const solicitudRoutes = require("./routes/solicitud.routes");
 
 
 // ------------------------------------------------------
-// CREAR APP
+// CREAR INSTANCIA DE EXPRESS
 // ------------------------------------------------------
 
 const app = express();
 
 
 // ------------------------------------------------------
+// CONFIGURACIÓN GLOBAL
+// ------------------------------------------------------
+
+// 🔥 Puerto desde .env o fallback
+const PORT = process.env.PORT || 3000;
+
+
+// ------------------------------------------------------
 // MIDDLEWARES GLOBALES
 // ------------------------------------------------------
 
-// Permitir recibir JSON en requests
+// Permite recibir JSON en body
 app.use(express.json());
 
-// Permitir CORS (evita errores entre puertos)
+// 🔥 Mejora pro: limitar tamaño del body (seguridad)
+app.use(express.json({ limit: "10mb" }));
+
+// Habilita CORS (permite conexión frontend)
 app.use(cors());
 
 // Logger de peticiones HTTP
@@ -64,7 +75,7 @@ app.use(logger);
 // ARCHIVOS ESTÁTICOS
 // ------------------------------------------------------
 
-// Servir frontend
+// Servir frontend (HTML, CSS, JS)
 app.use(express.static(path.join(__dirname, "public")));
 
 // Servir imágenes subidas
@@ -72,20 +83,23 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 
 // ------------------------------------------------------
-// RUTAS BÁSICAS
+// RUTAS BASE
 // ------------------------------------------------------
 
-// Ruta principal
+// Ruta raíz → carga index.html
 app.get("/", (req, res) => {
     res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
-// Ruta de salud del servidor (health check)
+// 🔥 Health check (muy usado en producción)
 app.get("/status", (req, res) => {
     res.json({
         status: "success",
         message: "Servidor activo",
-        data: null
+        data: {
+            uptime: process.uptime(),        // tiempo activo del server
+            timestamp: new Date()            // fecha actual
+        }
     });
 });
 
@@ -94,7 +108,7 @@ app.get("/status", (req, res) => {
 // RUTAS API
 // ------------------------------------------------------
 
-// Prefijo /api para mantener orden REST
+// Prefijo /api → organización REST
 
 app.use("/api/users", userRoutes);
 app.use("/api/auth", authRoutes);
@@ -104,21 +118,21 @@ app.use("/api/solicitudes", solicitudRoutes);
 
 
 // ------------------------------------------------------
-// MIDDLEWARE 404 (NUEVO 🔥 MUY IMPORTANTE)
+// MIDDLEWARE 404
 // ------------------------------------------------------
 
-// Si ninguna ruta coincide, devolvemos error controlado
+// Si ninguna ruta coincide → error controlado
 app.use((req, res, next) => {
     res.status(404).json({
         status: "error",
-        message: "Ruta no encontrada",
+        message: `Ruta no encontrada: ${req.originalUrl}`,
         data: null
     });
 });
 
 
 // ------------------------------------------------------
-// MIDDLEWARE DE ERRORES
+// MIDDLEWARE GLOBAL DE ERRORES
 // ------------------------------------------------------
 
 // ⚠️ SIEMPRE AL FINAL

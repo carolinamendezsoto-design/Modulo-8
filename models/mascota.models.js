@@ -2,10 +2,7 @@
 // IMPORTAR DEPENDENCIAS
 // ------------------------------------------------------
 
-// Tipos de datos de Sequelize
 const { DataTypes } = require("sequelize");
-
-// Conexión a la base de datos
 const { sequelize } = require("../config/database");
 
 
@@ -15,38 +12,31 @@ const { sequelize } = require("../config/database");
 
 const Mascota = sequelize.define("Mascota", {
 
-    // --------------------------------------------------
-    // ID (CLAVE PRIMARIA)
-    // --------------------------------------------------
-
+    // ID
     id: {
-        type: DataTypes.INTEGER,          // número entero
-        primaryKey: true,                 // clave primaria
-        autoIncrement: true               // autoincremental
+        type: DataTypes.INTEGER,
+        primaryKey: true,
+        autoIncrement: true
     },
 
-
-    // --------------------------------------------------
     // NOMBRE
-    // --------------------------------------------------
-
     nombre: {
-        type: DataTypes.STRING,           // texto corto
-        allowNull: false,                 // obligatorio
+        type: DataTypes.STRING,
+        allowNull: false,
         validate: {
             notEmpty: {
                 msg: "El nombre no puede estar vacío"
+            },
+            len: {
+                args: [2, 50],
+                msg: "El nombre debe tener entre 2 y 50 caracteres"
             }
         }
     },
 
-
-    // --------------------------------------------------
     // EDAD
-    // --------------------------------------------------
-
     edad: {
-        type: DataTypes.INTEGER,          // entero
+        type: DataTypes.INTEGER,
         allowNull: false,
         validate: {
             isInt: {
@@ -59,33 +49,21 @@ const Mascota = sequelize.define("Mascota", {
         }
     },
 
-
-    // --------------------------------------------------
     // PORTE
-    // --------------------------------------------------
-
     porte: {
-        type: DataTypes.ENUM("pequeño", "mediano", "grande"), // 🔥 mejor que string libre
+        type: DataTypes.ENUM("pequeño", "mediano", "grande"),
         allowNull: false
     },
 
-
-    // --------------------------------------------------
     // ENERGÍA
-    // --------------------------------------------------
-
     energia: {
-        type: DataTypes.ENUM("baja", "media", "alta"), // 🔥 control total
+        type: DataTypes.ENUM("baja", "media", "alta"),
         allowNull: false
     },
 
-
-    // --------------------------------------------------
     // DESCRIPCIÓN
-    // --------------------------------------------------
-
     descripcion: {
-        type: DataTypes.TEXT,             // texto largo
+        type: DataTypes.TEXT,
         allowNull: false,
         validate: {
             len: {
@@ -95,81 +73,60 @@ const Mascota = sequelize.define("Mascota", {
         }
     },
 
-
-    // --------------------------------------------------
     // IMAGEN
-    // --------------------------------------------------
-
     imagen: {
         type: DataTypes.STRING,
         allowNull: true,
-        defaultValue: "default.jpg" // 🔥 fallback pro
+        defaultValue: "default.jpg"
     },
 
-
-    // --------------------------------------------------
     // ESTADO
-    // --------------------------------------------------
-
     estado: {
         type: DataTypes.ENUM("disponible", "adoptado"),
         defaultValue: "disponible"
     },
 
-
-    // --------------------------------------------------
-    // USER ID (FOREIGN KEY)
-    // --------------------------------------------------
-
+    // FK USER
     userId: {
         type: DataTypes.INTEGER,
         allowNull: false,
         validate: {
-            isInt: true
+            isInt: {
+                msg: "userId debe ser un número entero"
+            }
         }
     }
 
 }, {
 
-    // --------------------------------------------------
-    // CONFIGURACIÓN DEL MODELO
-    // --------------------------------------------------
-
-    tableName: "mascotas",     // nombre real en DB
-    timestamps: true,          // createdAt / updatedAt
-
-    // --------------------------------------------------
-    // ÍNDICES (🔥 NIVEL PRO)
-    // --------------------------------------------------
+    tableName: "mascotas",
+    timestamps: true,
 
     indexes: [
-        {
-            fields: ["estado"] // búsquedas rápidas por estado
-        },
-        {
-            fields: ["userId"] // consultas por usuario
-        }
+        { fields: ["estado"] },
+        { fields: ["userId"] }
     ]
-
 });
 
 
 // ------------------------------------------------------
-// HOOKS (🔥 NIVEL SENIOR)
+// HOOKS
 // ------------------------------------------------------
 
 Mascota.beforeCreate((mascota) => {
 
-    // Normalizar texto (buena práctica)
     if (mascota.nombre) {
         mascota.nombre = mascota.nombre.trim();
     }
 
+    if (mascota.descripcion) {
+        mascota.descripcion = mascota.descripcion.trim();
+    }
 });
 
 
 // ------------------------------------------------------
-// EXPORTAR MODELO
+// EXPORTAR
 // ------------------------------------------------------
 
 module.exports = Mascota;

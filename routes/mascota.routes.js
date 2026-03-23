@@ -2,18 +2,14 @@
 // IMPORTAR DEPENDENCIAS
 // ------------------------------------------------------
 
-// Express para definir rutas
-const express = require("express");
-
-// Router de Express
-const router = express.Router();
+const express = require("express"); // framework
+const router = express.Router();    // instancia router
 
 
 // ------------------------------------------------------
 // IMPORTAR CONTROLADOR
 // ------------------------------------------------------
 
-// Controlador (NO lógica aquí)
 const mascotaController = require("../controllers/mascota.controller");
 
 
@@ -21,30 +17,24 @@ const mascotaController = require("../controllers/mascota.controller");
 // IMPORTAR MIDDLEWARES
 // ------------------------------------------------------
 
-// Autenticación (JWT)
-const auth = require("../middlewares/auth.middleware");
-
-// Subida de archivos (multer)
-const upload = require("../middlewares/upload.middleware");
+const auth = require("../middlewares/auth.middleware");       // JWT
+const upload = require("../middlewares/upload.middleware");   // multer
 
 
 // =======================================================
-// 🔥 RUTAS ESPECÍFICAS (SIEMPRE PRIMERO)
+// 🔥 RUTAS ESPECÍFICAS (ANTES DE :id)
 // =======================================================
-
-// ⚠️ IMPORTANTE:
-// Estas rutas van antes de "/:id"
-// para evitar conflictos de routing
 
 
 // ------------------------------------------------------
 // MATCH DE MASCOTAS
 // ------------------------------------------------------
 
-// GET /api/mascotas/match/filtro
+// GET /api/mascotas/match
+// Mejor práctica REST → no usar /filtro
 router.get(
-    "/match/filtro",                      // ruta específica
-    mascotaController.getMatchMascotas    // controller
+    "/match",
+    mascotaController.getMatchMascotas
 );
 
 
@@ -54,8 +44,8 @@ router.get(
 
 // PUT /api/mascotas/:id/estado
 router.put(
-    "/:id/estado",                        // 🔥 ruta específica
-    auth,                                 // requiere login
+    "/:id/estado",
+    auth, // requiere autenticación
     mascotaController.cambiarEstadoMascota
 );
 
@@ -71,7 +61,7 @@ router.put(
 
 // GET /api/mascotas
 router.get(
-    "/",                                  // ruta base
+    "/",
     mascotaController.getMascotas
 );
 
@@ -80,9 +70,8 @@ router.get(
 // OBTENER MASCOTA POR ID
 // ------------------------------------------------------
 
-// ⚠️ SIEMPRE DESPUÉS DE RUTAS ESPECÍFICAS
-
 // GET /api/mascotas/:id
+// ⚠️ siempre después de rutas específicas
 router.get(
     "/:id",
     mascotaController.getMascotaById
@@ -95,9 +84,9 @@ router.get(
 
 // POST /api/mascotas
 router.post(
-    "/",                                  // base
-    auth,                                 // requiere usuario
-    upload.single("imagen"),               // subida de imagen
+    "/",
+    auth,                       // requiere usuario logueado
+    upload.single("imagen"),   // subida de imagen
     mascotaController.createMascota
 );
 
@@ -110,7 +99,7 @@ router.post(
 router.put(
     "/:id",
     auth,
-    upload.single("imagen"),               // opcional
+    upload.single("imagen"), // opcional
     mascotaController.updateMascota
 );
 

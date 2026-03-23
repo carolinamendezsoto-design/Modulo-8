@@ -2,55 +2,66 @@
 // IMPORTAR DEPENDENCIAS
 // ------------------------------------------------------
 
-// Multer permite manejar subida de archivos en Express
+// Multer → manejo de subida de archivos
 const multer = require("multer");
 
-// Path ayuda a manejar rutas y extensiones de archivos
+// Path → manejo de rutas del sistema
 const path = require("path");
 
-// File system para validar/crear carpeta uploads
+// FS → sistema de archivos (crear carpetas, validar existencia)
 const fs = require("fs");
 
 
 // ------------------------------------------------------
-// ASEGURAR QUE EXISTE LA CARPETA UPLOADS
+// ASEGURAR CARPETA UPLOADS
 // ------------------------------------------------------
 
-// Definimos la ruta de la carpeta uploads
+// Ruta absoluta hacia la carpeta uploads
 const uploadDir = path.join(__dirname, "..", "uploads");
 
-// Si la carpeta no existe, la creamos automáticamente
+// Si la carpeta NO existe → la creamos automáticamente
 if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir, { recursive: true });
 }
 
 
 // ------------------------------------------------------
-// CONFIGURACIÓN DE ALMACENAMIENTO
+// FUNCIÓN AUXILIAR: LIMPIAR NOMBRE DE ARCHIVO
 // ------------------------------------------------------
 
-// Definimos cómo y dónde se guardarán los archivos
+// 🔥 Mejora pro: sanitiza nombres (evita problemas y ataques básicos)
+const sanitizeFileName = (filename) => {
+    return filename
+        .replace(/\s+/g, "_")           // espacios → _
+        .replace(/[^a-zA-Z0-9._-]/g, "") // elimina caracteres raros
+        .toLowerCase();                // todo en minúscula
+};
+
+
+// ------------------------------------------------------
+// CONFIGURACIÓN DE STORAGE
+// ------------------------------------------------------
+
 const storage = multer.diskStorage({
 
-    // Carpeta donde se guardan los archivos
+    // 📁 Dónde guardar archivos
     destination: (req, file, cb) => {
-
-        // Guardamos en la carpeta uploads (ruta absoluta para evitar errores)
         cb(null, uploadDir);
     },
 
-    // Nombre del archivo
+    // 🏷️ Cómo nombrar archivos
     filename: (req, file, cb) => {
 
-        // Sanitizamos el nombre original (evita espacios raros)
-        const safeName = file.originalname
-            .replace(/\s+/g, "_") // reemplaza espacios por _
-            .toLowerCase();
+        // Limpiamos nombre original
+        const safeName = sanitizeFileName(file.originalname);
 
-        // Generamos nombre único: timestamp + nombre limpio
-        const uniqueName = `${Date.now()}-${safeName}`;
+        // Extraemos extensión (.jpg, .png, etc.)
+        const ext = path.extname(safeName);
 
-        // Guardamos el archivo con ese nombre
+        // Generamos nombre único (timestamp + random)
+        const uniqueName = `${Date.now()}-${Math.round(Math.random() * 1e9)}${ext}`;
+
+        // Guardamos archivo con nombre seguro
         cb(null, uniqueName);
     }
 });
@@ -60,10 +71,9 @@ const storage = multer.diskStorage({
 // FILTRO DE ARCHIVOS (SEGURIDAD)
 // ------------------------------------------------------
 
-// Función que valida tipo de archivo
 const fileFilter = (req, file, cb) => {
 
-    // Tipos MIME permitidos (más seguro que regex simple)
+    // Tipos permitidos
     const allowedMimeTypes = [
         "image/jpeg",
         "image/jpg",
@@ -71,16 +81,15 @@ const fileFilter = (req, file, cb) => {
         "image/webp"
     ];
 
-    // Validamos si el tipo del archivo está permitido
+    // Validar tipo MIME
     if (allowedMimeTypes.includes(file.mimetype)) {
 
-        // Permitimos el archivo
         cb(null, true);
 
     } else {
 
-        // Rechazamos archivo con error claro
-        cb(new Error("Tipo de archivo no permitido. Solo imágenes (jpg, jpeg, png, webp)"));
+        // 🔥 Error claro para frontend
+        cb(new Error("Tipo de archivo no permitido. Solo imágenes (jpg, jpeg, png, webp)"), false);
     }
 };
 
@@ -89,38 +98,46 @@ const fileFilter = (req, file, cb) => {
 // CONFIGURACIÓN FINAL DE MULTER
 // ------------------------------------------------------
 
-// Creamos instancia de multer con configuración completa
 const upload = multer({
 
-    // Configuración de almacenamiento
+    // Dónde y cómo guardar archivos
     storage,
 
-    // Límite de tamaño del archivo (5MB)
+    // 🔥 Límite de tamaño (5MB)
     limits: {
         fileSize: 5 * 1024 * 1024
     },
 
-    // Validación de tipo de archivo
+    // Validación de archivos
     fileFilter
 });
 
 
 // ------------------------------------------------------
-// MIDDLEWARE DE MANEJO DE ERRORES DE MULTER
+// MIDDLEWARE DE ERRORES (PRO)
 // ------------------------------------------------------
 
-// Este middleware captura errores específicos de multer
 const handleMulterError = (err, req, res, next) => {
 
-    // Error de multer (ej: tamaño excedido)
+    // Error propio de multer (ej: archivo muy grande)
     if (err instanceof multer.MulterError) {
+
+        // Error específico por tamaño
+        if (err.code === "LIMIT_FILE_SIZE") {
+            return res.status(400).json({
+                status: "error",
+                message: "El archivo supera el tamaño máximo permitido (5MB)"
+            });
+        }
+
+        // Otros errores de multer
         return res.status(400).json({
             status: "error",
-            message: `Error de subida: ${err.message}`
+            message: err.message
         });
     }
 
-    // Error personalizado (tipo de archivo no permitido)
+    // Error personalizado (fileFilter, etc.)
     if (err) {
         return res.status(400).json({
             status: "error",
@@ -128,17 +145,16 @@ const handleMulterError = (err, req, res, next) => {
         });
     }
 
-    // Si no hay error, continúa
+    // Si no hay errores → continúa
     next();
 };
 
 
 // ------------------------------------------------------
-// EXPORTAR MIDDLEWARES
+// EXPORTAR
 // ------------------------------------------------------
 
-// Exportamos upload y el manejador de errores
 module.exports = {
-    upload,
-    handleMulterError
+    upload,              // middleware principal
+    handleMulterError    // middleware de errores
 };

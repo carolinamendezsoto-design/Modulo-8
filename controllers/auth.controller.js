@@ -2,7 +2,7 @@
 // IMPORTAR SERVICIO
 // ------------------------------------------------------
 
-// Importamos el servicio de autenticación donde vive la lógica del login
+// Aquí vive la lógica de autenticación (validar usuario, generar token, etc.)
 const authService = require("../services/auth.service");
 
 
@@ -10,19 +10,17 @@ const authService = require("../services/auth.service");
 // CONTROLADOR LOGIN
 // ------------------------------------------------------
 
-// Maneja la petición POST /auth/login
 const login = async (req, res, next) => {
 
     try {
 
         // --------------------------------------------------
-        // VALIDACIONES BÁSICAS (🔥 IMPORTANTE PARA LA NOTA)
+        // VALIDACIONES BÁSICAS
         // --------------------------------------------------
 
-        // Extraemos email y password del body
         const { email, password } = req.body;
 
-        // Validamos que existan los campos obligatorios
+        // Validación de campos obligatorios
         if (!email || !password) {
             return res.status(400).json({
                 status: "error",
@@ -31,32 +29,54 @@ const login = async (req, res, next) => {
             });
         }
 
+        // Validación básica de formato email (mejora nivel pro)
+        const emailRegex = /\S+@\S+\.\S+/;
+
+        if (!emailRegex.test(email)) {
+            return res.status(400).json({
+                status: "error",
+                message: "Formato de email inválido",
+                data: null
+            });
+        }
+
         // --------------------------------------------------
         // LLAMADA AL SERVICE
         // --------------------------------------------------
 
-        // Enviamos los datos al service para validar usuario
         const result = await authService.login({ email, password });
 
         // --------------------------------------------------
-        // RESPUESTA ESTÁNDAR (PRO 🔥)
+        // RESPUESTA EXITOSA
         // --------------------------------------------------
 
-        // Respondemos con estructura consistente (como pide la consigna)
         return res.status(200).json({
             status: "success",
             message: "Login exitoso",
-            data: result
+            data: result // token + user info
         });
 
     } catch (error) {
 
         // --------------------------------------------------
-        // MANEJO DE ERRORES
+        // MANEJO DE ERRORES CONTROLADO
         // --------------------------------------------------
 
-        // Delegamos el error al middleware global de errores
-        next(error);
+        // Si el service envió error con statusCode → lo respetamos
+        if (error.statusCode) {
+            return res.status(error.statusCode).json({
+                status: "error",
+                message: error.message,
+                data: null
+            });
+        }
+
+        // Error inesperado
+        return res.status(500).json({
+            status: "error",
+            message: "Error interno en login",
+            data: null
+        });
     }
 };
 
@@ -65,7 +85,6 @@ const login = async (req, res, next) => {
 // EXPORTAR CONTROLADOR
 // ------------------------------------------------------
 
-// Exportamos el método login para usarlo en las rutas
 module.exports = {
     login
 };

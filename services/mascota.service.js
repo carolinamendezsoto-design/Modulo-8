@@ -3,6 +3,7 @@
 // ------------------------------------------------------
 
 // Capa de acceso a datos (NO usamos Sequelize directo aquí)
+// Esto mantiene el service limpio y desacoplado de la DB
 const mascotaRepository = require("../repositories/mascota.repository");
 
 
@@ -16,8 +17,11 @@ const getMascotas = async (query = {}) => {
     // VALIDACIÓN DE QUERY
     // --------------------------------------------------
 
+    // Validamos que query sea un objeto válido
     if (typeof query !== "object") {
-        throw new Error("Los filtros deben ser un objeto");
+        const error = new Error("Los filtros deben ser un objeto");
+        error.statusCode = 400;
+        throw error;
     }
 
     // --------------------------------------------------
@@ -26,7 +30,7 @@ const getMascotas = async (query = {}) => {
 
     const filtros = {};
 
-    // Solo agregamos si existen (evita basura en query)
+    // Solo agregamos propiedades válidas (evita basura o SQL injection indirecto)
     if (query.estado) filtros.estado = query.estado;
     if (query.energia) filtros.energia = query.energia;
     if (query.porte) filtros.porte = query.porte;
@@ -35,7 +39,10 @@ const getMascotas = async (query = {}) => {
     // LLAMADA AL REPOSITORY
     // --------------------------------------------------
 
-    return await mascotaRepository.getMascotas(filtros);
+    const mascotas = await mascotaRepository.getMascotas(filtros);
+
+    // Retornamos siempre array (aunque esté vacío)
+    return mascotas;
 };
 
 
@@ -87,24 +94,35 @@ const createMascota = async (data) => {
     // VALIDACIONES DE NEGOCIO
     // --------------------------------------------------
 
-    if (!data) {
-        throw new Error("Datos requeridos");
+    if (!data || typeof data !== "object") {
+        const error = new Error("Datos inválidos");
+        error.statusCode = 400;
+        throw error;
     }
 
+    // Validaciones obligatorias
     if (!data.nombre) {
-        throw new Error("El nombre es obligatorio");
+        const error = new Error("El nombre es obligatorio");
+        error.statusCode = 400;
+        throw error;
     }
 
     if (!data.edad) {
-        throw new Error("La edad es obligatoria");
+        const error = new Error("La edad es obligatoria");
+        error.statusCode = 400;
+        throw error;
     }
 
     if (!data.descripcion || data.descripcion.length < 10) {
-        throw new Error("La descripción debe tener al menos 10 caracteres");
+        const error = new Error("La descripción debe tener al menos 10 caracteres");
+        error.statusCode = 400;
+        throw error;
     }
 
     if (!data.userId) {
-        throw new Error("El usuario es obligatorio");
+        const error = new Error("El usuario es obligatorio");
+        error.statusCode = 400;
+        throw error;
     }
 
     // --------------------------------------------------
@@ -112,14 +130,16 @@ const createMascota = async (data) => {
     // --------------------------------------------------
 
     if (!data.estado) {
-        data.estado = "disponible";
+        data.estado = "disponible"; // regla de negocio
     }
 
     // --------------------------------------------------
     // CREACIÓN
     // --------------------------------------------------
 
-    return await mascotaRepository.createMascota(data);
+    const nuevaMascota = await mascotaRepository.createMascota(data);
+
+    return nuevaMascota;
 };
 
 
@@ -140,8 +160,10 @@ const updateMascota = async ({ id, data }) => {
         throw error;
     }
 
-    if (!data) {
-        throw new Error("Datos requeridos para actualizar");
+    if (!data || typeof data !== "object") {
+        const error = new Error("Datos inválidos para actualizar");
+        error.statusCode = 400;
+        throw error;
     }
 
     // --------------------------------------------------
@@ -160,7 +182,9 @@ const updateMascota = async ({ id, data }) => {
     // ACTUALIZACIÓN
     // --------------------------------------------------
 
-    return await mascotaRepository.updateMascota(id, data);
+    const mascotaActualizada = await mascotaRepository.updateMascota(id, data);
+
+    return mascotaActualizada;
 };
 
 
@@ -197,6 +221,7 @@ const deleteMascota = async ({ id }) => {
         throw error;
     }
 
+    // Buena práctica: retornar mensaje claro
     return {
         message: "Mascota eliminada correctamente"
     };
@@ -205,7 +230,7 @@ const deleteMascota = async ({ id }) => {
 
 
 // =======================================================
-// MATCH DE MASCOTAS (🔥 DIFERENCIADOR)
+// MATCH DE MASCOTAS (🔥 DIFERENCIADOR PRO)
 // =======================================================
 
 const getMatchMascotas = async (preferencias = {}) => {
@@ -215,7 +240,9 @@ const getMatchMascotas = async (preferencias = {}) => {
     // --------------------------------------------------
 
     if (typeof preferencias !== "object") {
-        throw new Error("Preferencias inválidas");
+        const error = new Error("Preferencias inválidas");
+        error.statusCode = 400;
+        throw error;
     }
 
     // --------------------------------------------------
@@ -227,29 +254,31 @@ const getMatchMascotas = async (preferencias = {}) => {
     });
 
     // --------------------------------------------------
-    // CALCULAR MATCH
+    // CALCULAR MATCH (ALGORITMO SIMPLE)
     // --------------------------------------------------
 
     const resultado = mascotas.map(mascota => {
 
         let score = 0;
 
+        // Comparación por energía
         if (preferencias.energia && mascota.energia === preferencias.energia) {
             score++;
         }
 
+        // Comparación por porte
         if (preferencias.porte && mascota.porte === preferencias.porte) {
             score++;
         }
 
         return {
-            ...mascota.toJSON(), // evitar problemas Sequelize
+            ...mascota.toJSON(), // importante para evitar problemas Sequelize
             match: score
         };
     });
 
     // --------------------------------------------------
-    // ORDENAR RESULTADOS
+    // ORDENAR RESULTADOS (MEJOR MATCH PRIMERO)
     // --------------------------------------------------
 
     return resultado.sort((a, b) => b.match - a.match);
@@ -287,7 +316,6 @@ const cambiarEstadoMascota = async ({ id, estado }) => {
 
     return mascota;
 };
-
 
 
 // ------------------------------------------------------

@@ -2,7 +2,8 @@
 // IMPORTAR SERVICE
 // ------------------------------------------------------
 
-// Importamos la capa de lógica de negocio
+// Importamos la capa de lógica de negocio (service)
+// Aquí vive TODA la lógica, el controller solo coordina
 const mascotaService = require("../services/mascota.service");
 
 
@@ -18,22 +19,28 @@ const getMascotas = async (req, res) => {
         // LLAMAR SERVICE CON QUERY PARAMS
         // --------------------------------------------------
 
+        // Pasamos filtros desde la URL (?estado=disponible, etc.)
         const mascotas = await mascotaService.getMascotas(req.query);
 
         // --------------------------------------------------
-        // RESPUESTA EXITOSA
+        // RESPUESTA EXITOSA (FORMATO ESTÁNDAR)
         // --------------------------------------------------
 
-        res.status(200).json(mascotas);
+        res.status(200).json({
+            status: "success",
+            message: "Mascotas obtenidas correctamente",
+            data: mascotas
+        });
 
     } catch (error) {
 
         // --------------------------------------------------
-        // MANEJO DE ERROR
+        // MANEJO DE ERROR CENTRALIZADO
         // --------------------------------------------------
 
         res.status(error.statusCode || 500).json({
-            message: error.message
+            status: "error",
+            message: error.message || "Error al obtener mascotas"
         });
     }
 };
@@ -54,6 +61,14 @@ const getMascotaById = async (req, res) => {
 
         const { id } = req.params;
 
+        // Validación básica
+        if (!id) {
+            return res.status(400).json({
+                status: "error",
+                message: "El id es obligatorio"
+            });
+        }
+
         // --------------------------------------------------
         // LLAMAR SERVICE
         // --------------------------------------------------
@@ -64,12 +79,17 @@ const getMascotaById = async (req, res) => {
         // RESPUESTA
         // --------------------------------------------------
 
-        res.status(200).json(mascota);
+        res.status(200).json({
+            status: "success",
+            message: "Mascota obtenida correctamente",
+            data: mascota
+        });
 
     } catch (error) {
 
         res.status(error.statusCode || 500).json({
-            message: error.message
+            status: "error",
+            message: error.message || "Error al obtener mascota"
         });
     }
 };
@@ -90,11 +110,20 @@ const createMascota = async (req, res) => {
 
         const data = req.body;
 
+        // Validación mínima (puedes mejorarla después)
+        if (!data.nombre || !data.tipo) {
+            return res.status(400).json({
+                status: "error",
+                message: "Nombre y tipo son obligatorios"
+            });
+        }
+
         // --------------------------------------------------
         // AGREGAR USER ID (DESDE TOKEN)
         // --------------------------------------------------
 
-        data.userId = req.user.id; // 🔥 clave (auth middleware)
+        // El middleware auth ya inyecta req.user
+        data.userId = req.user.id;
 
         // --------------------------------------------------
         // AGREGAR IMAGEN SI EXISTE
@@ -114,12 +143,17 @@ const createMascota = async (req, res) => {
         // RESPUESTA
         // --------------------------------------------------
 
-        res.status(201).json(mascota);
+        res.status(201).json({
+            status: "success",
+            message: "Mascota creada correctamente",
+            data: mascota
+        });
 
     } catch (error) {
 
         res.status(error.statusCode || 500).json({
-            message: error.message
+            status: "error",
+            message: error.message || "Error al crear mascota"
         });
     }
 };
@@ -141,6 +175,13 @@ const updateMascota = async (req, res) => {
         const { id } = req.params;
         const data = req.body;
 
+        if (!id) {
+            return res.status(400).json({
+                status: "error",
+                message: "El id es obligatorio"
+            });
+        }
+
         // --------------------------------------------------
         // AGREGAR IMAGEN SI VIENE NUEVA
         // --------------------------------------------------
@@ -159,12 +200,17 @@ const updateMascota = async (req, res) => {
         // RESPUESTA
         // --------------------------------------------------
 
-        res.status(200).json(mascota);
+        res.status(200).json({
+            status: "success",
+            message: "Mascota actualizada correctamente",
+            data: mascota
+        });
 
     } catch (error) {
 
         res.status(error.statusCode || 500).json({
-            message: error.message
+            status: "error",
+            message: error.message || "Error al actualizar mascota"
         });
     }
 };
@@ -185,22 +231,33 @@ const deleteMascota = async (req, res) => {
 
         const { id } = req.params;
 
+        if (!id) {
+            return res.status(400).json({
+                status: "error",
+                message: "El id es obligatorio"
+            });
+        }
+
         // --------------------------------------------------
         // LLAMAR SERVICE
         // --------------------------------------------------
 
-        const result = await mascotaService.deleteMascota({ id });
+        await mascotaService.deleteMascota({ id });
 
         // --------------------------------------------------
         // RESPUESTA
         // --------------------------------------------------
 
-        res.status(200).json(result);
+        res.status(200).json({
+            status: "success",
+            message: "Mascota eliminada correctamente"
+        });
 
     } catch (error) {
 
         res.status(error.statusCode || 500).json({
-            message: error.message
+            status: "error",
+            message: error.message || "Error al eliminar mascota"
         });
     }
 };
@@ -225,12 +282,17 @@ const getMatchMascotas = async (req, res) => {
         // RESPUESTA
         // --------------------------------------------------
 
-        res.status(200).json(mascotas);
+        res.status(200).json({
+            status: "success",
+            message: "Match de mascotas obtenido correctamente",
+            data: mascotas
+        });
 
     } catch (error) {
 
         res.status(error.statusCode || 500).json({
-            message: error.message
+            status: "error",
+            message: error.message || "Error en match de mascotas"
         });
     }
 };
@@ -252,6 +314,13 @@ const cambiarEstadoMascota = async (req, res) => {
         const { id } = req.params;
         const { estado } = req.body;
 
+        if (!id || !estado) {
+            return res.status(400).json({
+                status: "error",
+                message: "Id y estado son obligatorios"
+            });
+        }
+
         // --------------------------------------------------
         // LLAMAR SERVICE
         // --------------------------------------------------
@@ -265,12 +334,17 @@ const cambiarEstadoMascota = async (req, res) => {
         // RESPUESTA
         // --------------------------------------------------
 
-        res.status(200).json(mascota);
+        res.status(200).json({
+            status: "success",
+            message: "Estado actualizado correctamente",
+            data: mascota
+        });
 
     } catch (error) {
 
         res.status(error.statusCode || 500).json({
-            message: error.message
+            status: "error",
+            message: error.message || "Error al cambiar estado"
         });
     }
 };
