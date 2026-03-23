@@ -2,10 +2,10 @@
 // IMPORTAR DEPENDENCIAS
 // ------------------------------------------------------
 
-// Importamos express para poder definir rutas HTTP
+// Express para definir rutas
 const express = require("express");
 
-// Creamos una instancia del router
+// Router de Express
 const router = express.Router();
 
 
@@ -13,8 +13,7 @@ const router = express.Router();
 // IMPORTAR CONTROLADOR
 // ------------------------------------------------------
 
-// Importamos el controlador de mascotas
-// Aquí está toda la lógica de negocio
+// Controlador (NO lógica aquí)
 const mascotaController = require("../controllers/mascota.controller");
 
 
@@ -22,90 +21,109 @@ const mascotaController = require("../controllers/mascota.controller");
 // IMPORTAR MIDDLEWARES
 // ------------------------------------------------------
 
-// Middleware de autenticación (valida JWT)
+// Autenticación (JWT)
 const auth = require("../middlewares/auth.middleware");
 
-// Middleware de subida de archivos (multer)
+// Subida de archivos (multer)
 const upload = require("../middlewares/upload.middleware");
 
 
-// ------------------------------------------------------
-// RUTAS
-// ------------------------------------------------------
-
-
 // =======================================================
-// MATCH DE MASCOTAS (🔥 DEBE IR PRIMERO)
+// 🔥 RUTAS ESPECÍFICAS (SIEMPRE PRIMERO)
 // =======================================================
 
 // ⚠️ IMPORTANTE:
-// Esta ruta va antes de "/:id"
-// porque si no, Express interpreta "match" como un id
+// Estas rutas van antes de "/:id"
+// para evitar conflictos de routing
 
-// Endpoint: GET /api/mascotas/match/filtro
+
+// ------------------------------------------------------
+// MATCH DE MASCOTAS
+// ------------------------------------------------------
+
+// GET /api/mascotas/match/filtro
 router.get(
-    "/match/filtro",                    // ruta específica
-    mascotaController.getMatchMascotas // controller
+    "/match/filtro",                      // ruta específica
+    mascotaController.getMatchMascotas    // controller
 );
 
 
-// =======================================================
-// OBTENER TODAS LAS MASCOTAS
-// =======================================================
+// ------------------------------------------------------
+// CAMBIAR ESTADO (ADOPCIÓN)
+// ------------------------------------------------------
 
-// Endpoint: GET /api/mascotas
-router.get(
-    "/",                              // ruta base
-    mascotaController.getMascotas     // controller
-);
-
-
-// =======================================================
-// OBTENER MASCOTA POR ID
-// =======================================================
-
-// Endpoint: GET /api/mascotas/:id
-router.get(
-    "/:id",                           // parámetro dinámico
-    mascotaController.getMascotaById // controller
-);
-
-
-// =======================================================
-// CREAR MASCOTA (CON IMAGEN)
-// =======================================================
-
-// Endpoint: POST /api/mascotas
-router.post(
-    "/",                              // ruta base
-    auth,                             // requiere token
-    upload.single("imagen"),          // multer → sube imagen
-    mascotaController.createMascota   // controller
-);
-
-
-// =======================================================
-// ACTUALIZAR MASCOTA
-// =======================================================
-
-// Endpoint: PUT /api/mascotas/:id
+// PUT /api/mascotas/:id/estado
 router.put(
-    "/:id",                           // id de la mascota
-    auth,                             // protegido
-    upload.single("imagen"),          // opcional nueva imagen
-    mascotaController.updateMascota   // controller
+    "/:id/estado",                        // 🔥 ruta específica
+    auth,                                 // requiere login
+    mascotaController.cambiarEstadoMascota
 );
 
 
 // =======================================================
-// ELIMINAR MASCOTA
+// 📦 CRUD GENERAL
 // =======================================================
 
-// Endpoint: DELETE /api/mascotas/:id
+
+// ------------------------------------------------------
+// OBTENER TODAS LAS MASCOTAS
+// ------------------------------------------------------
+
+// GET /api/mascotas
+router.get(
+    "/",                                  // ruta base
+    mascotaController.getMascotas
+);
+
+
+// ------------------------------------------------------
+// OBTENER MASCOTA POR ID
+// ------------------------------------------------------
+
+// ⚠️ SIEMPRE DESPUÉS DE RUTAS ESPECÍFICAS
+
+// GET /api/mascotas/:id
+router.get(
+    "/:id",
+    mascotaController.getMascotaById
+);
+
+
+// ------------------------------------------------------
+// CREAR MASCOTA
+// ------------------------------------------------------
+
+// POST /api/mascotas
+router.post(
+    "/",                                  // base
+    auth,                                 // requiere usuario
+    upload.single("imagen"),               // subida de imagen
+    mascotaController.createMascota
+);
+
+
+// ------------------------------------------------------
+// ACTUALIZAR MASCOTA
+// ------------------------------------------------------
+
+// PUT /api/mascotas/:id
+router.put(
+    "/:id",
+    auth,
+    upload.single("imagen"),               // opcional
+    mascotaController.updateMascota
+);
+
+
+// ------------------------------------------------------
+// ELIMINAR MASCOTA
+// ------------------------------------------------------
+
+// DELETE /api/mascotas/:id
 router.delete(
-    "/:id",                           // id de la mascota
-    auth,                             // protegido
-    mascotaController.deleteMascota   // controller
+    "/:id",
+    auth,
+    mascotaController.deleteMascota
 );
 
 
@@ -113,5 +131,4 @@ router.delete(
 // EXPORTAR ROUTER
 // ------------------------------------------------------
 
-// Exportamos el router para usarlo en index.js
 module.exports = router;

@@ -2,111 +2,191 @@
 // IMPORTAR MODELO
 // ------------------------------------------------------
 
-// Importamos el modelo Mascota desde Sequelize
-// ⚠️ Asegúrate que la ruta coincida con tu estructura real
-const { Mascota } = require("../models"); 
-// 👆 Mejor práctica: importar desde index.js de models
+// Importamos el modelo desde el index de models (mejor práctica)
+const { Mascota } = require("../models");
 
 
 // =======================================================
-// OBTENER TODAS LAS MASCOTAS
+// OBTENER TODAS LAS MASCOTAS (CON FILTROS DINÁMICOS)
 // =======================================================
 
-// Función que obtiene todas las mascotas
-// Puede recibir filtros en el futuro (estado, usuario, etc.)
-const getMascotas = async (query = {}) => {
+const getMascotas = async (filters = {}) => {
 
-    // Retornamos todas las mascotas
-    // 👇 dejamos preparado "where" para filtros dinámicos
+    // --------------------------------------------------
+    // VALIDACIÓN BÁSICA
+    // --------------------------------------------------
+
+    // Aseguramos que filters sea objeto
+    if (typeof filters !== "object") {
+        throw new Error("Los filtros deben ser un objeto");
+    }
+
+    // --------------------------------------------------
+    // CONSULTA A BASE DE DATOS
+    // --------------------------------------------------
+
     return await Mascota.findAll({
-        where: query
+        where: filters, // Sequelize arma WHERE dinámico
+        order: [["createdAt", "DESC"]] // 🔥 orden profesional
     });
-
 };
+
 
 
 // =======================================================
 // OBTENER MASCOTA POR ID
 // =======================================================
 
-// Función que busca una mascota por su ID
 const getMascotaById = async (id) => {
 
-    // Buscamos por clave primaria
-    return await Mascota.findByPk(id);
+    // --------------------------------------------------
+    // VALIDACIÓN
+    // --------------------------------------------------
 
+    if (!id) {
+        throw new Error("ID requerido en repository");
+    }
+
+    // --------------------------------------------------
+    // CONSULTA
+    // --------------------------------------------------
+
+    return await Mascota.findByPk(id);
 };
+
 
 
 // =======================================================
 // CREAR MASCOTA
 // =======================================================
 
-// Función que crea una nueva mascota
 const createMascota = async (data) => {
 
-    // Insertamos un nuevo registro
-    return await Mascota.create(data);
+    // --------------------------------------------------
+    // VALIDACIÓN
+    // --------------------------------------------------
 
+    if (!data) {
+        throw new Error("Datos requeridos para crear mascota");
+    }
+
+    // --------------------------------------------------
+    // CREACIÓN
+    // --------------------------------------------------
+
+    return await Mascota.create(data);
 };
+
 
 
 // =======================================================
 // ACTUALIZAR MASCOTA
 // =======================================================
 
-// Función que actualiza una mascota existente
 const updateMascota = async (id, data) => {
 
-    // Actualizamos los datos
+    // --------------------------------------------------
+    // VALIDACIONES
+    // --------------------------------------------------
+
+    if (!id) {
+        throw new Error("ID requerido para actualizar");
+    }
+
+    if (!data) {
+        throw new Error("Datos requeridos para actualizar");
+    }
+
+    // --------------------------------------------------
+    // UPDATE
+    // --------------------------------------------------
+
     const [updated] = await Mascota.update(data, {
         where: { id }
     });
 
-    // Si no se actualizó nada, retornamos null
+    // --------------------------------------------------
+    // VERIFICAR RESULTADO
+    // --------------------------------------------------
+
     if (!updated) return null;
 
-    // Retornamos la mascota actualizada
-    return await Mascota.findByPk(id);
+    // --------------------------------------------------
+    // RETORNAR REGISTRO ACTUALIZADO
+    // --------------------------------------------------
 
+    return await Mascota.findByPk(id);
 };
+
 
 
 // =======================================================
 // ELIMINAR MASCOTA
 // =======================================================
 
-// Función que elimina una mascota
 const deleteMascota = async (id) => {
 
-    // Eliminamos por id
+    // --------------------------------------------------
+    // VALIDACIÓN
+    // --------------------------------------------------
+
+    if (!id) {
+        throw new Error("ID requerido para eliminar");
+    }
+
+    // --------------------------------------------------
+    // DELETE
+    // --------------------------------------------------
+
     const deleted = await Mascota.destroy({
         where: { id }
     });
 
-    // Retornamos true/false (más útil que número)
-    return deleted > 0;
+    // --------------------------------------------------
+    // RETORNO BOOLEANO (MEJOR PRÁCTICA)
+    // --------------------------------------------------
 
+    return deleted > 0;
 };
 
 
+
 // =======================================================
-// CAMBIAR ESTADO DE MASCOTA (🔥 IMPORTANTE PARA TU FLUJO)
+// CAMBIAR ESTADO DE MASCOTA
 // =======================================================
 
 const updateEstadoMascota = async (id, estado) => {
 
-    // Cambiamos solo el estado (disponible → adoptado)
+    // --------------------------------------------------
+    // VALIDACIONES
+    // --------------------------------------------------
+
+    if (!id || !estado) {
+        throw new Error("ID y estado requeridos");
+    }
+
+    // --------------------------------------------------
+    // UPDATE PARCIAL
+    // --------------------------------------------------
+
     const [updated] = await Mascota.update(
         { estado },
         { where: { id } }
     );
 
+    // --------------------------------------------------
+    // VALIDAR RESULTADO
+    // --------------------------------------------------
+
     if (!updated) return null;
 
-    return await Mascota.findByPk(id);
+    // --------------------------------------------------
+    // RETORNAR ACTUALIZADO
+    // --------------------------------------------------
 
+    return await Mascota.findByPk(id);
 };
+
 
 
 // ------------------------------------------------------
@@ -119,5 +199,5 @@ module.exports = {
     createMascota,
     updateMascota,
     deleteMascota,
-    updateEstadoMascota // 🔥 nuevo método clave
+    updateEstadoMascota
 };

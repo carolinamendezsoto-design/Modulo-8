@@ -2,30 +2,35 @@
 // IMPORTAR MODELOS
 // ------------------------------------------------------
 
-// Importamos desde index (MEJOR PRÁCTICA)
+// Importamos desde index (relaciones incluidas)
 const { Solicitud, User, Mascota } = require("../models");
 
 
 // =======================================================
-// CREAR SOLICITUD (POSTULAR A UNA MASCOTA)
+// CREAR SOLICITUD
 // =======================================================
 
 const createSolicitud = async (data) => {
 
     // --------------------------------------------------
-    // VALIDAR DUPLICADO (🔥 MUY IMPORTANTE)
+    // VALIDACIÓN
     // --------------------------------------------------
 
-    // Buscamos si ya existe una solicitud del mismo usuario
-    // para la misma mascota
+    if (!data.adoptanteId || !data.mascotaId) {
+        throw new Error("adoptanteId y mascotaId son requeridos");
+    }
+
+    // --------------------------------------------------
+    // VALIDAR DUPLICADO (🔥 CLAVE)
+    // --------------------------------------------------
+
     const existe = await Solicitud.findOne({
         where: {
-            usuarioId: data.usuarioId,
+            adoptanteId: data.adoptanteId,
             mascotaId: data.mascotaId
         }
     });
 
-    // Si ya existe, no permitimos duplicados
     if (existe) {
         throw new Error("Ya postulaste a esta mascota");
     }
@@ -34,63 +39,68 @@ const createSolicitud = async (data) => {
     // CREAR SOLICITUD
     // --------------------------------------------------
 
-    // Creamos la solicitud con estado por defecto (pendiente)
     return await Solicitud.create({
         ...data,
         estado: "pendiente"
     });
-
 };
 
 
+
 // =======================================================
-// OBTENER SOLICITUDES POR MASCOTA (POSTULANTES)
+// OBTENER SOLICITUDES POR MASCOTA
 // =======================================================
 
 const getSolicitudesByMascota = async (mascotaId) => {
 
+    if (!mascotaId) {
+        throw new Error("mascotaId es requerido");
+    }
+
     return await Solicitud.findAll({
 
-        // Filtramos por mascota
         where: { mascotaId },
 
-        // Incluimos información del usuario postulante
         include: [
             {
                 model: User,
-                as: "usuario",
+                as: "usuario", // ⚠️ debe coincidir con relación
                 attributes: ["id", "nombre", "email", "telefono"]
             }
-        ]
+        ],
 
+        order: [["createdAt", "DESC"]] // 🔥 mejora pro
     });
-
 };
+
 
 
 // =======================================================
 // OBTENER SOLICITUDES DE UN USUARIO
 // =======================================================
 
-const getSolicitudesByUsuario = async (usuarioId) => {
+const getSolicitudesByUsuario = async (adoptanteId) => {
+
+    if (!adoptanteId) {
+        throw new Error("adoptanteId es requerido");
+    }
 
     return await Solicitud.findAll({
 
-        // Filtramos por usuario
-        where: { usuarioId },
+        where: { adoptanteId },
 
-        // Incluimos datos de la mascota
         include: [
             {
                 model: Mascota,
                 as: "mascota",
                 attributes: ["id", "nombre", "edad", "estado"]
             }
-        ]
+        ],
 
+        order: [["createdAt", "DESC"]]
     });
-
 };
+
 
 
 // =======================================================
@@ -99,34 +109,39 @@ const getSolicitudesByUsuario = async (usuarioId) => {
 
 const updateSolicitudEstado = async (id, estado) => {
 
-    // Actualizamos estado (aprobada / rechazada)
+    if (!id || !estado) {
+        throw new Error("ID y estado requeridos");
+    }
+
     const [updated] = await Solicitud.update(
         { estado },
         { where: { id } }
     );
 
-    // Si no se actualizó nada
     if (!updated) return null;
 
-    // Retornamos solicitud actualizada
     return await Solicitud.findByPk(id);
-
 };
 
 
+
 // =======================================================
-// ELIMINAR SOLICITUD (OPCIONAL)
+// ELIMINAR SOLICITUD
 // =======================================================
 
 const deleteSolicitud = async (id) => {
+
+    if (!id) {
+        throw new Error("ID requerido");
+    }
 
     const deleted = await Solicitud.destroy({
         where: { id }
     });
 
     return deleted > 0;
-
 };
+
 
 
 // =======================================================
@@ -148,11 +163,12 @@ const getAllSolicitudes = async () => {
                 as: "mascota",
                 attributes: ["id", "nombre", "estado"]
             }
-        ]
+        ],
 
+        order: [["createdAt", "DESC"]]
     });
-
 };
+
 
 
 // ------------------------------------------------------

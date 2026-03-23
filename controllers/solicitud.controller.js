@@ -2,7 +2,10 @@
 // IMPORTAR SERVICES
 // ------------------------------------------------------
 
+// Service de solicitudes (lógica de negocio)
 const solicitudService = require("../services/solicitud.service");
+
+// Service de mascotas (para flujo de adopción)
 const mascotaService = require("../services/mascota.service");
 
 
@@ -11,38 +14,30 @@ const mascotaService = require("../services/mascota.service");
 // ======================================================
 
 const createSolicitud = async (req, res, next) => {
+
     try {
 
-        // Extraemos datos
+        // --------------------------------------------------
+        // EXTRAER DATOS
+        // --------------------------------------------------
+
         const { mascotaId } = req.body;
 
-        // Usuario autenticado
-        const usuarioId = req.user.id;
-        const rol = req.user.rol;
+        // Usuario autenticado (desde middleware auth)
+        const adoptanteId = req.user.id;
 
-        // Validamos mascotaId
-        if (!mascotaId) {
-            return res.status(400).json({
-                status: "error",
-                message: "mascotaId es obligatorio",
-                data: null
-            });
-        }
+        // --------------------------------------------------
+        // LLAMAR SERVICE
+        // --------------------------------------------------
 
-        // Validamos rol
-        if (rol !== "adoptante") {
-            return res.status(403).json({
-                status: "error",
-                message: "Solo adoptantes pueden postular",
-                data: null
-            });
-        }
-
-        // Creamos solicitud
         const result = await solicitudService.createSolicitud({
-            usuarioId,
+            adoptanteId,
             mascotaId
         });
+
+        // --------------------------------------------------
+        // RESPUESTA
+        // --------------------------------------------------
 
         return res.status(201).json({
             status: "success",
@@ -51,9 +46,12 @@ const createSolicitud = async (req, res, next) => {
         });
 
     } catch (error) {
+
+        // Pasamos error al middleware global
         next(error);
     }
 };
+
 
 
 // ======================================================
@@ -61,6 +59,7 @@ const createSolicitud = async (req, res, next) => {
 // ======================================================
 
 const getSolicitudesByMascota = async (req, res, next) => {
+
     try {
 
         const { mascotaId } = req.params;
@@ -74,9 +73,11 @@ const getSolicitudesByMascota = async (req, res, next) => {
         });
 
     } catch (error) {
+
         next(error);
     }
 };
+
 
 
 // ======================================================
@@ -84,11 +85,12 @@ const getSolicitudesByMascota = async (req, res, next) => {
 // ======================================================
 
 const getMisSolicitudes = async (req, res, next) => {
+
     try {
 
-        const usuarioId = req.user.id;
+        const adoptanteId = req.user.id;
 
-        const result = await solicitudService.getSolicitudesByUsuario(usuarioId);
+        const result = await solicitudService.getSolicitudesByUsuario(adoptanteId);
 
         return res.status(200).json({
             status: "success",
@@ -97,9 +99,11 @@ const getMisSolicitudes = async (req, res, next) => {
         });
 
     } catch (error) {
+
         next(error);
     }
 };
+
 
 
 // ======================================================
@@ -107,14 +111,24 @@ const getMisSolicitudes = async (req, res, next) => {
 // ======================================================
 
 const seleccionarAdoptante = async (req, res, next) => {
+
     try {
 
         const { id } = req.params;
 
-        // Aprobamos solicitud
-        const solicitud = await solicitudService.updateSolicitudEstado(id, "aprobada");
+        // --------------------------------------------------
+        // APROBAR SOLICITUD
+        // --------------------------------------------------
 
-        // Cambiamos estado mascota
+        const solicitud = await solicitudService.updateSolicitudEstado(
+            id,
+            "aprobado"
+        );
+
+        // --------------------------------------------------
+        // CAMBIAR ESTADO DE MASCOTA
+        // --------------------------------------------------
+
         await mascotaService.cambiarEstadoMascota({
             id: solicitud.mascotaId,
             estado: "adoptado"
@@ -127,9 +141,11 @@ const seleccionarAdoptante = async (req, res, next) => {
         });
 
     } catch (error) {
+
         next(error);
     }
 };
+
 
 
 // ======================================================
@@ -137,11 +153,15 @@ const seleccionarAdoptante = async (req, res, next) => {
 // ======================================================
 
 const rechazarSolicitud = async (req, res, next) => {
+
     try {
 
         const { id } = req.params;
 
-        const solicitud = await solicitudService.updateSolicitudEstado(id, "rechazada");
+        const solicitud = await solicitudService.updateSolicitudEstado(
+            id,
+            "rechazado"
+        );
 
         return res.status(200).json({
             status: "success",
@@ -150,9 +170,11 @@ const rechazarSolicitud = async (req, res, next) => {
         });
 
     } catch (error) {
+
         next(error);
     }
 };
+
 
 
 // ======================================================
@@ -160,6 +182,7 @@ const rechazarSolicitud = async (req, res, next) => {
 // ======================================================
 
 const getAllSolicitudes = async (req, res, next) => {
+
     try {
 
         const result = await solicitudService.getAllSolicitudes();
@@ -171,6 +194,7 @@ const getAllSolicitudes = async (req, res, next) => {
         });
 
     } catch (error) {
+
         next(error);
     }
 };

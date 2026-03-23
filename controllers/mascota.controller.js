@@ -1,122 +1,292 @@
 // ------------------------------------------------------
-// IMPORTAR DEPENDENCIAS
+// IMPORTAR SERVICE
 // ------------------------------------------------------
 
-// Cargamos variables de entorno (.env)
-require("dotenv").config();
-
-// Importamos sequelize desde la configuración de la DB
-const { sequelize } = require("./config/database");
-
-// Importamos el modelo User (⚠️ idealmente desde index de models)
-const { User } = require("./models");
-
-// Librería para encriptar contraseñas
-const bcrypt = require("bcryptjs");
+// Importamos la capa de lógica de negocio
+const mascotaService = require("../services/mascota.service");
 
 
-// ------------------------------------------------------
-// FUNCIÓN PRINCIPAL
-// ------------------------------------------------------
+// =======================================================
+// OBTENER TODAS LAS MASCOTAS
+// =======================================================
 
-// Función asincrónica para crear admin
-async function crearAdmin() {
+const getMascotas = async (req, res) => {
 
     try {
 
         // --------------------------------------------------
-        // CONECTAR A BASE DE DATOS
+        // LLAMAR SERVICE CON QUERY PARAMS
         // --------------------------------------------------
 
-        // Verificamos conexión con la DB
-        await sequelize.authenticate();
-
-        console.log("✅ Conectado a la base de datos");
-
+        const mascotas = await mascotaService.getMascotas(req.query);
 
         // --------------------------------------------------
-        // VERIFICAR SI YA EXISTE ADMIN
+        // RESPUESTA EXITOSA
         // --------------------------------------------------
 
-        // Buscamos si ya existe un admin con ese email
-        const adminExistente = await User.findOne({
-            where: { email: "admin@admin.com" }
-        });
-
-        // Si existe, lo eliminamos (para evitar duplicados)
-        if (adminExistente) {
-
-            await adminExistente.destroy();
-
-            console.log("🗑️ Admin antiguo eliminado");
-        }
-
-
-        // --------------------------------------------------
-        // ENCRIPTAR PASSWORD
-        // --------------------------------------------------
-
-        // Encriptamos la contraseña con bcrypt (salt 10)
-        const passwordHash = await bcrypt.hash("1234", 10);
-
-
-        // --------------------------------------------------
-        // CREAR NUEVO ADMIN
-        // --------------------------------------------------
-
-        const admin = await User.create({
-
-            // Nombre del usuario
-            nombre: "Admin",
-
-            // Email único
-            email: "admin@admin.com",
-
-            // Password encriptada
-            password: passwordHash,
-
-            // Teléfono (opcional)
-            telefono: "999999999",
-
-            // Rol (🔥 clave en tu sistema)
-            rol: "admin"
-        });
-
-
-        // --------------------------------------------------
-        // RESPUESTA EN CONSOLA
-        // --------------------------------------------------
-
-        console.log("🔥 Admin creado correctamente:");
-
-        // Mostramos el objeto limpio
-        console.log(admin.toJSON());
-
-
-        // --------------------------------------------------
-        // FINALIZAR PROCESO
-        // --------------------------------------------------
-
-        // Terminamos ejecución correctamente
-        process.exit(0);
+        res.status(200).json(mascotas);
 
     } catch (error) {
 
         // --------------------------------------------------
-        // MANEJO DE ERRORES
+        // MANEJO DE ERROR
         // --------------------------------------------------
 
-        console.error("❌ Error al crear admin:", error.message);
-
-        // Terminamos ejecución con error
-        process.exit(1);
+        res.status(error.statusCode || 500).json({
+            message: error.message
+        });
     }
-}
+};
+
+
+
+// =======================================================
+// OBTENER MASCOTA POR ID
+// =======================================================
+
+const getMascotaById = async (req, res) => {
+
+    try {
+
+        // --------------------------------------------------
+        // EXTRAER ID DESDE PARAMS
+        // --------------------------------------------------
+
+        const { id } = req.params;
+
+        // --------------------------------------------------
+        // LLAMAR SERVICE
+        // --------------------------------------------------
+
+        const mascota = await mascotaService.getMascotaById({ id });
+
+        // --------------------------------------------------
+        // RESPUESTA
+        // --------------------------------------------------
+
+        res.status(200).json(mascota);
+
+    } catch (error) {
+
+        res.status(error.statusCode || 500).json({
+            message: error.message
+        });
+    }
+};
+
+
+
+// =======================================================
+// CREAR MASCOTA
+// =======================================================
+
+const createMascota = async (req, res) => {
+
+    try {
+
+        // --------------------------------------------------
+        // EXTRAER DATA DEL BODY
+        // --------------------------------------------------
+
+        const data = req.body;
+
+        // --------------------------------------------------
+        // AGREGAR USER ID (DESDE TOKEN)
+        // --------------------------------------------------
+
+        data.userId = req.user.id; // 🔥 clave (auth middleware)
+
+        // --------------------------------------------------
+        // AGREGAR IMAGEN SI EXISTE
+        // --------------------------------------------------
+
+        if (req.file) {
+            data.imagen = req.file.filename;
+        }
+
+        // --------------------------------------------------
+        // LLAMAR SERVICE
+        // --------------------------------------------------
+
+        const mascota = await mascotaService.createMascota(data);
+
+        // --------------------------------------------------
+        // RESPUESTA
+        // --------------------------------------------------
+
+        res.status(201).json(mascota);
+
+    } catch (error) {
+
+        res.status(error.statusCode || 500).json({
+            message: error.message
+        });
+    }
+};
+
+
+
+// =======================================================
+// ACTUALIZAR MASCOTA
+// =======================================================
+
+const updateMascota = async (req, res) => {
+
+    try {
+
+        // --------------------------------------------------
+        // EXTRAER ID Y DATA
+        // --------------------------------------------------
+
+        const { id } = req.params;
+        const data = req.body;
+
+        // --------------------------------------------------
+        // AGREGAR IMAGEN SI VIENE NUEVA
+        // --------------------------------------------------
+
+        if (req.file) {
+            data.imagen = req.file.filename;
+        }
+
+        // --------------------------------------------------
+        // LLAMAR SERVICE
+        // --------------------------------------------------
+
+        const mascota = await mascotaService.updateMascota({ id, data });
+
+        // --------------------------------------------------
+        // RESPUESTA
+        // --------------------------------------------------
+
+        res.status(200).json(mascota);
+
+    } catch (error) {
+
+        res.status(error.statusCode || 500).json({
+            message: error.message
+        });
+    }
+};
+
+
+
+// =======================================================
+// ELIMINAR MASCOTA
+// =======================================================
+
+const deleteMascota = async (req, res) => {
+
+    try {
+
+        // --------------------------------------------------
+        // EXTRAER ID
+        // --------------------------------------------------
+
+        const { id } = req.params;
+
+        // --------------------------------------------------
+        // LLAMAR SERVICE
+        // --------------------------------------------------
+
+        const result = await mascotaService.deleteMascota({ id });
+
+        // --------------------------------------------------
+        // RESPUESTA
+        // --------------------------------------------------
+
+        res.status(200).json(result);
+
+    } catch (error) {
+
+        res.status(error.statusCode || 500).json({
+            message: error.message
+        });
+    }
+};
+
+
+
+// =======================================================
+// MATCH DE MASCOTAS
+// =======================================================
+
+const getMatchMascotas = async (req, res) => {
+
+    try {
+
+        // --------------------------------------------------
+        // LLAMAR SERVICE CON PREFERENCIAS
+        // --------------------------------------------------
+
+        const mascotas = await mascotaService.getMatchMascotas(req.query);
+
+        // --------------------------------------------------
+        // RESPUESTA
+        // --------------------------------------------------
+
+        res.status(200).json(mascotas);
+
+    } catch (error) {
+
+        res.status(error.statusCode || 500).json({
+            message: error.message
+        });
+    }
+};
+
+
+
+// =======================================================
+// CAMBIAR ESTADO (ADOPCIÓN)
+// =======================================================
+
+const cambiarEstadoMascota = async (req, res) => {
+
+    try {
+
+        // --------------------------------------------------
+        // EXTRAER DATOS
+        // --------------------------------------------------
+
+        const { id } = req.params;
+        const { estado } = req.body;
+
+        // --------------------------------------------------
+        // LLAMAR SERVICE
+        // --------------------------------------------------
+
+        const mascota = await mascotaService.cambiarEstadoMascota({
+            id,
+            estado
+        });
+
+        // --------------------------------------------------
+        // RESPUESTA
+        // --------------------------------------------------
+
+        res.status(200).json(mascota);
+
+    } catch (error) {
+
+        res.status(error.statusCode || 500).json({
+            message: error.message
+        });
+    }
+};
+
 
 
 // ------------------------------------------------------
-// EJECUTAR SCRIPT
+// EXPORTAR CONTROLLER
 // ------------------------------------------------------
 
-// Llamamos a la función principal
-crearAdmin();
+module.exports = {
+    getMascotas,
+    getMascotaById,
+    createMascota,
+    updateMascota,
+    deleteMascota,
+    getMatchMascotas,
+    cambiarEstadoMascota
+};

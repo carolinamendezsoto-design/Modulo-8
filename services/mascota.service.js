@@ -2,52 +2,42 @@
 // IMPORTAR REPOSITORY
 // ------------------------------------------------------
 
-// Importamos el repository de mascotas (acceso a DB)
+// Capa de acceso a datos (NO usamos Sequelize directo aquí)
 const mascotaRepository = require("../repositories/mascota.repository");
 
 
 // =======================================================
-// OBTENER TODAS LAS MASCOTAS (CON FILTROS PRO)
+// OBTENER TODAS LAS MASCOTAS (CON FILTROS)
 // =======================================================
 
 const getMascotas = async (query = {}) => {
 
     // --------------------------------------------------
-    // CREAR OBJETO DE FILTROS
+    // VALIDACIÓN DE QUERY
+    // --------------------------------------------------
+
+    if (typeof query !== "object") {
+        throw new Error("Los filtros deben ser un objeto");
+    }
+
+    // --------------------------------------------------
+    // ARMAR FILTROS LIMPIOS
     // --------------------------------------------------
 
     const filtros = {};
 
-    // --------------------------------------------------
-    // FILTRO POR ESTADO
-    // --------------------------------------------------
-
-    if (query.estado) {
-        filtros.estado = query.estado;
-    }
+    // Solo agregamos si existen (evita basura en query)
+    if (query.estado) filtros.estado = query.estado;
+    if (query.energia) filtros.energia = query.energia;
+    if (query.porte) filtros.porte = query.porte;
 
     // --------------------------------------------------
-    // FILTRO POR ENERGÍA
-    // --------------------------------------------------
-
-    if (query.energia) {
-        filtros.energia = query.energia;
-    }
-
-    // --------------------------------------------------
-    // FILTRO POR PORTE
-    // --------------------------------------------------
-
-    if (query.porte) {
-        filtros.porte = query.porte;
-    }
-
-    // --------------------------------------------------
-    // LLAMAR AL REPOSITORY
+    // LLAMADA AL REPOSITORY
     // --------------------------------------------------
 
     return await mascotaRepository.getMascotas(filtros);
 };
+
 
 
 // =======================================================
@@ -56,29 +46,35 @@ const getMascotas = async (query = {}) => {
 
 const getMascotaById = async ({ id }) => {
 
-    // Validamos que exista id
-    if (!id) {
+    // --------------------------------------------------
+    // VALIDACIÓN
+    // --------------------------------------------------
 
+    if (!id) {
         const error = new Error("ID requerido");
         error.statusCode = 400;
-
         throw error;
     }
 
-    // Buscamos mascota
+    // --------------------------------------------------
+    // CONSULTA
+    // --------------------------------------------------
+
     const mascota = await mascotaRepository.getMascotaById(id);
 
-    // Si no existe
-    if (!mascota) {
+    // --------------------------------------------------
+    // VALIDAR EXISTENCIA
+    // --------------------------------------------------
 
+    if (!mascota) {
         const error = new Error("Mascota no encontrada");
         error.statusCode = 404;
-
         throw error;
     }
 
     return mascota;
 };
+
 
 
 // =======================================================
@@ -88,8 +84,12 @@ const getMascotaById = async ({ id }) => {
 const createMascota = async (data) => {
 
     // --------------------------------------------------
-    // VALIDACIONES
+    // VALIDACIONES DE NEGOCIO
     // --------------------------------------------------
+
+    if (!data) {
+        throw new Error("Datos requeridos");
+    }
 
     if (!data.nombre) {
         throw new Error("El nombre es obligatorio");
@@ -103,8 +103,12 @@ const createMascota = async (data) => {
         throw new Error("La descripción debe tener al menos 10 caracteres");
     }
 
+    if (!data.userId) {
+        throw new Error("El usuario es obligatorio");
+    }
+
     // --------------------------------------------------
-    // VALORES POR DEFECTO (🔥 PRO)
+    // VALORES POR DEFECTO (REGLA DE NEGOCIO)
     // --------------------------------------------------
 
     if (!data.estado) {
@@ -112,11 +116,12 @@ const createMascota = async (data) => {
     }
 
     // --------------------------------------------------
-    // CREAR
+    // CREACIÓN
     // --------------------------------------------------
 
     return await mascotaRepository.createMascota(data);
 };
+
 
 
 // =======================================================
@@ -125,28 +130,39 @@ const createMascota = async (data) => {
 
 const updateMascota = async ({ id, data }) => {
 
-    if (!id) {
+    // --------------------------------------------------
+    // VALIDACIONES
+    // --------------------------------------------------
 
+    if (!id) {
         const error = new Error("ID requerido para actualizar");
         error.statusCode = 400;
-
         throw error;
     }
 
-    // Verificamos existencia
+    if (!data) {
+        throw new Error("Datos requeridos para actualizar");
+    }
+
+    // --------------------------------------------------
+    // VERIFICAR EXISTENCIA
+    // --------------------------------------------------
+
     const mascota = await mascotaRepository.getMascotaById(id);
 
     if (!mascota) {
-
         const error = new Error("Mascota no encontrada");
         error.statusCode = 404;
-
         throw error;
     }
 
-    // Actualizamos
+    // --------------------------------------------------
+    // ACTUALIZACIÓN
+    // --------------------------------------------------
+
     return await mascotaRepository.updateMascota(id, data);
 };
+
 
 
 // =======================================================
@@ -155,22 +171,29 @@ const updateMascota = async ({ id, data }) => {
 
 const deleteMascota = async ({ id }) => {
 
-    if (!id) {
+    // --------------------------------------------------
+    // VALIDACIÓN
+    // --------------------------------------------------
 
+    if (!id) {
         const error = new Error("ID requerido para eliminar");
         error.statusCode = 400;
-
         throw error;
     }
 
-    // Eliminamos
+    // --------------------------------------------------
+    // ELIMINACIÓN
+    // --------------------------------------------------
+
     const deleted = await mascotaRepository.deleteMascota(id);
 
-    if (!deleted) {
+    // --------------------------------------------------
+    // VALIDAR RESULTADO
+    // --------------------------------------------------
 
+    if (!deleted) {
         const error = new Error("Mascota no encontrada");
         error.statusCode = 404;
-
         throw error;
     }
 
@@ -180,59 +203,91 @@ const deleteMascota = async ({ id }) => {
 };
 
 
+
 // =======================================================
-// MATCH DE MASCOTAS (🔥 NIVEL PRO)
+// MATCH DE MASCOTAS (🔥 DIFERENCIADOR)
 // =======================================================
 
 const getMatchMascotas = async (preferencias = {}) => {
 
-    // Traemos mascotas disponibles
+    // --------------------------------------------------
+    // VALIDACIÓN
+    // --------------------------------------------------
+
+    if (typeof preferencias !== "object") {
+        throw new Error("Preferencias inválidas");
+    }
+
+    // --------------------------------------------------
+    // TRAER MASCOTAS DISPONIBLES
+    // --------------------------------------------------
+
     const mascotas = await mascotaRepository.getMascotas({
         estado: "disponible"
     });
 
-    // Calculamos compatibilidad
+    // --------------------------------------------------
+    // CALCULAR MATCH
+    // --------------------------------------------------
+
     const resultado = mascotas.map(mascota => {
 
         let score = 0;
 
-        // Match energía
         if (preferencias.energia && mascota.energia === preferencias.energia) {
-            score += 1;
+            score++;
         }
 
-        // Match porte
         if (preferencias.porte && mascota.porte === preferencias.porte) {
-            score += 1;
+            score++;
         }
 
         return {
-            ...mascota.toJSON(), // 🔥 importante para evitar problemas de Sequelize
+            ...mascota.toJSON(), // evitar problemas Sequelize
             match: score
         };
     });
 
-    // Ordenamos de mayor a menor compatibilidad
+    // --------------------------------------------------
+    // ORDENAR RESULTADOS
+    // --------------------------------------------------
+
     return resultado.sort((a, b) => b.match - a.match);
 };
 
 
+
 // =======================================================
-// CAMBIAR ESTADO DE MASCOTA (🔥 PARA ADOPCIÓN)
+// CAMBIAR ESTADO DE MASCOTA
 // =======================================================
 
 const cambiarEstadoMascota = async ({ id, estado }) => {
 
-    if (!id || !estado) {
+    // --------------------------------------------------
+    // VALIDACIONES
+    // --------------------------------------------------
 
+    if (!id || !estado) {
         const error = new Error("ID y estado son requeridos");
         error.statusCode = 400;
-
         throw error;
     }
 
-    return await mascotaRepository.updateEstadoMascota(id, estado);
+    // --------------------------------------------------
+    // ACTUALIZACIÓN
+    // --------------------------------------------------
+
+    const mascota = await mascotaRepository.updateEstadoMascota(id, estado);
+
+    if (!mascota) {
+        const error = new Error("Mascota no encontrada");
+        error.statusCode = 404;
+        throw error;
+    }
+
+    return mascota;
 };
+
 
 
 // ------------------------------------------------------
@@ -246,5 +301,5 @@ module.exports = {
     updateMascota,
     deleteMascota,
     getMatchMascotas,
-    cambiarEstadoMascota // 🔥 clave para adopción
+    cambiarEstadoMascota
 };

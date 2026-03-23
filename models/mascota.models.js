@@ -2,134 +2,168 @@
 // IMPORTAR DEPENDENCIAS
 // ------------------------------------------------------
 
-// Importamos tipos de datos de Sequelize
+// Tipos de datos de Sequelize
 const { DataTypes } = require("sequelize");
 
-// Importamos la conexión a la base de datos
+// Conexión a la base de datos
 const { sequelize } = require("../config/database");
 
 
 // ------------------------------------------------------
-// DEFINICIÓN DEL MODELO MASCOTA
+// DEFINICIÓN DEL MODELO
 // ------------------------------------------------------
 
-// Definimos el modelo Mascota (tabla en la BD)
 const Mascota = sequelize.define("Mascota", {
 
     // --------------------------------------------------
-    // ID
+    // ID (CLAVE PRIMARIA)
     // --------------------------------------------------
 
-    // Identificador único de la mascota
     id: {
-        type: DataTypes.INTEGER,   // tipo número entero
-        primaryKey: true,          // clave primaria
-        autoIncrement: true        // autoincremental
+        type: DataTypes.INTEGER,          // número entero
+        primaryKey: true,                 // clave primaria
+        autoIncrement: true               // autoincremental
     },
+
 
     // --------------------------------------------------
     // NOMBRE
     // --------------------------------------------------
 
-    // Nombre de la mascota
     nombre: {
-        type: DataTypes.STRING,    // texto corto
-        allowNull: false,          // obligatorio
+        type: DataTypes.STRING,           // texto corto
+        allowNull: false,                 // obligatorio
         validate: {
-            notEmpty: true         // no permite vacío
+            notEmpty: {
+                msg: "El nombre no puede estar vacío"
+            }
         }
     },
+
 
     // --------------------------------------------------
     // EDAD
     // --------------------------------------------------
 
-    // Edad de la mascota
     edad: {
-        type: DataTypes.INTEGER,   // número entero
-        allowNull: false,          // obligatorio
+        type: DataTypes.INTEGER,          // entero
+        allowNull: false,
         validate: {
-            isInt: true,           // debe ser entero
-            min: 0                 // no negativos
+            isInt: {
+                msg: "La edad debe ser un número entero"
+            },
+            min: {
+                args: [0],
+                msg: "La edad no puede ser negativa"
+            }
         }
     },
+
 
     // --------------------------------------------------
     // PORTE
     // --------------------------------------------------
 
-    // Tamaño de la mascota
     porte: {
-        type: DataTypes.STRING,    // texto
-        allowNull: false,          // obligatorio
-        validate: {
-            notEmpty: true         // no vacío
-        }
+        type: DataTypes.ENUM("pequeño", "mediano", "grande"), // 🔥 mejor que string libre
+        allowNull: false
     },
+
 
     // --------------------------------------------------
     // ENERGÍA
     // --------------------------------------------------
 
-    // Nivel de energía
     energia: {
-        type: DataTypes.STRING,    // texto
-        allowNull: false,          // obligatorio
-        validate: {
-            notEmpty: true
-        }
+        type: DataTypes.ENUM("baja", "media", "alta"), // 🔥 control total
+        allowNull: false
     },
+
 
     // --------------------------------------------------
     // DESCRIPCIÓN
     // --------------------------------------------------
 
-    // Descripción detallada de la mascota
     descripcion: {
-        type: DataTypes.TEXT,      // texto largo
-        allowNull: false,          // obligatorio
+        type: DataTypes.TEXT,             // texto largo
+        allowNull: false,
         validate: {
-            len: [10, 1000]        // mínimo 10 caracteres
+            len: {
+                args: [10, 1000],
+                msg: "La descripción debe tener entre 10 y 1000 caracteres"
+            }
         }
     },
+
 
     // --------------------------------------------------
     // IMAGEN
     // --------------------------------------------------
 
-    // Nombre del archivo de imagen (subido con multer)
     imagen: {
-        type: DataTypes.STRING,    // texto
-        allowNull: true            // opcional
+        type: DataTypes.STRING,
+        allowNull: true,
+        defaultValue: "default.jpg" // 🔥 fallback pro
     },
+
 
     // --------------------------------------------------
     // ESTADO
     // --------------------------------------------------
 
-    // Estado de adopción
     estado: {
-        type: DataTypes.ENUM("disponible", "adoptado"), // valores permitidos
-        defaultValue: "disponible" // valor inicial
+        type: DataTypes.ENUM("disponible", "adoptado"),
+        defaultValue: "disponible"
     },
 
+
     // --------------------------------------------------
-    // USER ID (FK)
+    // USER ID (FOREIGN KEY)
     // --------------------------------------------------
 
-    // ID del usuario que publica la mascota
     userId: {
-        type: DataTypes.INTEGER,   // número
-        allowNull: false,          // obligatorio
+        type: DataTypes.INTEGER,
+        allowNull: false,
         validate: {
-            isInt: true            // validación
+            isInt: true
         }
     }
 
 }, {
 
-    tableName: "mascotas", // nombre real en BD (buena práctica)
-    timestamps: true       // agrega createdAt y updatedAt
+    // --------------------------------------------------
+    // CONFIGURACIÓN DEL MODELO
+    // --------------------------------------------------
+
+    tableName: "mascotas",     // nombre real en DB
+    timestamps: true,          // createdAt / updatedAt
+
+    // --------------------------------------------------
+    // ÍNDICES (🔥 NIVEL PRO)
+    // --------------------------------------------------
+
+    indexes: [
+        {
+            fields: ["estado"] // búsquedas rápidas por estado
+        },
+        {
+            fields: ["userId"] // consultas por usuario
+        }
+    ]
+
+});
+
+
+// ------------------------------------------------------
+// HOOKS (🔥 NIVEL SENIOR)
+// ------------------------------------------------------
+
+Mascota.beforeCreate((mascota) => {
+
+    // Normalizar texto (buena práctica)
+    if (mascota.nombre) {
+        mascota.nombre = mascota.nombre.trim();
+    }
 
 });
 
@@ -138,5 +172,4 @@ const Mascota = sequelize.define("Mascota", {
 // EXPORTAR MODELO
 // ------------------------------------------------------
 
-// Exportamos modelo para usar en services/controllers
 module.exports = Mascota;

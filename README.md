@@ -1,53 +1,146 @@
-# 🐾 Huellitas de Amor - API Backend
+# 🐾 Huellitas de Amor — Plataforma de Adopción de Mascotas
 
-Aplicación backend desarrollada con **Node.js + Express** para la gestión de adopción de mascotas.
-Permite registrar usuarios, publicar mascotas, postular a adopciones y gestionar solicitudes mediante una API RESTful segura.
+Aplicación web full stack para la gestión de adopción de mascotas, que permite conectar rescatistas con adoptantes mediante un sistema de postulaciones, evaluación y selección.
 
 ---
 
 ## 🚀 Tecnologías utilizadas
 
+### Backend
+
 * Node.js
 * Express.js
-* Sequelize (ORM)
-* PostgreSQL
-* JSON Web Tokens (JWT)
-* Multer (subida de archivos)
-* Nodemon
+* Sequelize ORM
+* MySQL
+* JWT (autenticación)
+* Multer (subida de imágenes)
+
+### Frontend
+
+* HTML5
+* CSS3 (Glassmorphism UI)
+* JavaScript (Vanilla)
 
 ---
 
-## 📁 Estructura del proyecto
+## 🧠 Arquitectura del proyecto
+
+El backend está estructurado siguiendo una arquitectura en capas:
 
 ```
-src/
-│
-├── controllers/     # Lógica de entrada (req/res)
-├── services/        # Lógica de negocio
-├── models/          # Modelos Sequelize
-├── routes/          # Definición de endpoints
-├── middlewares/     # JWT, multer, errores
-├── config/          # Configuración DB
-│
-├── uploads/         # Imágenes subidas
-├── app.js           # Configuración Express
-└── server.js        # Inicialización del servidor
+Routes → Controller → Service → Repository → Model
+```
+
+### 🔹 Descripción de capas
+
+* **Routes:** Definición de endpoints y middlewares
+* **Controller:** Manejo de request/response (sin lógica de negocio)
+* **Service:** Lógica de negocio y validaciones
+* **Repository:** Acceso a base de datos (Sequelize)
+* **Model:** Definición de entidades y relaciones
+
+---
+
+## 👥 Roles del sistema
+
+* **Admin**
+
+  * Gestiona usuarios
+  * Acceso total al sistema
+
+* **Rescatista**
+
+  * Publica mascotas
+  * Revisa postulantes
+  * Selecciona adoptante
+
+* **Adoptante**
+
+  * Explora mascotas
+  * Postula a adopción
+  * Ve sus solicitudes
+
+---
+
+## 🐶 Funcionalidades principales
+
+### 🔹 Mascotas
+
+* Crear mascota (con imagen)
+* Listar mascotas con filtros
+* Editar mascota
+* Eliminar mascota
+* Cambiar estado (disponible → adoptado)
+
+---
+
+### 🔹 Solicitudes de adopción
+
+* Postular a una mascota
+* Ver postulantes por mascota
+* Ver mis solicitudes
+* Aprobar adoptante
+* Rechazar solicitud
+
+---
+
+### 🔹 Sistema de Match
+
+* Recomendación de mascotas según:
+
+  * Energía
+  * Porte
+
+---
+
+### 🔹 Usuarios
+
+* Registro con rol
+* Login con JWT
+* Gestión de usuarios (admin)
+
+---
+
+## 🔐 Autenticación
+
+Se utiliza JWT para proteger rutas privadas.
+
+* Login genera token
+* Middleware valida acceso
+* Roles controlan permisos
+
+---
+
+## 🗄️ Base de datos
+
+### Relaciones principales
+
+* Usuario (1:N) Mascotas
+* Usuario (1:N) Solicitudes
+* Mascota (1:N) Solicitudes
+
+### Restricciones importantes
+
+* No se permiten solicitudes duplicadas:
+
+```
+(mascotaId + adoptanteId) UNIQUE
 ```
 
 ---
 
-## ⚙️ Instalación y ejecución
+## 📦 Instalación y ejecución
 
 ### 1. Clonar repositorio
 
-```
-git clone https://github.com/tu-usuario/tu-repo.git
-cd tu-repo
+```bash
+git clone <tu-repo>
+cd proyecto
 ```
 
 ### 2. Instalar dependencias
 
-```
+```bash
 npm install
 ```
 
@@ -56,195 +149,73 @@ npm install
 Crear archivo `.env`:
 
 ```
-PORT=3000
-DB_NAME=nombre_db
-DB_USER=usuario
-DB_PASS=password
-DB_HOST=localhost
-JWT_SECRET=secreto_super_seguro
+DB_NAME=...
+DB_USER=...
+DB_PASSWORD=...
+JWT_SECRET=...
 ```
 
 ### 4. Ejecutar servidor
 
-```
+```bash
 npm run dev
-```
-
-Servidor corriendo en:
-
-```
-http://localhost:3000
 ```
 
 ---
 
-## 🔐 Autenticación
+## 🧪 Usuario administrador
 
-La API utiliza **JWT (JSON Web Token)**.
+Se puede crear usando el script:
 
-### Login
-
-```
-POST /api/auth/login
-```
-
-Respuesta:
-
-```
-{
-  "token": "..."
-}
-```
-
-### Uso del token
-
-Enviar en headers:
-
-```
-Authorization: Bearer TU_TOKEN
+```bash
+node seedAdmin.js
 ```
 
 ---
 
 ## 📌 Endpoints principales
 
-### 👤 Usuarios
+### Mascotas
 
-| Método | Endpoint       | Descripción            |
-| ------ | -------------- | ---------------------- |
-| GET    | /api/users     | Obtener usuarios       |
-| GET    | /api/users/:id | Obtener usuario por ID |
-| POST   | /api/users     | Crear usuario          |
-| PUT    | /api/users/:id | Actualizar usuario     |
-| DELETE | /api/users/:id | Eliminar usuario       |
+* `GET /api/mascotas`
+* `POST /api/mascotas`
+* `PUT /api/mascotas/:id`
+* `DELETE /api/mascotas/:id`
+* `GET /api/mascotas/match/filtro`
 
 ---
 
-### 🐾 Mascotas
+### Solicitudes
 
-| Método | Endpoint            | Descripción                |
-| ------ | ------------------- | -------------------------- |
-| GET    | /api/mascotas       | Listar mascotas            |
-| GET    | /api/mascotas/:id   | Ver mascota                |
-| POST   | /api/mascotas       | Crear mascota (con imagen) |
-| PUT    | /api/mascotas/:id   | Actualizar mascota         |
-| DELETE | /api/mascotas/:id   | Eliminar mascota           |
-| GET    | /api/mascotas/match | Match por preferencias     |
+* `POST /api/solicitudes`
+* `GET /api/solicitudes/mascota/:id`
+* `GET /api/solicitudes/mis-solicitudes`
+* `PUT /api/solicitudes/:id/seleccionar`
+* `PUT /api/solicitudes/:id/rechazar`
 
 ---
 
-### 📨 Solicitudes de adopción
+## 🎨 UI/UX
 
-| Método | Endpoint                         | Descripción       |
-| ------ | -------------------------------- | ----------------- |
-| POST   | /api/solicitudes                 | Crear solicitud   |
-| GET    | /api/solicitudes/mascota/:id     | Ver postulantes   |
-| PUT    | /api/solicitudes/:id/seleccionar | Aprobar adoptante |
+* Diseño moderno tipo glassmorphism
+* Interfaces separadas por rol
+* Navegación clara y consistente
 
 ---
 
-### 📂 Subida de archivos
+## 📈 Mejoras futuras
 
-| Método | Endpoint    | Descripción  |
-| ------ | ----------- | ------------ |
-| POST   | /api/upload | Subir imagen |
-
-✔ Tipos permitidos: JPG, JPEG, PNG
-✔ Tamaño máximo: 5MB
+* Loader de carga
+* Notificaciones visuales
+* Paginación de resultados
+* Tests automatizados
 
 ---
 
-## 🧠 Modelo de datos (relaciones)
+## 🏆 Conclusión
 
-* Un **usuario** puede tener muchas mascotas
-* Una **mascota** pertenece a un usuario
-* Una **mascota** puede tener muchas solicitudes
-* Una **solicitud** pertenece a una mascota y a un usuario
+Este proyecto implementa un sistema completo de adopción con arquitectura escalable, separación de responsabilidades y funcionalidades reales de negocio, acercándose a estándares de desarrollo profesional.
 
 ---
 
-## 🔄 Flujo de adopción
-
-1. Usuario (adoptante) postula a una mascota
-2. Rescatista revisa postulantes
-3. Selecciona adoptante
-4. Sistema:
-
-   * aprueba solicitud elegida
-   * rechaza las demás
-   * cambia estado de mascota a "adoptado"
-
----
-
-## 🔒 Seguridad
-
-* Autenticación mediante JWT
-* Rutas protegidas por middleware
-* Validación de archivos en subida
-* Control de roles (admin, rescatista, adoptante)
-
----
-
-## 📸 Manejo de imágenes
-
-Las imágenes se almacenan en:
-
-```
-/uploads
-```
-
-Acceso:
-
-```
-http://localhost:3000/uploads/nombre_imagen.jpg
-```
-
----
-
-## 🧪 Pruebas
-
-Se recomienda usar:
-
-* Postman
-* Thunder Client
-
-Para testear:
-
-* login
-* rutas protegidas
-* subida de imágenes
-* flujo de adopción
-
----
-
-## 📌 Estado del proyecto
-
-✔ API REST funcional
-✔ Autenticación JWT
-✔ CRUD completo
-✔ ORM con relaciones
-✔ Subida de archivos
-✔ Flujo de adopción implementado
-
----
-
-## 💼 Autor
-
-Desarrollado por: **[Tu Nombre]**
-
-Proyecto final - Backend Node.js & Express
-Alkemy Bootcamp 🚀
-
----
-
-## ⭐ Notas finales
-
-Este proyecto representa una implementación completa de backend moderno, incluyendo:
-
-* Arquitectura modular
-* Seguridad
-* Persistencia en base de datos
-* Manejo de archivos
-* Lógica de negocio real
-
----
+✨ Desarrollado por Carolina Méndez Soto
