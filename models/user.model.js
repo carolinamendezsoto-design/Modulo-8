@@ -2,13 +2,13 @@
 // IMPORTAR DEPENDENCIAS
 // ------------------------------------------------------
 
-// Tipos de datos de Sequelize
+// Importamos tipos de datos de Sequelize
 const { DataTypes } = require("sequelize");
 
-// Conexión a la base de datos
+// Importamos conexión a DB
 const { sequelize } = require("../config/database");
 
-// Librería para encriptar contraseñas
+// Importamos bcrypt para encriptar
 const bcryptjs = require("bcryptjs");
 
 
@@ -18,21 +18,14 @@ const bcryptjs = require("bcryptjs");
 
 const User = sequelize.define("User", {
 
-    // --------------------------------------------------
-    // ID (CLAVE PRIMARIA)
-    // --------------------------------------------------
-
+    // ID único
     id: {
-        type: DataTypes.INTEGER,        // número entero
-        primaryKey: true,               // clave primaria
-        autoIncrement: true             // autoincremental
+        type: DataTypes.INTEGER,
+        primaryKey: true,
+        autoIncrement: true
     },
 
-
-    // --------------------------------------------------
-    // NOMBRE
-    // --------------------------------------------------
-
+    // Nombre del usuario
     nombre: {
         type: DataTypes.STRING,
         allowNull: false,
@@ -47,15 +40,11 @@ const User = sequelize.define("User", {
         }
     },
 
-
-    // --------------------------------------------------
-    // EMAIL
-    // --------------------------------------------------
-
+    // Email único
     email: {
         type: DataTypes.STRING,
         allowNull: false,
-        unique: true, // evita duplicados
+        unique: true,
         validate: {
             isEmail: {
                 msg: "Debe ser un email válido"
@@ -66,11 +55,7 @@ const User = sequelize.define("User", {
         }
     },
 
-
-    // --------------------------------------------------
-    // PASSWORD
-    // --------------------------------------------------
-
+    // Password (se guardará encriptado)
     password: {
         type: DataTypes.STRING,
         allowNull: false,
@@ -82,95 +67,64 @@ const User = sequelize.define("User", {
         }
     },
 
-
-    // --------------------------------------------------
-    // TELÉFONO
-    // --------------------------------------------------
-
+    // Teléfono
     telefono: {
         type: DataTypes.STRING,
         allowNull: false,
         validate: {
             notEmpty: {
                 msg: "El teléfono es obligatorio"
-            },
-            len: {
-                args: [8, 15],
-                msg: "El teléfono debe tener entre 8 y 15 caracteres"
             }
         }
     },
 
-
-    // --------------------------------------------------
-    // ROL
-    // --------------------------------------------------
-
+    // Rol
     rol: {
         type: DataTypes.ENUM("admin", "rescatista", "adoptante"),
         defaultValue: "adoptante"
     }
 
 }, {
-
-    // --------------------------------------------------
-    // CONFIGURACIÓN
-    // --------------------------------------------------
-
     tableName: "users",
-    timestamps: true,
-
-    // 🔥 ÍNDICE PRO (mejora búsquedas por email)
-    indexes: [
-        {
-            unique: true,
-            fields: ["email"]
-        }
-    ]
+    timestamps: true
 });
 
 
 // ------------------------------------------------------
-// HOOK: ENCRIPTAR PASSWORD
+// HOOK: ENCRIPTAR PASSWORD (CLAVE DEL PROBLEMA)
 // ------------------------------------------------------
 
 User.beforeCreate(async (user) => {
 
-    // Normalizar email
+    // Normalizamos email
     user.email = user.email.toLowerCase().trim();
 
-    // Generar salt
+    // Generamos salt
     const salt = await bcryptjs.genSalt(10);
 
-    // Encriptar password
+    // Encriptamos password
     user.password = await bcryptjs.hash(user.password, salt);
 });
 
 
-// 🔥 IMPORTANTE (nivel pro real)
-// También en update si cambia password
+// También en update
 User.beforeUpdate(async (user) => {
 
     if (user.changed("password")) {
 
         const salt = await bcryptjs.genSalt(10);
+
         user.password = await bcryptjs.hash(user.password, salt);
     }
 });
 
 
-// ------------------------------------------------------
-// MÉTODO PERSONALIZADO
-// ------------------------------------------------------
-
+// Método para comparar password
 User.prototype.comparePassword = async function (password) {
 
     return await bcryptjs.compare(password, this.password);
 };
 
 
-// ------------------------------------------------------
-// EXPORTAR
-// ------------------------------------------------------
-
+// Exportamos modelo
 module.exports = User;

@@ -2,23 +2,22 @@
 // IMPORTAR DEPENDENCIAS
 // ------------------------------------------------------
 
-const express = require("express");
-const router = express.Router();
+const express = require("express"); // Importamos express
+const router = express.Router();   // Creamos instancia de router
 
 
 // ------------------------------------------------------
 // IMPORTAR CONTROLADOR
 // ------------------------------------------------------
 
-// ⚠️ CORRECCIÓN IMPORTANTE → nombre consistente
-const authController = require("../controllers/auth.controller");
+const authController = require("../controllers/auth.controller"); // Controlador de auth
 
 
 // ------------------------------------------------------
 // IMPORTAR MIDDLEWARE
 // ------------------------------------------------------
 
-const auth = require("../middlewares/auth.middleware");
+const auth = require("../middlewares/auth.middleware"); // Middleware para proteger rutas
 
 
 // =======================================================
@@ -27,38 +26,42 @@ const auth = require("../middlewares/auth.middleware");
 
 
 // ------------------------------------------------------
-// LOGIN
+// 🟢 REGISTRO (🔥 FIX CRÍTICO)
+// ------------------------------------------------------
+
+// POST /api/auth/register
+// Esta ruta permite crear un nuevo usuario
+router.post("/register", authController.register);
+
+
+// ------------------------------------------------------
+// 🔵 LOGIN
 // ------------------------------------------------------
 
 // POST /api/auth/login
-router.post(
-    "/login",
-    authController.login
-);
+// Esta ruta permite iniciar sesión
+router.post("/login", authController.login);
 
 
 // ------------------------------------------------------
-// VERIFICAR TOKEN
+// 🟡 VERIFICAR TOKEN
 // ------------------------------------------------------
 
 // GET /api/auth/verify
-router.get(
-    "/verify",
-    auth,
-    (req, res) => {
+// Esta ruta valida si el token JWT es válido
+router.get("/verify", auth, (req, res) => {
 
-        // Si pasa auth → token válido
-        res.status(200).json({
-            status: "success",
-            message: "Token válido",
-            data: req.user
-        });
-    }
-);
+    // Si pasa el middleware auth → token válido
+    res.status(200).json({
+        status: "success",
+        message: "Token válido",
+        data: req.user // usuario decodificado del token
+    });
+});
 
 
 // ------------------------------------------------------
 // EXPORTAR ROUTER
 // ------------------------------------------------------
 
-module.exports = router;
+module.exports = router; // Exportamos router para usarlo en app.js

@@ -2,53 +2,51 @@
 // IMPORTAR MODELOS
 // ------------------------------------------------------
 
-// 🔥 IMPORTANTE: nombres consistentes (sin .models si no lo usas en todos)
-
-// Modelo de usuarios
+// Importamos modelo de usuario
 const User = require("./user.model");
 
-// Modelo de mascotas
+// Importamos modelo de mascota
 const Mascota = require("./mascota.model");
 
-// Modelo de solicitudes (tabla intermedia)
+// Importamos modelo de solicitud (tabla intermedia)
 const Solicitud = require("./solicitud.model");
 
 
 // ------------------------------------------------------
-// RELACIÓN 1:N → USER (RESCATISTA) → MASCOTAS
+// RELACIÓN USER → MASCOTAS (1:N)
 // ------------------------------------------------------
 
 // Un usuario puede tener muchas mascotas
 User.hasMany(Mascota, {
-    foreignKey: "userId",   // FK en Mascota
-    as: "mascotas",         // alias para includes
-    onDelete: "CASCADE",    // si se elimina usuario → elimina mascotas
+    foreignKey: "userId",      // FK en Mascota
+    as: "mascotas",            // Alias para include
+    onDelete: "CASCADE",       // Borra mascotas si se elimina usuario
     onUpdate: "CASCADE"
 });
 
 // Cada mascota pertenece a un usuario (rescatista)
 Mascota.belongsTo(User, {
     foreignKey: "userId",
-    as: "rescatista",
+    as: "rescatista",          // 🔥 ESTE ALIAS ES CLAVE
     onDelete: "CASCADE",
     onUpdate: "CASCADE"
 });
 
 
 // ------------------------------------------------------
-// RELACIÓN N:M → ADOPTANTE ↔ MASCOTAS (VÍA SOLICITUD)
+// RELACIÓN N:M (ADOPCIÓN)
 // ------------------------------------------------------
 
 // Usuario (adoptante) puede postular a muchas mascotas
 User.belongsToMany(Mascota, {
-    through: Solicitud,         // tabla intermedia
-    foreignKey: "adoptanteId",  // FK en Solicitud
-    otherKey: "mascotaId",      // FK inversa
-    as: "postulaciones",        // alias
+    through: Solicitud,        // Tabla intermedia
+    foreignKey: "adoptanteId",
+    otherKey: "mascotaId",
+    as: "postulaciones",
     onDelete: "CASCADE"
 });
 
-// Mascota puede tener muchos adoptantes interesados
+// Mascota puede tener muchos interesados
 Mascota.belongsToMany(User, {
     through: Solicitud,
     foreignKey: "mascotaId",
@@ -59,48 +57,37 @@ Mascota.belongsToMany(User, {
 
 
 // ------------------------------------------------------
-// RELACIONES DIRECTAS (MUY IMPORTANTE)
+// RELACIONES DIRECTAS (CLAVE PARA INCLUDE)
 // ------------------------------------------------------
 
-// 🔥 Esto permite hacer includes directos y queries más claros
-
-// Solicitud → Usuario (adoptante)
+// Solicitud pertenece a usuario (adoptante)
 Solicitud.belongsTo(User, {
     foreignKey: "adoptanteId",
-    as: "adoptante",
-    onDelete: "CASCADE",
-    onUpdate: "CASCADE"
+    as: "adoptante"
 });
 
-// Usuario → Solicitudes
+// Usuario tiene muchas solicitudes
 User.hasMany(Solicitud, {
     foreignKey: "adoptanteId",
-    as: "solicitudes",
-    onDelete: "CASCADE"
+    as: "solicitudes"
 });
 
-
-// Solicitud → Mascota
+// Solicitud pertenece a mascota
 Solicitud.belongsTo(Mascota, {
     foreignKey: "mascotaId",
-    as: "mascota",
-    onDelete: "CASCADE",
-    onUpdate: "CASCADE"
+    as: "mascota"
 });
 
-// Mascota → Solicitudes
+// Mascota tiene muchas solicitudes
 Mascota.hasMany(Solicitud, {
     foreignKey: "mascotaId",
-    as: "solicitudes",
-    onDelete: "CASCADE"
+    as: "solicitudes"
 });
 
 
 // ------------------------------------------------------
-// EXPORTAR MODELOS CENTRALIZADOS
+// EXPORTAR (CONSISTENTE)
 // ------------------------------------------------------
-
-// 🔥 Esto permite importar TODO desde un solo lugar
 
 module.exports = {
     User,

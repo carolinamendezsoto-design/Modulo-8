@@ -1,10 +1,13 @@
-<!DOCTYPE html> <!-- HTML5 -->
+<!-- ===================================================== -->
+<!-- DOCUMENTO HTML5 -->
+<!-- ===================================================== -->
+<!DOCTYPE html>
 
-<html lang="es"> <!-- Idioma -->
+<html lang="es">
 
 <head>
 
-    <!-- Codificación -->
+    <!-- Codificación UTF-8 -->
     <meta charset="UTF-8">
 
     <!-- Responsive -->
@@ -21,266 +24,260 @@
 
     <style>
 
-        /* BODY */
+        /* Fuente y fondo */
         body {
             font-family: 'Poppins', sans-serif;
             background-image: url("img/Huellitas_de_Amor.jpg");
             background-size: cover;
             background-attachment: fixed;
-            padding: 20px;
         }
 
-        /* OVERLAY */
+        /* Overlay oscuro */
         body::before {
             content: "";
             position: fixed;
             inset: 0;
-            background: linear-gradient(
-                rgba(0,0,0,0.6),
-                rgba(0,0,0,0.4)
-            );
+            background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.5));
             z-index: -1;
         }
 
-        /* HEADER */
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            color: white;
-        }
-
-        /* GRID */
-        .contenedor {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-            gap: 20px;
-        }
-
-        /* CARD */
+        /* Card estilo glass */
         .card {
             border-radius: 20px;
-            padding: 15px;
             background: rgba(255,255,255,0.15);
             backdrop-filter: blur(12px);
             border: 1px solid rgba(255,255,255,0.2);
-            color: white;
             box-shadow: 0 15px 40px rgba(0,0,0,0.3);
-            transition: 0.3s;
         }
 
-        /* HOVER */
-        .card:hover {
-            transform: translateY(-5px);
-        }
-
-        /* IMAGEN */
-        .img {
+        /* Imagen */
+        .card img {
             width: 100%;
             height: 180px;
             object-fit: cover;
-            border-radius: 15px;
+            border-radius: 12px;
             margin-bottom: 10px;
-        }
-
-        /* BOTONES */
-        .btn {
-            border-radius: 10px;
         }
 
     </style>
 
 </head>
 
-<body>
+<body class="p-4 text-white">
 
 <div class="container">
 
     <!-- HEADER -->
-    <div class="header">
+    <div class="d-flex justify-content-between align-items-center mb-4">
 
         <h3>🐶 Mascotas disponibles</h3>
 
-        <button class="btn btn-danger btn-sm" onclick="logout()">
-            Cerrar sesión
-        </button>
+        <div>
+
+            <!-- Volver -->
+            <a id="btnVolver" class="btn btn-light btn-sm me-2 fw-bold"></a>
+
+            <!-- Logout -->
+            <button class="btn btn-danger btn-sm" onclick="logout()">Cerrar sesión</button>
+
+        </div>
 
     </div>
 
     <!-- CONTENEDOR -->
-    <div id="contenedor" class="contenedor"></div>
+    <div id="contenedor" class="row g-3"></div>
 
 </div>
 
-<!-- SCRIPTS -->
 <script src="js/utils.js"></script>
 <script src="js/auth.js"></script>
 
 <script>
 
-    // --------------------------------------------------
-    // VARIABLES GLOBALES
-    // --------------------------------------------------
+// API endpoint
+const API = "/api/mascotas";
 
-    const API = "/api/mascotas"; // endpoint backend
+// contenedor
+const contenedor = document.getElementById("contenedor");
 
-    const contenedor = document.getElementById("contenedor"); // contenedor HTML
+// token
+const token = localStorage.getItem("token");
 
-    const token = localStorage.getItem("token"); // token JWT
+// user
+let user = null;
 
-    const user = JSON.parse(localStorage.getItem("user")) || null; // usuario
+try {
+    user = JSON.parse(localStorage.getItem("user"));
+} catch {
+    user = null;
+}
 
+// rol
+const rol = user?.rol?.toLowerCase()?.trim();
 
-    // --------------------------------------------------
-    // CARGAR MASCOTAS
-    // --------------------------------------------------
+// botón volver
+const btnVolver = document.getElementById("btnVolver");
 
-    async function obtenerMascotas() {
+if (!rol) {
 
-        try {
+    btnVolver.style.display = "none";
 
-            // Mensaje carga
-            contenedor.innerHTML = "<p class='text-white'>Cargando mascotas...</p>";
+} else if (rol === "admin") {
 
-            // Request
-            const res = await fetch(API);
+    btnVolver.href = "admin.html";
+    btnVolver.textContent = "← Panel Admin";
 
-            const data = await res.json();
+} else if (rol === "rescatista") {
 
-            // Validación backend
-            if (!res.ok) {
-                throw new Error(data.message || "Error al obtener mascotas");
-            }
+    btnVolver.href = "rescatista.html";
+    btnVolver.textContent = "← Mis Mascotas";
 
-            const mascotas = data.data || [];
+} else {
 
-            contenedor.innerHTML = "";
-
-            // Si no hay
-            if (!mascotas.length) {
-                contenedor.innerHTML = "<p class='text-white'>No hay mascotas disponibles</p>";
-                return;
-            }
-
-            // Render
-            mascotas.forEach(m => {
-
-                const card = document.createElement("div");
-
-                card.className = "card";
-
-                const adoptado = m.estado === "adoptado";
-
-                card.innerHTML = `
-
-                    <img 
-                        src="${m.imagen ? "/uploads/" + m.imagen : "img/default.jpg"}" 
-                        class="img"
-                    >
-
-                    <h5>${m.nombre}</h5>
-
-                    <p><strong>Edad:</strong> ${m.edad}</p>
-
-                    <p>${m.descripcion}</p>
-
-                    <p>
-                        Estado: 
-                        <strong style="color:${adoptado ? "red" : "lightgreen"};">
-                            ${m.estado}
-                        </strong>
-                    </p>
-
-                    <button 
-                        class="btn btn-success w-100 mb-2"
-                        onclick="adoptar(${m.id})"
-                        ${adoptado ? "disabled" : ""}
-                    >
-                        ❤️ Adoptar
-                    </button>
-
-                    ${user && user.rol === "rescatista" ? `
-                        <button 
-                            class="btn btn-primary w-100"
-                            onclick="verPostulantes(${m.id})"
-                        >
-                            👀 Ver postulantes
-                        </button>
-                    ` : ""}
-
-                `;
-
-                contenedor.appendChild(card);
-            });
-
-        } catch (error) {
-
-            console.error(error);
-
-            mostrarMensaje(error.message, "danger");
-        }
-    }
+    btnVolver.style.display = "none";
+}
 
 
-    // --------------------------------------------------
-    // ADOPTAR
-    // --------------------------------------------------
+// ------------------------------------------------------
+// CARGAR MASCOTAS
+// ------------------------------------------------------
 
-    async function adoptar(id) {
+async function obtenerMascotas() {
 
-        // Validar login
-        if (!token) {
-            mostrarMensaje("Debes iniciar sesión", "warning");
+    try {
+
+        contenedor.innerHTML = "<p>Cargando...</p>";
+
+        const res = await fetch(API);
+
+        const data = await res.json();
+
+        if (!res.ok) throw new Error(data.message);
+
+        const mascotas = data.data || [];
+
+        contenedor.innerHTML = "";
+
+        if (!mascotas.length) {
+            contenedor.innerHTML = "<p>No hay mascotas</p>";
             return;
         }
 
-        try {
+        mascotas.forEach(m => {
 
-            const res = await fetch("/api/solicitudes", {
+            const col = document.createElement("div");
+            col.className = "col-md-4";
 
-                method: "POST",
+            const adoptado = m.estado === "adoptado";
 
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: "Bearer " + token
-                },
+            // 🔥 FIX imagen correcta
+            const imagen = m.imagen 
+                ? `/uploads/${m.imagen}` 
+                : "img/default.jpg";
 
-                body: JSON.stringify({ mascotaId: id })
-            });
+            col.innerHTML = `
+                <div class="card p-3 text-white">
 
-            const data = await res.json();
+                    <!-- Imagen -->
+                    <img src="${imagen}" alt="mascota">
 
-            if (!res.ok) {
-                throw new Error(data.message || "Error al adoptar");
-            }
+                    <!-- Nombre -->
+                    <h5>${m.nombre}</h5>
 
-            mostrarMensaje("Solicitud enviada 🐾", "success");
+                    <!-- Raza -->
+                    <p><strong>Raza:</strong> ${m.raza || "No definida"}</p>
 
-        } catch (error) {
+                    <!-- Edad -->
+                    <p><strong>Edad:</strong> ${m.edad}</p>
 
-            console.error(error);
+                    <!-- Descripción -->
+                    <p>${m.descripcion || ""}</p>
 
-            mostrarMensaje(error.message, "danger");
-        }
+                    <!-- Estado -->
+                    <p><strong>${m.estado}</strong></p>
+
+                    <!-- Botón adoptar -->
+                    <button 
+                        class="btn btn-success mb-2"
+                        onclick="adoptar(${m.id})"
+                        ${adoptado ? "disabled" : ""}
+                    >
+                        Adoptar
+                    </button>
+
+                    <!-- Solo rescatista -->
+                    ${rol === "rescatista" ? `
+                        <button 
+                            class="btn btn-primary"
+                            onclick="verPostulantes(${m.id})"
+                        >
+                            Ver postulantes
+                        </button>
+                    ` : ""}
+
+                </div>
+            `;
+
+            contenedor.appendChild(col);
+        });
+
+    } catch (error) {
+
+        console.error(error);
+        mostrarMensaje(error.message, "danger");
+    }
+}
+
+
+// ------------------------------------------------------
+// ADOPTAR
+// ------------------------------------------------------
+
+async function adoptar(id) {
+
+    if (!token) {
+        mostrarMensaje("Debes iniciar sesión", "warning");
+        return;
     }
 
+    try {
 
-    // --------------------------------------------------
-    // VER POSTULANTES
-    // --------------------------------------------------
+        const res = await fetch("/api/solicitudes", {
 
-    function verPostulantes(id) {
+            method: "POST",
 
-        window.location.href = `postulantes.html?id=${id}`;
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: "Bearer " + token
+            },
+
+            body: JSON.stringify({ mascotaId: id })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) throw new Error(data.message);
+
+        mostrarMensaje("Solicitud enviada 🐾");
+
+    } catch (error) {
+
+        console.error(error);
+        mostrarMensaje(error.message, "danger");
     }
+}
 
 
-    // --------------------------------------------------
-    // INIT
-    // --------------------------------------------------
+// ------------------------------------------------------
+// REDIRECCIÓN
+// ------------------------------------------------------
 
-    obtenerMascotas();
+function verPostulantes(id) {
+    window.location.href = `postulantes.html?id=${id}`;
+}
+
+// INIT
+obtenerMascotas();
 
 </script>
 

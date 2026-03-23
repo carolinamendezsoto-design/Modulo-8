@@ -2,25 +2,22 @@
 // IMPORTAR DEPENDENCIAS
 // ------------------------------------------------------
 
-// Librería para manejar JWT
-const jwt = require("jsonwebtoken");
+const jwt = require("jsonwebtoken"); // manejo de tokens
 
 
 // ------------------------------------------------------
 // MIDDLEWARE DE AUTENTICACIÓN
 // ------------------------------------------------------
 
-// Este middleware protege rutas privadas verificando el token JWT
 const authMiddleware = (req, res, next) => {
 
     // --------------------------------------------------
     // OBTENER HEADER AUTHORIZATION
     // --------------------------------------------------
 
-    // Intentamos obtener el header Authorization
-    const authHeader = req.headers["authorization"];
+    const authHeader = req.headers["authorization"]; // header
 
-    // Si no existe → acceso denegado
+    // Si no hay token
     if (!authHeader) {
         return res.status(401).json({
             status: "error",
@@ -31,13 +28,11 @@ const authMiddleware = (req, res, next) => {
 
 
     // --------------------------------------------------
-    // VALIDAR FORMATO DEL TOKEN
+    // VALIDAR FORMATO
     // --------------------------------------------------
 
-    // Formato esperado: "Bearer TOKEN"
-    const parts = authHeader.split(" ");
+    const parts = authHeader.split(" "); // "Bearer token"
 
-    // Validamos estructura
     if (parts.length !== 2 || parts[0] !== "Bearer") {
         return res.status(400).json({
             status: "error",
@@ -46,8 +41,7 @@ const authMiddleware = (req, res, next) => {
         });
     }
 
-    // Extraemos token
-    const token = parts[1];
+    const token = parts[1]; // extraemos token
 
 
     // --------------------------------------------------

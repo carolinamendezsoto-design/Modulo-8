@@ -2,7 +2,10 @@
 // IMPORTAR DEPENDENCIAS
 // ------------------------------------------------------
 
+// Importamos DataTypes de Sequelize para definir tipos de datos
 const { DataTypes } = require("sequelize");
+
+// Importamos la conexión a la base de datos
 const { sequelize } = require("../config/database");
 
 
@@ -10,123 +13,101 @@ const { sequelize } = require("../config/database");
 // DEFINICIÓN DEL MODELO
 // ------------------------------------------------------
 
+// Definimos el modelo Mascota
 const Mascota = sequelize.define("Mascota", {
 
-    // ID
+    // --------------------------------------------------
+    // ID (PRIMARY KEY)
+    // --------------------------------------------------
     id: {
-        type: DataTypes.INTEGER,
-        primaryKey: true,
-        autoIncrement: true
+        type: DataTypes.INTEGER, // número entero
+        primaryKey: true, // clave primaria
+        autoIncrement: true // autoincremental
     },
 
+    // --------------------------------------------------
     // NOMBRE
+    // --------------------------------------------------
     nombre: {
-        type: DataTypes.STRING,
-        allowNull: false,
-        validate: {
-            notEmpty: {
-                msg: "El nombre no puede estar vacío"
-            },
-            len: {
-                args: [2, 50],
-                msg: "El nombre debe tener entre 2 y 50 caracteres"
-            }
-        }
+        type: DataTypes.STRING, // texto corto
+        allowNull: false // obligatorio
     },
 
-    // EDAD
+    // --------------------------------------------------
+    // 🔥 RAZA (NUEVO CAMPO)
+    // --------------------------------------------------
+    raza: {
+        type: DataTypes.STRING, // texto
+        allowNull: false // obligatorio
+    },
+
+    // --------------------------------------------------
+    // 🔥 EDAD (STRING → porque usas "2 años 3 meses")
+    // --------------------------------------------------
     edad: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-        validate: {
-            isInt: {
-                msg: "La edad debe ser un número entero"
-            },
-            min: {
-                args: [0],
-                msg: "La edad no puede ser negativa"
-            }
-        }
+        type: DataTypes.STRING, // texto
+        allowNull: false // obligatorio
     },
 
+    // --------------------------------------------------
     // PORTE
+    // --------------------------------------------------
     porte: {
-        type: DataTypes.ENUM("pequeño", "mediano", "grande"),
+        type: DataTypes.STRING, // texto (pequeño, mediano, grande)
         allowNull: false
     },
 
+    // --------------------------------------------------
     // ENERGÍA
+    // --------------------------------------------------
     energia: {
-        type: DataTypes.ENUM("baja", "media", "alta"),
+        type: DataTypes.STRING, // texto (baja, media, alta)
         allowNull: false
     },
 
+    // --------------------------------------------------
     // DESCRIPCIÓN
+    // --------------------------------------------------
     descripcion: {
-        type: DataTypes.TEXT,
-        allowNull: false,
-        validate: {
-            len: {
-                args: [10, 1000],
-                msg: "La descripción debe tener entre 10 y 1000 caracteres"
-            }
-        }
+        type: DataTypes.TEXT, // texto largo
+        allowNull: false
     },
 
+    // --------------------------------------------------
     // IMAGEN
+    // --------------------------------------------------
     imagen: {
-        type: DataTypes.STRING,
-        allowNull: true,
-        defaultValue: "default.jpg"
+        type: DataTypes.STRING, // nombre archivo
+        allowNull: true, // opcional
+        defaultValue: "default.jpg" // imagen por defecto
     },
 
+    // --------------------------------------------------
     // ESTADO
+    // --------------------------------------------------
     estado: {
-        type: DataTypes.ENUM("disponible", "adoptado"),
+        type: DataTypes.STRING, // disponible / adoptado
         defaultValue: "disponible"
     },
 
-    // FK USER
+    // --------------------------------------------------
+    // USER ID (FK)
+    // --------------------------------------------------
     userId: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-        validate: {
-            isInt: {
-                msg: "userId debe ser un número entero"
-            }
-        }
+        type: DataTypes.INTEGER, // id usuario
+        allowNull: false
     }
 
 }, {
 
-    tableName: "mascotas",
-    timestamps: true,
+    tableName: "mascotas", // nombre tabla
+    timestamps: true // createdAt / updatedAt
 
-    indexes: [
-        { fields: ["estado"] },
-        { fields: ["userId"] }
-    ]
 });
 
 
 // ------------------------------------------------------
-// HOOKS
-// ------------------------------------------------------
-
-Mascota.beforeCreate((mascota) => {
-
-    if (mascota.nombre) {
-        mascota.nombre = mascota.nombre.trim();
-    }
-
-    if (mascota.descripcion) {
-        mascota.descripcion = mascota.descripcion.trim();
-    }
-});
-
-
-// ------------------------------------------------------
-// EXPORTAR
+// EXPORTAR MODELO
 // ------------------------------------------------------
 
 module.exports = Mascota;

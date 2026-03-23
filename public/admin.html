@@ -1,86 +1,86 @@
-<!DOCTYPE html> <!-- HTML5 -->
-
-<html lang="es"> <!-- Idioma -->
+<!DOCTYPE html>
+<html lang="es">
 
 <head>
 
-    <!-- Codificación -->
-    <meta charset="UTF-8">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <!-- Responsive -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🐾 Panel Admin</title>
 
-    <!-- Título -->
-    <title>🐾 Panel Admin</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 
-    <!-- Bootstrap -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
 
-    <!-- Fuente -->
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
 
-    <style>
+/* FUENTE Y FONDO */
+body {
+    font-family: 'Poppins', sans-serif;
+    background-image: url("img/Huellitas_de_Amor.jpg");
+    background-size: cover;
+    background-attachment: fixed;
+    padding: 30px;
+}
 
-        body {
-            font-family: 'Poppins', sans-serif;
-            background-image: url("img/Huellitas_de_Amor.jpg");
-            background-size: cover;
-            background-attachment: fixed;
-            padding: 30px;
-            position: relative;
-        }
+/* OVERLAY OSCURO */
+body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background: linear-gradient(
+        rgba(0,0,0,0.6),
+        rgba(0,0,0,0.4)
+    );
+    z-index: -1;
+}
 
-        body::before {
-            content: "";
-            position: fixed;
-            inset: 0;
-            background: linear-gradient(
-                rgba(0,0,0,0.5),
-                rgba(0,0,0,0.3)
-            );
-            z-index: -1;
-        }
+/* HEADER */
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    color: white;
+}
 
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
-            color: white;
-        }
+/* GRID */
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 25px;
+}
 
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-        }
+/* CARD GLASS */
+.card {
+    border-radius: 20px;
+    padding: 25px;
+    text-align: center;
+    background: rgba(255,255,255,0.15);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255,255,255,0.2);
+    color: white;
+    box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+    transition: 0.3s;
+}
 
-        .card {
-            border-radius: 25px;
-            padding: 25px;
-            text-align: center;
-            background: rgba(255,255,255,0.15);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255,255,255,0.2);
-            color: white;
-            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
-            transition: 0.3s;
-        }
+/* HOVER */
+.card:hover {
+    transform: translateY(-8px) scale(1.02);
+}
 
-        .card:hover {
-            transform: translateY(-8px) scale(1.03);
-        }
+/* ICONOS */
+.icon {
+    font-size: 38px;
+    margin-bottom: 10px;
+}
 
-        .icon {
-            font-size: 40px;
-            margin-bottom: 10px;
-        }
+/* BOTONES */
+.btn {
+    border-radius: 10px;
+}
 
-        .btn {
-            border-radius: 12px;
-        }
-
-    </style>
+</style>
 
 </head>
 
@@ -88,46 +88,59 @@
 
 <div class="container">
 
+    <!-- HEADER -->
     <div class="header">
 
         <h2>🐾 Panel Administrador</h2>
 
-        <button class="btn btn-danger" onclick="logout()">
-            Cerrar sesión
-        </button>
+        <div>
+
+            <!-- Nombre admin -->
+            <span id="nombreAdmin" class="me-3 fw-bold"></span>
+
+            <!-- Logout -->
+            <button class="btn btn-danger btn-sm" onclick="logout()">
+                Cerrar sesión
+            </button>
+
+        </div>
 
     </div>
 
+    <!-- GRID -->
     <div class="grid">
 
+        <!-- USUARIOS -->
         <div class="card">
 
             <div class="icon">👥</div>
 
             <h4>Usuarios</h4>
 
-            <p>Gestiona todos los usuarios</p>
+            <p>Gestiona usuarios</p>
 
-            <a href="usuarios.html" class="btn btn-primary">
-                Ir a usuarios
+            <a href="usuarios.html" class="btn btn-primary w-100">
+                Ir
             </a>
 
         </div>
 
+        <!-- MASCOTAS -->
         <div class="card">
 
             <div class="icon">🐶</div>
 
             <h4>Mascotas</h4>
 
-            <p>Ver todas las mascotas</p>
+            <p>Ver mascotas</p>
 
-            <a href="mascotas.html" class="btn btn-success">
-                Ir a mascotas
+            <a href="mascotas.html" class="btn btn-success w-100">
+                Ir
             </a>
 
         </div>
 
+        <!-- SOLICITUDES -->
         <div class="card">
 
             <div class="icon">💌</div>
@@ -136,8 +149,8 @@
 
             <p>Revisar adopciones</p>
 
-            <a href="postulantes.html" class="btn btn-warning">
-                Ver solicitudes
+            <a href="postulantes.html" class="btn btn-warning w-100">
+                Ir
             </a>
 
         </div>
@@ -146,33 +159,38 @@
 
 </div>
 
+<!-- SCRIPTS -->
 <script src="js/utils.js"></script>
 <script src="js/auth.js"></script>
 
 <script>
 
-    // --------------------------------------------------
-    // PROTECCIÓN ADMIN PRO
-    // --------------------------------------------------
+// PROTECCIÓN
+const token = localStorage.getItem("token");
 
-    const token = localStorage.getItem("token");
+let user = null;
 
-    let user = null;
+try {
+    user = JSON.parse(localStorage.getItem("user"));
+} catch {
+    user = null;
+}
 
-    try {
-        user = JSON.parse(localStorage.getItem("user"));
-    } catch {
-        user = null;
-    }
+if (!token || !user || user.rol !== "admin") {
 
-    if (!token || !user || user.rol !== "admin") {
+    mostrarMensaje("Acceso solo admin", "danger");
 
-        mostrarMensaje("Acceso solo admin", "danger");
+    setTimeout(() => {
+        window.location.href = "index.html";
+    }, 800);
+}
 
-        setTimeout(() => {
-            window.location.href = "index.html";
-        }, 800);
-    }
+// MOSTRAR NOMBRE
+const nombreAdmin = document.getElementById("nombreAdmin");
+
+if (user) {
+    nombreAdmin.textContent = "👤 " + (user.nombre || "Admin");
+}
 
 </script>
 

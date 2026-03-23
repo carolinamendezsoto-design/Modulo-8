@@ -19,27 +19,27 @@ const getMascotas = async (query = {}) => {
 
     // Validamos que query sea un objeto válido
     if (typeof query !== "object") {
-        const error = new Error("Los filtros deben ser un objeto");
-        error.statusCode = 400;
-        throw error;
+        const error = new Error("Los filtros deben ser un objeto"); // mensaje claro
+        error.statusCode = 400; // código HTTP
+        throw error; // lanzamos error
     }
 
     // --------------------------------------------------
     // ARMAR FILTROS LIMPIOS
     // --------------------------------------------------
 
-    const filtros = {};
+    const filtros = {}; // objeto vacío donde construiremos filtros válidos
 
     // Solo agregamos propiedades válidas (evita basura o SQL injection indirecto)
-    if (query.estado) filtros.estado = query.estado;
-    if (query.energia) filtros.energia = query.energia;
-    if (query.porte) filtros.porte = query.porte;
+    if (query.estado) filtros.estado = query.estado; // filtramos por estado
+    if (query.energia) filtros.energia = query.energia; // filtramos por energía
+    if (query.porte) filtros.porte = query.porte; // filtramos por porte
 
     // --------------------------------------------------
     // LLAMADA AL REPOSITORY
     // --------------------------------------------------
 
-    const mascotas = await mascotaRepository.getMascotas(filtros);
+    const mascotas = await mascotaRepository.getMascotas(filtros); // consulta DB
 
     // Retornamos siempre array (aunque esté vacío)
     return mascotas;
@@ -58,8 +58,8 @@ const getMascotaById = async ({ id }) => {
     // --------------------------------------------------
 
     if (!id) {
-        const error = new Error("ID requerido");
-        error.statusCode = 400;
+        const error = new Error("ID requerido"); // mensaje claro
+        error.statusCode = 400; // error cliente
         throw error;
     }
 
@@ -67,19 +67,19 @@ const getMascotaById = async ({ id }) => {
     // CONSULTA
     // --------------------------------------------------
 
-    const mascota = await mascotaRepository.getMascotaById(id);
+    const mascota = await mascotaRepository.getMascotaById(id); // buscamos por id
 
     // --------------------------------------------------
     // VALIDAR EXISTENCIA
     // --------------------------------------------------
 
     if (!mascota) {
-        const error = new Error("Mascota no encontrada");
-        error.statusCode = 404;
+        const error = new Error("Mascota no encontrada"); // no existe
+        error.statusCode = 404; // not found
         throw error;
     }
 
-    return mascota;
+    return mascota; // retornamos mascota encontrada
 };
 
 
@@ -94,15 +94,26 @@ const createMascota = async (data) => {
     // VALIDACIONES DE NEGOCIO
     // --------------------------------------------------
 
+    // Validamos que data exista y sea objeto
     if (!data || typeof data !== "object") {
         const error = new Error("Datos inválidos");
         error.statusCode = 400;
         throw error;
     }
 
-    // Validaciones obligatorias
+    // --------------------------------------------------
+    // CAMPOS OBLIGATORIOS
+    // --------------------------------------------------
+
     if (!data.nombre) {
         const error = new Error("El nombre es obligatorio");
+        error.statusCode = 400;
+        throw error;
+    }
+
+    // 🔥 NUEVO → VALIDAMOS RAZA (ANTES NO EXISTÍA)
+    if (!data.raza) {
+        const error = new Error("La raza es obligatoria");
         error.statusCode = 400;
         throw error;
     }
@@ -130,16 +141,16 @@ const createMascota = async (data) => {
     // --------------------------------------------------
 
     if (!data.estado) {
-        data.estado = "disponible"; // regla de negocio
+        data.estado = "disponible"; // por defecto siempre disponible
     }
 
     // --------------------------------------------------
     // CREACIÓN
     // --------------------------------------------------
 
-    const nuevaMascota = await mascotaRepository.createMascota(data);
+    const nuevaMascota = await mascotaRepository.createMascota(data); // guardamos en DB
 
-    return nuevaMascota;
+    return nuevaMascota; // devolvemos resultado
 };
 
 
@@ -170,7 +181,7 @@ const updateMascota = async ({ id, data }) => {
     // VERIFICAR EXISTENCIA
     // --------------------------------------------------
 
-    const mascota = await mascotaRepository.getMascotaById(id);
+    const mascota = await mascotaRepository.getMascotaById(id); // buscamos primero
 
     if (!mascota) {
         const error = new Error("Mascota no encontrada");
@@ -182,7 +193,7 @@ const updateMascota = async ({ id, data }) => {
     // ACTUALIZACIÓN
     // --------------------------------------------------
 
-    const mascotaActualizada = await mascotaRepository.updateMascota(id, data);
+    const mascotaActualizada = await mascotaRepository.updateMascota(id, data); // actualizamos
 
     return mascotaActualizada;
 };
@@ -209,7 +220,7 @@ const deleteMascota = async ({ id }) => {
     // ELIMINACIÓN
     // --------------------------------------------------
 
-    const deleted = await mascotaRepository.deleteMascota(id);
+    const deleted = await mascotaRepository.deleteMascota(id); // eliminamos
 
     // --------------------------------------------------
     // VALIDAR RESULTADO
@@ -221,7 +232,7 @@ const deleteMascota = async ({ id }) => {
         throw error;
     }
 
-    // Buena práctica: retornar mensaje claro
+    // Retorno claro (buena práctica)
     return {
         message: "Mascota eliminada correctamente"
     };
@@ -254,31 +265,31 @@ const getMatchMascotas = async (preferencias = {}) => {
     });
 
     // --------------------------------------------------
-    // CALCULAR MATCH (ALGORITMO SIMPLE)
+    // CALCULAR MATCH
     // --------------------------------------------------
 
     const resultado = mascotas.map(mascota => {
 
-        let score = 0;
+        let score = 0; // puntaje inicial
 
-        // Comparación por energía
+        // energía coincide
         if (preferencias.energia && mascota.energia === preferencias.energia) {
             score++;
         }
 
-        // Comparación por porte
+        // porte coincide
         if (preferencias.porte && mascota.porte === preferencias.porte) {
             score++;
         }
 
         return {
-            ...mascota.toJSON(), // importante para evitar problemas Sequelize
-            match: score
+            ...mascota.toJSON(), // convertimos a JSON plano
+            match: score // agregamos score
         };
     });
 
     // --------------------------------------------------
-    // ORDENAR RESULTADOS (MEJOR MATCH PRIMERO)
+    // ORDENAR RESULTADOS
     // --------------------------------------------------
 
     return resultado.sort((a, b) => b.match - a.match);

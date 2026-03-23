@@ -2,111 +2,146 @@
 // IMPORTAR DEPENDENCIAS
 // ------------------------------------------------------
 
-// App principal (Express configurado)
+// Importamos la aplicación principal de Express (configurada en app.js)
 const app = require("./app");
 
-// Conexión a base de datos
+// Importamos la función de conexión a la base de datos y la instancia Sequelize
 const { connectDB, sequelize } = require("./config/database");
 
-// Variables de entorno
+// Cargamos variables de entorno desde el archivo .env
 require("dotenv").config();
 
 
 // ------------------------------------------------------
-// CONFIGURAR PUERTO
+// CONFIGURACIÓN DEL PUERTO
 // ------------------------------------------------------
 
-// Puerto desde .env o fallback
+// Definimos el puerto en el que correrá el servidor
+// Usamos el puerto del .env o 3000 por defecto
 const PORT = process.env.PORT || 3000;
 
 
 // ------------------------------------------------------
-// FUNCIÓN PRINCIPAL
+// FUNCIÓN PRINCIPAL DEL SERVIDOR
 // ------------------------------------------------------
 
+// Función async para iniciar todo el backend
 const startServer = async () => {
 
     try {
 
         // --------------------------------------------------
-        // CONECTAR BASE DE DATOS
+        // CONEXIÓN A BASE DE DATOS
         // --------------------------------------------------
 
+        // Ejecutamos la conexión a PostgreSQL
         await connectDB();
 
+        // Confirmamos conexión exitosa
         console.log("✅ Base de datos conectada correctamente");
 
 
         // --------------------------------------------------
-        // SINCRONIZAR MODELOS
+        // ⚠️ IMPORTANTE: NO BORRAR BASE DE DATOS
         // --------------------------------------------------
 
-        // Crea tablas si no existen
-        await sequelize.sync();
+        // ❌ ELIMINADO:
+        // Antes tenías un reset que borraba todas las tablas
+        // Esto causaba que el usuario desapareciera en cada reinicio
+        // Ahora lo dejamos limpio para desarrollo real
 
+
+        // --------------------------------------------------
+        // SINCRONIZAR MODELOS CON SEQUELIZE
+        // --------------------------------------------------
+
+        // Sequelize sincroniza los modelos con la base de datos
+        // alter: true ajusta columnas sin borrar datos existentes
+        await sequelize.sync({
+            alter: true
+        });
+
+        // Confirmamos sincronización
         console.log("✅ Modelos sincronizados correctamente");
 
 
         // --------------------------------------------------
-        // INICIAR SERVIDOR
+        // INICIAR SERVIDOR HTTP
         // --------------------------------------------------
 
+        // Levantamos el servidor en el puerto definido
         const server = app.listen(PORT, () => {
+
+            // Mostramos URL en consola
             console.log(`🚀 Servidor corriendo en http://localhost:${PORT}`);
+
         });
 
 
         // --------------------------------------------------
-        // CIERRE GRACEFUL (PRO)
+        // CIERRE CONTROLADO DEL SERVIDOR
         // --------------------------------------------------
 
+        // Capturamos señal SIGTERM (uso en producción)
         process.on("SIGTERM", () => {
+
             console.log("⚠️ Cerrando servidor (SIGTERM)...");
-            server.close(() => {
-                console.log("💤 Servidor cerrado correctamente");
-                process.exit(0);
-            });
+
+            // Cerramos servidor correctamente
+            server.close(() => process.exit(0));
+
         });
 
+        // Capturamos Ctrl + C (desarrollo)
         process.on("SIGINT", () => {
+
             console.log("⚠️ Cerrando servidor (SIGINT)...");
-            server.close(() => {
-                console.log("💤 Servidor cerrado correctamente");
-                process.exit(0);
-            });
+
+            // Cerramos servidor correctamente
+            server.close(() => process.exit(0));
+
         });
 
     } catch (error) {
 
         // --------------------------------------------------
-        // ERROR CRÍTICO
+        // MANEJO DE ERROR CRÍTICO
         // --------------------------------------------------
 
-        console.error("❌ Error crítico al iniciar:");
+        // Mostramos mensaje de error general
+        console.error("❌ Error crítico al iniciar servidor:");
+
+        // Mostramos detalle del error
         console.error(error.message);
 
+        // Terminamos ejecución si algo falla
         process.exit(1);
     }
 };
 
 
 // ------------------------------------------------------
-// ERRORES GLOBALES
+// MANEJO GLOBAL DE ERRORES
 // ------------------------------------------------------
 
-// Promesas no manejadas
-process.on("unhandledRejection", (err) => {
+// Captura errores de promesas no manejadas (async)
+process.on("unhandledRejection", err => {
+
     console.error("❌ Unhandled Rejection:", err.message);
+
 });
 
-// Errores síncronos
-process.on("uncaughtException", (err) => {
+// Captura errores síncronos no controlados
+process.on("uncaughtException", err => {
+
     console.error("❌ Uncaught Exception:", err.message);
+
 });
 
 
 // ------------------------------------------------------
-// EJECUTAR
+// INICIO DEL SERVIDOR
 // ------------------------------------------------------
 
+// Ejecutamos la función principal para iniciar el backend
 startServer();

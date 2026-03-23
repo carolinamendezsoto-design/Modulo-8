@@ -1,195 +1,111 @@
 // ------------------------------------------------------
-// IMPORTAR MODELO
+// IMPORTAR MODELOS
 // ------------------------------------------------------
 
-// Importamos el modelo desde el index de models (mejor práctica)
-const db = require("../models");
+// 🔥 IMPORTANTE: usar nombres correctos
+const { Mascota, User, Solicitud } = require("../models");
 
-// =======================================================
-// OBTENER TODAS LAS MASCOTAS (CON FILTROS DINÁMICOS)
-// =======================================================
 
-const getMascotas = async (filters = {}) => {
+// ------------------------------------------------------
+// OBTENER TODAS LAS MASCOTAS
+// ------------------------------------------------------
 
-    // --------------------------------------------------
-    // VALIDACIÓN BÁSICA
-    // --------------------------------------------------
-
-    // Aseguramos que filters sea objeto
-    if (typeof filters !== "object") {
-        throw new Error("Los filtros deben ser un objeto");
-    }
-
-    // --------------------------------------------------
-    // CONSULTA A BASE DE DATOS
-    // --------------------------------------------------
+const getMascotas = async () => {
 
     return await Mascota.findAll({
-        where: filters, // Sequelize arma WHERE dinámico
-        order: [["createdAt", "DESC"]] // 🔥 orden profesional
+
+        include: [
+
+            {
+                // 🔥 DEBE COINCIDIR CON EL "as" DEL MODELO
+                model: User,
+                as: "rescatista",
+
+                attributes: ["id", "nombre", "email"]
+            },
+
+            {
+                model: Solicitud,
+                as: "solicitudes",
+
+                attributes: ["id", "estado"]
+            }
+
+        ]
+
     });
 };
 
 
-
-// =======================================================
-// OBTENER MASCOTA POR ID
-// =======================================================
+// ------------------------------------------------------
+// OBTENER POR ID
+// ------------------------------------------------------
 
 const getMascotaById = async (id) => {
 
-    // --------------------------------------------------
-    // VALIDACIÓN
-    // --------------------------------------------------
+    return await Mascota.findByPk(id, {
 
-    if (!id) {
-        throw new Error("ID requerido en repository");
-    }
+        include: [
 
-    // --------------------------------------------------
-    // CONSULTA
-    // --------------------------------------------------
+            {
+                model: User,
+                as: "rescatista",
+                attributes: ["id", "nombre"]
+            },
 
-    return await Mascota.findByPk(id);
+            {
+                model: Solicitud,
+                as: "solicitudes"
+            }
+
+        ]
+
+    });
 };
 
 
-
-// =======================================================
-// CREAR MASCOTA
-// =======================================================
+// ------------------------------------------------------
+// CREAR
+// ------------------------------------------------------
 
 const createMascota = async (data) => {
-
-    // --------------------------------------------------
-    // VALIDACIÓN
-    // --------------------------------------------------
-
-    if (!data) {
-        throw new Error("Datos requeridos para crear mascota");
-    }
-
-    // --------------------------------------------------
-    // CREACIÓN
-    // --------------------------------------------------
 
     return await Mascota.create(data);
 };
 
 
-
-// =======================================================
-// ACTUALIZAR MASCOTA
-// =======================================================
+// ------------------------------------------------------
+// ACTUALIZAR
+// ------------------------------------------------------
 
 const updateMascota = async (id, data) => {
 
-    // --------------------------------------------------
-    // VALIDACIONES
-    // --------------------------------------------------
+    const mascota = await Mascota.findByPk(id);
 
-    if (!id) {
-        throw new Error("ID requerido para actualizar");
-    }
+    if (!mascota) return null;
 
-    if (!data) {
-        throw new Error("Datos requeridos para actualizar");
-    }
-
-    // --------------------------------------------------
-    // UPDATE
-    // --------------------------------------------------
-
-    const [updated] = await Mascota.update(data, {
-        where: { id }
-    });
-
-    // --------------------------------------------------
-    // VERIFICAR RESULTADO
-    // --------------------------------------------------
-
-    if (!updated) return null;
-
-    // --------------------------------------------------
-    // RETORNAR REGISTRO ACTUALIZADO
-    // --------------------------------------------------
-
-    return await Mascota.findByPk(id);
+    return await mascota.update(data);
 };
-
-
-
-// =======================================================
-// ELIMINAR MASCOTA
-// =======================================================
-
-const deleteMascota = async (id) => {
-
-    // --------------------------------------------------
-    // VALIDACIÓN
-    // --------------------------------------------------
-
-    if (!id) {
-        throw new Error("ID requerido para eliminar");
-    }
-
-    // --------------------------------------------------
-    // DELETE
-    // --------------------------------------------------
-
-    const deleted = await Mascota.destroy({
-        where: { id }
-    });
-
-    // --------------------------------------------------
-    // RETORNO BOOLEANO (MEJOR PRÁCTICA)
-    // --------------------------------------------------
-
-    return deleted > 0;
-};
-
-
-
-// =======================================================
-// CAMBIAR ESTADO DE MASCOTA
-// =======================================================
-
-const updateEstadoMascota = async (id, estado) => {
-
-    // --------------------------------------------------
-    // VALIDACIONES
-    // --------------------------------------------------
-
-    if (!id || !estado) {
-        throw new Error("ID y estado requeridos");
-    }
-
-    // --------------------------------------------------
-    // UPDATE PARCIAL
-    // --------------------------------------------------
-
-    const [updated] = await Mascota.update(
-        { estado },
-        { where: { id } }
-    );
-
-    // --------------------------------------------------
-    // VALIDAR RESULTADO
-    // --------------------------------------------------
-
-    if (!updated) return null;
-
-    // --------------------------------------------------
-    // RETORNAR ACTUALIZADO
-    // --------------------------------------------------
-
-    return await Mascota.findByPk(id);
-};
-
 
 
 // ------------------------------------------------------
-// EXPORTAR REPOSITORY
+// ELIMINAR
+// ------------------------------------------------------
+
+const deleteMascota = async (id) => {
+
+    const mascota = await Mascota.findByPk(id);
+
+    if (!mascota) return null;
+
+    await mascota.destroy();
+
+    return mascota;
+};
+
+
+// ------------------------------------------------------
+// EXPORTAR
 // ------------------------------------------------------
 
 module.exports = {
@@ -197,6 +113,5 @@ module.exports = {
     getMascotaById,
     createMascota,
     updateMascota,
-    deleteMascota,
-    updateEstadoMascota
+    deleteMascota
 };

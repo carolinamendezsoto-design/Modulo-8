@@ -1,317 +1,249 @@
-<!DOCTYPE html> <!-- HTML5 -->
-
+<!DOCTYPE html> <!-- Documento HTML5 -->
 <html lang="es"> <!-- Idioma -->
 
 <head>
 
-    <!-- Codificación -->
-    <meta charset="UTF-8">
+<meta charset="UTF-8"> <!-- Codificación -->
+<title>Panel Rescatista</title> <!-- Título -->
 
-    <!-- Responsive -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- Bootstrap -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 
-    <!-- Título -->
-    <title>🐾 Mis Mascotas</title>
+<!-- Fuente -->
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
 
-    <!-- Bootstrap -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>
 
-    <!-- Fuente -->
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+/* -------------------------------------------------- */
+/* FONDO GLOBAL CONSISTENTE */
+/* -------------------------------------------------- */
 
-    <style>
+body {
+    font-family: 'Poppins', sans-serif; /* Fuente */
+    background-image: url("img/Huellitas_de_Amor.jpg"); /* Imagen fondo */
+    background-size: cover; /* Ajuste */
+    background-attachment: fixed; /* Fijo */
+    min-height: 100vh; /* Altura */
+    color: white; /* Texto */
+}
 
-        body {
-            font-family: 'Poppins', sans-serif;
-            background-image: url("img/Huellitas_de_Amor.jpg");
-            background-size: cover;
-            background-attachment: fixed;
-            padding: 20px;
-        }
+/* Overlay oscuro */
+body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.5));
+    z-index: -1;
+}
 
-        body::before {
-            content: "";
-            position: fixed;
-            inset: 0;
-            background: linear-gradient(
-                rgba(0,0,0,0.65),
-                rgba(0,0,0,0.45)
-            );
-            z-index: -1;
-        }
+/* -------------------------------------------------- */
+/* CONTENEDOR PRINCIPAL */
+/* -------------------------------------------------- */
 
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            color: white;
-        }
+.container-box {
+    background: rgba(255,255,255,0.15); /* glass */
+    backdrop-filter: blur(15px); /* blur */
+    border-radius: 25px; /* bordes */
+    padding: 25px; /* espacio */
+    box-shadow: 0 25px 50px rgba(0,0,0,0.4); /* sombra */
+}
 
-        .card {
-            border-radius: 20px;
-            padding: 20px;
-            margin-bottom: 15px;
-            background: rgba(255,255,255,0.15);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255,255,255,0.2);
-            color: white;
-        }
+/* -------------------------------------------------- */
+/* HEADER */
+/* -------------------------------------------------- */
 
-        .mini {
-            background: rgba(255,255,255,0.1);
-            padding: 10px;
-            border-radius: 10px;
-            margin-top: 10px;
-        }
+.top-bar {
+    display: flex; /* flex */
+    justify-content: space-between; /* separación */
+    align-items: center; /* centrado */
+    margin-bottom: 20px; /* espacio */
+}
 
-        .btn {
-            border-radius: 10px;
-        }
+/* -------------------------------------------------- */
+/* TARJETAS */
+/* -------------------------------------------------- */
 
-    </style>
+.card {
+    border-radius: 20px; /* bordes */
+    background: rgba(255,255,255,0.15); /* glass */
+    backdrop-filter: blur(12px); /* blur */
+    border: 1px solid rgba(255,255,255,0.2); /* borde */
+    box-shadow: 0 15px 40px rgba(0,0,0,0.3); /* sombra */
+    transition: 0.3s;
+}
+
+/* Hover */
+.card:hover {
+    transform: translateY(-5px);
+}
+
+/* Imagen */
+.card img {
+    width: 100%;
+    height: 180px;
+    object-fit: cover;
+    border-radius: 12px;
+    margin-bottom: 10px;
+}
+
+</style>
 
 </head>
 
-<body>
+<body class="p-4">
 
 <div class="container">
 
-    <!-- HEADER -->
-    <div class="header">
+    <div class="container-box">
 
-        <h3>🐶 Mis Mascotas</h3>
+        <!-- HEADER -->
+        <div class="top-bar">
 
-        <div>
+            <h3>🐾 Mis Mascotas</h3>
 
-            <a href="crear-mascota.html" class="btn btn-success btn-sm me-2">
-                + Nueva mascota
-            </a>
+            <div>
 
-            <button class="btn btn-danger btn-sm" onclick="logout()">
-                Cerrar sesión
-            </button>
+                <!-- Crear -->
+                <a href="crear-mascota.html" class="btn btn-success me-2">
+                    ➕ Crear Mascota
+                </a>
+
+                <!-- Logout -->
+                <button onclick="logout()" class="btn btn-danger">
+                    Cerrar sesión
+                </button>
+
+            </div>
 
         </div>
 
-    </div>
+        <!-- CONTENEDOR -->
+        <div id="contenedorMascotas" class="row"></div>
 
-    <!-- CONTENEDOR -->
-    <div id="contenedorMascotas"></div>
+    </div>
 
 </div>
 
-<!-- SCRIPTS -->
 <script src="js/utils.js"></script>
 <script src="js/auth.js"></script>
 
 <script>
 
-    // --------------------------------------------------
-    // VARIABLES
-    // --------------------------------------------------
+// --------------------------------------------------
+// TOKEN
+// --------------------------------------------------
 
-    const token = localStorage.getItem("token"); // token
+const token = localStorage.getItem("token"); // obtenemos token
 
-    const user = JSON.parse(localStorage.getItem("user")) || null; // usuario
+// --------------------------------------------------
+// USER
+// --------------------------------------------------
 
+let user = null; // inicializamos
 
-    // --------------------------------------------------
-    // PROTECCIÓN
-    // --------------------------------------------------
+try {
+    user = JSON.parse(localStorage.getItem("user")); // parse seguro
+} catch {
+    user = null; // fallback
+}
 
-    if (!token || !user || user.rol !== "rescatista") {
+// --------------------------------------------------
+// ROL
+// --------------------------------------------------
 
-        mostrarMensaje("Acceso solo rescatista", "danger");
+const rol = user?.rol?.toLowerCase()?.trim(); // normalizamos
 
-        window.location.href = "index.html";
-    }
+// --------------------------------------------------
+// PROTECCIÓN
+// --------------------------------------------------
 
+if (!token || !user || rol !== "rescatista") {
+    window.location.href = "index.html"; // redirige si no cumple
+}
 
-    // --------------------------------------------------
-    // CARGAR MASCOTAS
-    // --------------------------------------------------
+// --------------------------------------------------
+// CARGAR MASCOTAS
+// --------------------------------------------------
 
-    async function cargarMisMascotas() {
+async function cargarMascotas() {
 
-        try {
+    const contenedor = document.getElementById("contenedorMascotas");
 
-            const cont = document.getElementById("contenedorMascotas");
+    try {
 
-            cont.innerHTML = "<p class='text-white'>Cargando...</p>";
-
-            const res = await fetch("/api/mascotas", {
-                headers: {
-                    Authorization: "Bearer " + token
-                }
-            });
-
-            const data = await res.json();
-
-            if (!res.ok) {
-                throw new Error(data.message || "Error al cargar mascotas");
+        const res = await fetch("/api/mascotas", {
+            headers: {
+                Authorization: "Bearer " + token
             }
+        });
 
-            const mascotas = data.data || [];
+        const data = await res.json();
 
-            // Filtrar del usuario
-            const misMascotas = mascotas.filter(m => m.userId === user.id);
+        // Filtramos solo las del usuario
+        const mascotas = (data.data || []).filter(m => m.userId === user.id);
 
-            mostrarMascotas(misMascotas);
+        contenedor.innerHTML = "";
 
-        } catch (error) {
-
-            console.error(error);
-
-            mostrarMensaje(error.message, "danger");
-        }
-    }
-
-
-    // --------------------------------------------------
-    // MOSTRAR
-    // --------------------------------------------------
-
-    function mostrarMascotas(lista) {
-
-        const cont = document.getElementById("contenedorMascotas");
-
-        cont.innerHTML = "";
-
-        if (!lista.length) {
-            cont.innerHTML = "<p class='text-white'>No tienes mascotas publicadas</p>";
+        if (!mascotas.length) {
+            contenedor.innerHTML = "<p>No tienes mascotas aún 🐶</p>";
             return;
         }
 
-        lista.forEach(m => {
+        mascotas.forEach(m => {
 
-            cont.innerHTML += `
-                <div class="card">
+            // 🔥 imagen correcta
+            const imagen = m.imagen 
+                ? `/uploads/${m.imagen}` 
+                : "img/default.jpg";
 
-                    <h4>${m.nombre} 🐶</h4>
+            contenedor.innerHTML += `
+                <div class="col-md-4">
+                    <div class="card p-3 text-white mb-3">
 
-                    <p>${m.descripcion}</p>
+                        <!-- Imagen -->
+                        <img src="${imagen}" alt="mascota">
 
-                    <button 
-                        onclick="verSolicitudes(${m.id})"
-                        class="btn btn-primary btn-sm"
-                    >
-                        Ver solicitudes
-                    </button>
+                        <!-- Nombre -->
+                        <h5>${m.nombre}</h5>
 
-                    <div id="solicitudes-${m.id}"></div>
+                        <!-- Raza -->
+                        <p><strong>Raza:</strong> ${m.raza || "No definida"}</p>
 
-                </div>
-            `;
-        });
-    }
+                        <!-- Edad -->
+                        <p><strong>Edad:</strong> ${m.edad}</p>
 
+                        <!-- Estado -->
+                        <p><strong>${m.estado}</strong></p>
 
-    // --------------------------------------------------
-    // VER SOLICITUDES
-    // --------------------------------------------------
-
-    async function verSolicitudes(id) {
-
-        try {
-
-            const cont = document.getElementById(`solicitudes-${id}`);
-
-            cont.innerHTML = "Cargando solicitudes...";
-
-            const res = await fetch(`/api/solicitudes/mascota/${id}`, {
-                headers: {
-                    Authorization: "Bearer " + token
-                }
-            });
-
-            const data = await res.json();
-
-            if (!res.ok) {
-                throw new Error(data.message || "Error al cargar solicitudes");
-            }
-
-            const solicitudes = data.data || [];
-
-            if (!solicitudes.length) {
-                cont.innerHTML = "<p>No hay solicitudes</p>";
-                return;
-            }
-
-            cont.innerHTML = "";
-
-            solicitudes.forEach(s => {
-
-                cont.innerHTML += `
-                    <div class="mini">
-
-                        <strong>${s.adoptante.nombre}</strong><br>
-
-                        <small>${s.adoptante.email}</small>
-
-                        <p>${s.mensaje || ""}</p>
-
-                        <button 
-                            class="btn btn-success btn-sm"
-                            onclick="elegir(${s.id})"
-                        >
-                            Seleccionar ✅
+                        <!-- Botón -->
+                        <button onclick="verPostulantes(${m.id})" class="btn btn-primary mt-2">
+                            Ver postulantes
                         </button>
 
                     </div>
-                `;
-            });
+                </div>
+            `;
+        });
 
-        } catch (error) {
+    } catch (error) {
 
-            console.error(error);
-
-            mostrarMensaje(error.message, "danger");
-        }
+        console.error("Error cargando mascotas:", error);
     }
+}
 
+// --------------------------------------------------
+// REDIRECCIÓN
+// --------------------------------------------------
 
-    // --------------------------------------------------
-    // SELECCIONAR ADOPTANTE
-    // --------------------------------------------------
+function verPostulantes(id) {
+    window.location.href = "postulantes.html?id=" + id;
+}
 
-    async function elegir(id) {
+// --------------------------------------------------
+// INIT
+// --------------------------------------------------
 
-        try {
-
-            const res = await fetch(`/api/solicitudes/seleccionar/${id}`, {
-
-                method: "PUT",
-
-                headers: {
-                    Authorization: "Bearer " + token
-                }
-            });
-
-            const data = await res.json();
-
-            if (!res.ok) {
-                throw new Error(data.message || "Error al seleccionar");
-            }
-
-            mostrarMensaje("Adopción completada 🎉", "success");
-
-            location.reload();
-
-        } catch (error) {
-
-            console.error(error);
-
-            mostrarMensaje(error.message, "danger");
-        }
-    }
-
-
-    // --------------------------------------------------
-    // INIT
-    // --------------------------------------------------
-
-    cargarMisMascotas();
+cargarMascotas();
 
 </script>
 

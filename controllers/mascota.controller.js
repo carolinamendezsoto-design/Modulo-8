@@ -53,8 +53,10 @@ const getMascotaById = async (req, res, next) => {
             });
         }
 
+        // Llamamos al service
         const mascota = await mascotaService.getMascotaById({ id });
 
+        // Respuesta OK
         return res.status(200).json({
             status: "success",
             message: "Mascota obtenida correctamente",
@@ -69,33 +71,53 @@ const getMascotaById = async (req, res, next) => {
 
 
 // =======================================================
-// CREAR MASCOTA
+// CREAR MASCOTA (🔥 FIX IMPORTANTE)
 // =======================================================
 
 const createMascota = async (req, res, next) => {
 
     try {
 
+        // Body de la request
         const data = req.body;
 
-        // Validación básica
-        if (!data.nombre || !data.tipo) {
+        // --------------------------------------------------
+        // VALIDACIÓN CORREGIDA
+        // --------------------------------------------------
+
+        // ❌ antes: tipo (no existe en frontend)
+        // ✅ ahora: nombre + raza (correcto)
+        if (!data.nombre || !data.raza) {
             return res.status(400).json({
                 status: "error",
-                message: "Nombre y tipo son obligatorios",
+                message: "Nombre y raza son obligatorios",
                 data: null
             });
         }
 
-        // Agregamos usuario autenticado
-        data.userId = req.user.id;
+        // --------------------------------------------------
+        // USER AUTENTICADO
+        // --------------------------------------------------
 
-        // Si viene imagen (multer)
+        data.userId = req.user.id; // sacamos id del token
+
+        // --------------------------------------------------
+        // IMAGEN (MULTER)
+        // --------------------------------------------------
+
         if (req.file) {
-            data.imagen = req.file.filename;
+            data.imagen = req.file.filename; // guardamos nombre archivo
         }
 
+        // --------------------------------------------------
+        // CREAR EN SERVICE
+        // --------------------------------------------------
+
         const mascota = await mascotaService.createMascota(data);
+
+        // --------------------------------------------------
+        // RESPUESTA
+        // --------------------------------------------------
 
         return res.status(201).json({
             status: "success",
@@ -118,9 +140,10 @@ const updateMascota = async (req, res, next) => {
 
     try {
 
-        const { id } = req.params;
-        const data = req.body;
+        const { id } = req.params; // id desde URL
+        const data = req.body;     // datos nuevos
 
+        // Validación
         if (!id) {
             return res.status(400).json({
                 status: "error",
@@ -129,10 +152,12 @@ const updateMascota = async (req, res, next) => {
             });
         }
 
+        // Imagen opcional
         if (req.file) {
             data.imagen = req.file.filename;
         }
 
+        // Service
         const mascota = await mascotaService.updateMascota({ id, data });
 
         return res.status(200).json({
@@ -158,6 +183,7 @@ const deleteMascota = async (req, res, next) => {
 
         const { id } = req.params;
 
+        // Validación
         if (!id) {
             return res.status(400).json({
                 status: "error",
@@ -166,6 +192,7 @@ const deleteMascota = async (req, res, next) => {
             });
         }
 
+        // Eliminamos
         await mascotaService.deleteMascota({ id });
 
         return res.status(200).json({
@@ -189,6 +216,7 @@ const getMatchMascotas = async (req, res, next) => {
 
     try {
 
+        // Llamamos service con preferencias
         const mascotas = await mascotaService.getMatchMascotas(req.query);
 
         return res.status(200).json({
@@ -215,6 +243,7 @@ const cambiarEstadoMascota = async (req, res, next) => {
         const { id } = req.params;
         const { estado } = req.body;
 
+        // Validación
         if (!id || !estado) {
             return res.status(400).json({
                 status: "error",
@@ -223,6 +252,7 @@ const cambiarEstadoMascota = async (req, res, next) => {
             });
         }
 
+        // Service
         const mascota = await mascotaService.cambiarEstadoMascota({
             id,
             estado

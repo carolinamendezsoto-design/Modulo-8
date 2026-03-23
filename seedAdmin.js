@@ -2,24 +2,25 @@
 // IMPORTAR DEPENDENCIAS
 // ------------------------------------------------------
 
-// Cargamos variables de entorno (.env)
+// Cargamos variables de entorno desde el archivo .env
 require("dotenv").config();
 
-// Importamos sequelize desde la configuración de la DB
+// Importamos la instancia de sequelize desde la configuración de la base de datos
 const { sequelize } = require("./config/database");
 
-// Importamos el modelo User (⚠️ idealmente desde index de models)
-const { User } = require("./models./index.model");
+// Importamos el modelo User desde la carpeta models
+// Node automáticamente usa el index.js
+const { User } = require("./models");
 
-// Librería para encriptar contraseñas
-const bcrypt = require("bcryptjs");
+// ❌ ELIMINAMOS bcrypt
+// Porque el modelo User ya encripta la contraseña automáticamente con hooks
 
 
 // ------------------------------------------------------
 // FUNCIÓN PRINCIPAL
 // ------------------------------------------------------
 
-// Función asincrónica para crear admin
+// Función async para crear usuario administrador
 async function crearAdmin() {
 
     try {
@@ -28,22 +29,25 @@ async function crearAdmin() {
         // CONECTAR A BASE DE DATOS
         // --------------------------------------------------
 
-        // Verificamos conexión con la DB
+        // Verificamos conexión con PostgreSQL
         await sequelize.authenticate();
 
+        // Mensaje de éxito
         console.log("✅ Conectado a la base de datos");
 
 
         // --------------------------------------------------
-        // VERIFICAR SI YA EXISTE ADMIN
+        // BUSCAR SI YA EXISTE ADMIN
         // --------------------------------------------------
 
-        // Buscamos si ya existe un admin con ese email
+        // Buscamos usuario con email admin
         const adminExistente = await User.findOne({
+
             where: { email: "admin@admin.com" }
+
         });
 
-        // Si existe, lo eliminamos (para evitar duplicados)
+        // Si existe → lo eliminamos
         if (adminExistente) {
 
             await adminExistente.destroy();
@@ -53,33 +57,21 @@ async function crearAdmin() {
 
 
         // --------------------------------------------------
-        // ENCRIPTAR PASSWORD
+        // CREAR ADMIN (SIN ENCRIPTAR AQUÍ)
         // --------------------------------------------------
 
-        // Encriptamos la contraseña con bcrypt (salt 10)
-        const passwordHash = await bcrypt.hash("1234", 10);
-
-
-        // --------------------------------------------------
-        // CREAR NUEVO ADMIN
-        // --------------------------------------------------
-
+        // Creamos el usuario
+        // ⚠️ IMPORTANTE:
+        // NO usamos bcrypt aquí
+        // El modelo User.beforeCreate encripta automáticamente
         const admin = await User.create({
 
-            // Nombre del usuario
-            nombre: "Admin",
+            nombre: "Admin",                 // nombre del usuario
+            email: "admin@admin.com",        // email
+            password: "123456",                // password en texto plano (el modelo la encripta)
+            telefono: "999999999",           // teléfono
+            rol: "admin"                     // rol del sistema
 
-            // Email único
-            email: "admin@admin.com",
-
-            // Password encriptada
-            password: passwordHash,
-
-            // Teléfono (opcional)
-            telefono: "999999999",
-
-            // Rol (🔥 clave en tu sistema)
-            rol: "admin"
         });
 
 
@@ -88,8 +80,6 @@ async function crearAdmin() {
         // --------------------------------------------------
 
         console.log("🔥 Admin creado correctamente:");
-
-        // Mostramos el objeto limpio
         console.log(admin.toJSON());
 
 
@@ -97,7 +87,6 @@ async function crearAdmin() {
         // FINALIZAR PROCESO
         // --------------------------------------------------
 
-        // Terminamos ejecución correctamente
         process.exit(0);
 
     } catch (error) {
@@ -108,7 +97,6 @@ async function crearAdmin() {
 
         console.error("❌ Error al crear admin:", error.message);
 
-        // Terminamos ejecución con error
         process.exit(1);
     }
 }
@@ -118,5 +106,4 @@ async function crearAdmin() {
 // EJECUTAR SCRIPT
 // ------------------------------------------------------
 
-// Llamamos a la función principal
 crearAdmin();
