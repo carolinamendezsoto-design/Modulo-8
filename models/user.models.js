@@ -2,10 +2,13 @@
 // IMPORTAR DEPENDENCIAS
 // ------------------------------------------------------
 
+// Importamos tipos de datos de Sequelize
 const { DataTypes } = require("sequelize");
+
+// Importamos la conexión a la base de datos
 const { sequelize } = require("../config/database");
 
-// Importamos bcrypt para encriptar contraseña
+// Importamos bcrypt para encriptar contraseñas
 const bcrypt = require("bcrypt");
 
 
@@ -13,52 +16,93 @@ const bcrypt = require("bcrypt");
 // DEFINICIÓN DEL MODELO USER
 // ------------------------------------------------------
 
+// Definimos el modelo User (tabla en la BD)
 const User = sequelize.define("User", {
 
-    // ID único del usuario
+    // --------------------------------------------------
+    // ID
+    // --------------------------------------------------
+
+    // Identificador único del usuario
     id: {
-        type: DataTypes.INTEGER,       // número
-        primaryKey: true,              // clave primaria
-        autoIncrement: true            // autoincremental
+        type: DataTypes.INTEGER,   // número entero
+        primaryKey: true,          // clave primaria
+        autoIncrement: true        // autoincremental
     },
+
+    // --------------------------------------------------
+    // NOMBRE
+    // --------------------------------------------------
 
     // Nombre del usuario
     nombre: {
-        type: DataTypes.STRING,
-        allowNull: false               // obligatorio
-    },
-
-    // Email único
-    email: {
-        type: DataTypes.STRING,
-        allowNull: false,
-        unique: true,                 // no se puede repetir
+        type: DataTypes.STRING,    // texto corto
+        allowNull: false,          // obligatorio
         validate: {
-            isEmail: true             // validación automática
+            notEmpty: true         // no permite vacío
         }
     },
 
-    // Contraseña (encriptada)
+    // --------------------------------------------------
+    // EMAIL
+    // --------------------------------------------------
+
+    // Email del usuario (único)
+    email: {
+        type: DataTypes.STRING,    // texto
+        allowNull: false,          // obligatorio
+        unique: true,              // no se puede repetir
+        validate: {
+            isEmail: true,         // validación automática
+            notEmpty: true
+        }
+    },
+
+    // --------------------------------------------------
+    // PASSWORD
+    // --------------------------------------------------
+
+    // Contraseña (se guarda encriptada)
     password: {
-        type: DataTypes.STRING,
-        allowNull: false
+        type: DataTypes.STRING,    // texto
+        allowNull: false,          // obligatorio
+        validate: {
+            len: [6, 100]          // mínimo 6 caracteres
+        }
     },
 
-    // Teléfono
+    // --------------------------------------------------
+    // TELÉFONO
+    // --------------------------------------------------
+
+    // Número de contacto del usuario
     telefono: {
-        type: DataTypes.STRING,
-        allowNull: false
+        type: DataTypes.STRING,    // texto
+        allowNull: false,          // obligatorio
+        validate: {
+            notEmpty: true
+        }
     },
 
-    // Rol del usuario
+    // --------------------------------------------------
+    // ROL
+    // --------------------------------------------------
+
+    // Rol del usuario dentro del sistema
     rol: {
-        type: DataTypes.ENUM("admin", "rescatista", "adoptante"), // ENUM pro
-        defaultValue: "adoptante"
+        type: DataTypes.ENUM("admin", "rescatista", "adoptante"), // ENUM profesional
+        defaultValue: "adoptante" // valor por defecto
     }
 
 }, {
-    tableName: "users",
-    timestamps: true
+
+    // --------------------------------------------------
+    // CONFIGURACIÓN DEL MODELO
+    // --------------------------------------------------
+
+    tableName: "users", // nombre de tabla en BD
+
+    timestamps: true // createdAt y updatedAt
 });
 
 
@@ -66,14 +110,32 @@ const User = sequelize.define("User", {
 // HOOK: ENCRIPTAR PASSWORD ANTES DE GUARDAR
 // ------------------------------------------------------
 
+// Antes de crear un usuario en la BD
 User.beforeCreate(async (user) => {
-    const salt = await bcrypt.genSalt(10);      // generamos salt
-    user.password = await bcrypt.hash(user.password, salt); // hash
+
+    // Generamos un "salt" (nivel de seguridad)
+    const salt = await bcrypt.genSalt(10);
+
+    // Encriptamos la contraseña usando bcrypt
+    user.password = await bcrypt.hash(user.password, salt);
 });
+
+
+// ------------------------------------------------------
+// MÉTODO PERSONALIZADO (🔥 PRO)
+// ------------------------------------------------------
+
+// Método para comparar contraseñas (login)
+User.prototype.comparePassword = async function (password) {
+
+    // Comparamos password ingresado con el hash almacenado
+    return await bcrypt.compare(password, this.password);
+};
 
 
 // ------------------------------------------------------
 // EXPORTAR MODELO
 // ------------------------------------------------------
 
+// Exportamos modelo para usar en services/controllers
 module.exports = User;

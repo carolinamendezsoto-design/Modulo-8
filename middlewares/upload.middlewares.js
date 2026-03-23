@@ -2,10 +2,10 @@
 // IMPORTAR DEPENDENCIAS
 // ------------------------------------------------------
 
-// Multer permite manejar subida de archivos
+// Multer permite manejar subida de archivos en Express
 const multer = require("multer");
 
-// Path ayuda a manejar rutas de archivos
+// Path ayuda a manejar rutas y extensiones de archivos
 const path = require("path");
 
 
@@ -13,19 +13,23 @@ const path = require("path");
 // CONFIGURACIÓN DE ALMACENAMIENTO
 // ------------------------------------------------------
 
+// Definimos cómo y dónde se guardarán los archivos
 const storage = multer.diskStorage({
 
-    // Definimos dónde guardar los archivos
+    // Carpeta donde se guardan los archivos
     destination: (req, file, cb) => {
-        cb(null, "uploads/"); // carpeta uploads
+
+        // Indicamos la carpeta "uploads/"
+        cb(null, "uploads/");
     },
 
-    // Definimos el nombre del archivo
+    // Nombre del archivo
     filename: (req, file, cb) => {
 
-        // Generamos nombre único con timestamp
+        // Generamos un nombre único usando timestamp + extensión original
         const uniqueName = Date.now() + path.extname(file.originalname);
 
+        // Guardamos el archivo con ese nombre
         cb(null, uniqueName);
     }
 });
@@ -35,38 +39,54 @@ const storage = multer.diskStorage({
 // FILTRO DE ARCHIVOS (SEGURIDAD)
 // ------------------------------------------------------
 
+// Función que valida tipo de archivo
 const fileFilter = (req, file, cb) => {
 
-    // Tipos permitidos
+    // Definimos tipos permitidos
     const allowedTypes = /jpg|jpeg|png/;
 
-    // Validamos extensión
-    const ext = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+    // Validamos extensión del archivo (ej: .jpg)
+    const ext = allowedTypes.test(
+        path.extname(file.originalname).toLowerCase()
+    );
 
-    // Validamos tipo MIME
+    // Validamos tipo MIME (seguridad adicional)
     const mime = allowedTypes.test(file.mimetype);
 
+    // Si cumple ambas validaciones
     if (ext && mime) {
-        cb(null, true); // permitido
+
+        // Permitimos archivo
+        cb(null, true);
+
     } else {
+
+        // Rechazamos archivo con error
         cb(new Error("Solo se permiten imágenes (jpg, jpeg, png)"));
     }
 };
 
 
 // ------------------------------------------------------
-// CONFIGURACIÓN FINAL
+// CONFIGURACIÓN FINAL DE MULTER
 // ------------------------------------------------------
 
+// Creamos instancia de multer con configuración completa
 const upload = multer({
-    storage, // almacenamiento configurado
-    limits: { fileSize: 5 * 1024 * 1024 }, // máximo 5MB
-    fileFilter // filtro de seguridad
+
+    storage, // configuración de almacenamiento
+
+    limits: {
+        fileSize: 5 * 1024 * 1024 // máximo 5MB
+    },
+
+    fileFilter // validación de tipo de archivo
 });
 
 
 // ------------------------------------------------------
-// EXPORTAR
+// EXPORTAR MIDDLEWARE
 // ------------------------------------------------------
 
+// Exportamos para usar en rutas (ej: upload.single("imagen"))
 module.exports = upload;

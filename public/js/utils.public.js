@@ -1,21 +1,24 @@
 // --------------------------------------------------
-// FUNCIÓN PARA MOSTRAR MENSAJES BONITOS
+// FUNCIÓN PARA MOSTRAR MENSAJES EN PANTALLA
 // --------------------------------------------------
 
+// Definimos función reutilizable para mostrar alertas
 function mostrarMensaje(mensaje, tipo = "success") {
 
-    // Creamos un div
+    // Creamos un elemento <div> en memoria
     const alerta = document.createElement("div");
 
-    // Le agregamos clases de Bootstrap dinámicamente
+    // Le asignamos clases de Bootstrap dinámicamente según el tipo
     alerta.className = `alert alert-${tipo} mt-2`;
 
-    // Le asignamos el texto
+    // Insertamos el texto dentro del div
     alerta.textContent = mensaje;
 
-    // Lo agregamos arriba del body
+    // Insertamos la alerta al inicio del body (arriba de todo)
     document.body.prepend(alerta);
 
-    // Lo eliminamos después de 3 segundos
-    setTimeout(() => alerta.remove(), 3000);
+    // Eliminamos automáticamente la alerta después de 3 segundos
+    setTimeout(() => {
+        alerta.remove(); // elimina el elemento del DOM
+    }, 3000);
 }

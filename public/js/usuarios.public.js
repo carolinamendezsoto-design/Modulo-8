@@ -2,12 +2,17 @@
 // FUNCIÓN PARA CARGAR USUARIOS
 // --------------------------------------------------
 
+// Función async que obtiene usuarios desde el backend
 async function cargarUsuarios() {
 
-    // Obtenemos token
+    // --------------------------------------------------
+    // OBTENER TOKEN
+    // --------------------------------------------------
+
+    // Recuperamos token desde localStorage
     const token = localStorage.getItem("token");
 
-    // Validación
+    // Validamos que exista
     if (!token) {
         mostrarMensaje("No autorizado", "danger");
         window.location.href = "index.html";
@@ -16,27 +21,49 @@ async function cargarUsuarios() {
 
     try {
 
-        // Petición
+        // --------------------------------------------------
+        // PETICIÓN AL BACKEND
+        // --------------------------------------------------
+
         const res = await fetch("/api/users", {
             headers: {
-                "Authorization": "Bearer " + token
+                "Authorization": "Bearer " + token // enviamos token
             }
         });
 
-        // Token inválido
+        // Si token inválido o expirado
         if (res.status === 401) {
-            localStorage.removeItem("token");
+            localStorage.clear();
             window.location.href = "index.html";
             return;
         }
 
+        // Convertimos respuesta
         const data = await res.json();
+
+        // Validamos respuesta
+        if (!res.ok || data.status !== "success") {
+            mostrarMensaje(data.message || "Error al cargar usuarios", "danger");
+            return;
+        }
+
+        // --------------------------------------------------
+        // OBTENER CONTENEDOR
+        // --------------------------------------------------
 
         const lista = document.getElementById("listaUsuarios");
 
+        // Si no existe el contenedor, evitamos error
         if (!lista) return;
 
+        // Limpiamos contenido anterior
         lista.innerHTML = "";
+
+        // Si no hay usuarios
+        if (!data.data.length) {
+            lista.innerHTML = "<p>No hay usuarios</p>";
+            return;
+        }
 
         // --------------------------------------------------
         // RECORRER USUARIOS
@@ -44,14 +71,20 @@ async function cargarUsuarios() {
 
         data.data.forEach(usuario => {
 
+            // Creamos elemento <li>
             const li = document.createElement("li");
+
+            // Le agregamos clase Bootstrap
             li.className = "list-group-item";
 
+            // Insertamos HTML dinámico
             li.innerHTML = `
                 <strong>${usuario.nombre}</strong> 
+                
                 <span class="badge bg-secondary ms-2">
                     ${usuario.rol}
                 </span>
+
                 <br>
 
                 <small>📧 ${usuario.email}</small><br>
@@ -59,17 +92,17 @@ async function cargarUsuarios() {
 
                 <div class="mt-2 d-flex gap-2">
 
-                    <!-- CAMBIAR ROL -->
+                    <!-- SELECT PARA CAMBIAR ROL -->
                     <select 
                         class="form-select form-select-sm w-auto"
                         onchange="cambiarRol(${usuario.id}, this.value)"
                     >
-                        <option value="adoptante">Adoptante</option>
-                        <option value="rescatista">Rescatista</option>
-                        <option value="admin">Admin</option>
+                        <option value="adoptante" ${usuario.rol === "adoptante" ? "selected" : ""}>Adoptante</option>
+                        <option value="rescatista" ${usuario.rol === "rescatista" ? "selected" : ""}>Rescatista</option>
+                        <option value="admin" ${usuario.rol === "admin" ? "selected" : ""}>Admin</option>
                     </select>
 
-                    <!-- ELIMINAR -->
+                    <!-- BOTÓN ELIMINAR -->
                     <button 
                         class="btn btn-danger btn-sm"
                         onclick="eliminarUsuario(${usuario.id})"
@@ -80,26 +113,33 @@ async function cargarUsuarios() {
                 </div>
             `;
 
+            // Agregamos al DOM
             lista.appendChild(li);
         });
 
     } catch (error) {
+
+        // Error inesperado
         console.error(error);
+
         mostrarMensaje("Error al cargar usuarios", "danger");
     }
 }
 
 
 // --------------------------------------------------
-// CAMBIAR ROL
+// CAMBIAR ROL DE USUARIO
 // --------------------------------------------------
 
+// Función para actualizar rol
 async function cambiarRol(userId, nuevoRol) {
 
+    // Obtenemos token
     const token = localStorage.getItem("token");
 
     try {
 
+        // Petición PUT al backend
         const res = await fetch(`/api/users/${userId}`, {
 
             method: "PUT",
@@ -116,10 +156,18 @@ async function cambiarRol(userId, nuevoRol) {
 
         const data = await res.json();
 
-        mostrarMensaje("Rol actualizado");
+        // Validamos respuesta
+        if (!res.ok) {
+            mostrarMensaje(data.message || "Error al actualizar rol", "danger");
+            return;
+        }
+
+        mostrarMensaje("Rol actualizado correctamente");
 
     } catch (error) {
+
         console.error(error);
+
         mostrarMensaje("Error al cambiar rol", "danger");
     }
 }
@@ -129,17 +177,20 @@ async function cambiarRol(userId, nuevoRol) {
 // ELIMINAR USUARIO
 // --------------------------------------------------
 
+// Función para eliminar usuario
 async function eliminarUsuario(userId) {
 
+    // Obtenemos token
     const token = localStorage.getItem("token");
 
-    // Confirmación
+    // Confirmación antes de eliminar
     if (!confirm("¿Seguro que quieres eliminar este usuario?")) {
         return;
     }
 
     try {
 
+        // Petición DELETE
         const res = await fetch(`/api/users/${userId}`, {
 
             method: "DELETE",
@@ -147,20 +198,26 @@ async function eliminarUsuario(userId) {
             headers: {
                 "Authorization": "Bearer " + token
             }
-
         });
 
         const data = await res.json();
 
-        mostrarMensaje("Usuario eliminado");
+        // Validamos respuesta
+        if (!res.ok) {
+            mostrarMensaje(data.message || "Error al eliminar usuario", "danger");
+            return;
+        }
 
-        // Recargar lista
+        mostrarMensaje("Usuario eliminado correctamente");
+
+        // Recargamos lista
         cargarUsuarios();
 
     } catch (error) {
 
         console.error(error);
-        mostrarMensaje("Error al eliminar", "danger");
+
+        mostrarMensaje("Error al eliminar usuario", "danger");
     }
 }
 
@@ -169,4 +226,5 @@ async function eliminarUsuario(userId) {
 // AUTO CARGA
 // --------------------------------------------------
 
+// Ejecutamos automáticamente al cargar la página
 cargarUsuarios();

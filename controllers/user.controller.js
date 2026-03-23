@@ -1,3 +1,8 @@
+// ------------------------------------------------------
+// IMPORTAR SERVICE
+// ------------------------------------------------------
+
+// Importamos el servicio donde vive la lógica de usuarios
 const userService = require("../services/user.service");
 
 
@@ -7,16 +12,19 @@ const userService = require("../services/user.service");
 
 exports.getUsers = async (req, res, next) => {
     try {
+
+        // Llamamos al service pasando filtros opcionales (query params)
         const users = await userService.getUsers(req.query);
 
-        res.json({
+        // Respuesta estándar API
+        return res.status(200).json({
             status: "success",
             message: "Usuarios obtenidos correctamente",
             data: users
         });
 
     } catch (error) {
-        next(error);
+        next(error); // delegamos al middleware global
     }
 };
 
@@ -27,11 +35,33 @@ exports.getUsers = async (req, res, next) => {
 
 exports.getUserById = async (req, res, next) => {
     try {
+
+        // Extraemos id desde la URL
         const { id } = req.params;
 
+        // Validamos que exista el id
+        if (!id) {
+            return res.status(400).json({
+                status: "error",
+                message: "ID de usuario requerido",
+                data: null
+            });
+        }
+
+        // Llamamos al service
         const user = await userService.getUserById({ id });
 
-        res.json({
+        // Validamos si no existe
+        if (!user) {
+            return res.status(404).json({
+                status: "error",
+                message: "Usuario no encontrado",
+                data: null
+            });
+        }
+
+        // Respuesta correcta
+        return res.status(200).json({
             status: "success",
             message: "Usuario obtenido correctamente",
             data: user
@@ -50,14 +80,43 @@ exports.getUserById = async (req, res, next) => {
 exports.createUser = async (req, res, next) => {
     try {
 
+        // Extraemos datos del body
         const { nombre, email, password, telefono, rol } = req.body;
 
+        // --------------------------------------------------
+        // VALIDACIONES (🔥 IMPORTANTE)
+        // --------------------------------------------------
+
+        // Validamos campos obligatorios
         if (!nombre || !email || !password) {
             return res.status(400).json({
                 status: "error",
-                message: "Campos obligatorios faltantes"
+                message: "Nombre, email y contraseña son obligatorios",
+                data: null
             });
         }
+
+        // Validamos formato básico de email
+        if (!email.includes("@")) {
+            return res.status(400).json({
+                status: "error",
+                message: "Email inválido",
+                data: null
+            });
+        }
+
+        // Validamos longitud de contraseña
+        if (password.length < 6) {
+            return res.status(400).json({
+                status: "error",
+                message: "La contraseña debe tener al menos 6 caracteres",
+                data: null
+            });
+        }
+
+        // --------------------------------------------------
+        // CREAR USUARIO
+        // --------------------------------------------------
 
         const newUser = await userService.createUser({
             nombre,
@@ -67,7 +126,8 @@ exports.createUser = async (req, res, next) => {
             rol
         });
 
-        res.status(201).json({
+        // Respuesta exitosa
+        return res.status(201).json({
             status: "success",
             message: "Usuario creado correctamente",
             data: newUser
@@ -86,14 +146,46 @@ exports.createUser = async (req, res, next) => {
 exports.updateUser = async (req, res, next) => {
     try {
 
+        // Extraemos id
         const { id } = req.params;
 
+        // Validamos id
+        if (!id) {
+            return res.status(400).json({
+                status: "error",
+                message: "ID requerido",
+                data: null
+            });
+        }
+
+        // --------------------------------------------------
+        // VALIDACIÓN BÁSICA DE DATOS
+        // --------------------------------------------------
+
+        if (req.body.email && !req.body.email.includes("@")) {
+            return res.status(400).json({
+                status: "error",
+                message: "Email inválido",
+                data: null
+            });
+        }
+
+        // Llamamos al service
         const updatedUser = await userService.updateUser({
             id,
             data: req.body
         });
 
-        res.json({
+        // Validamos si no existe
+        if (!updatedUser) {
+            return res.status(404).json({
+                status: "error",
+                message: "Usuario no encontrado",
+                data: null
+            });
+        }
+
+        return res.status(200).json({
             status: "success",
             message: "Usuario actualizado correctamente",
             data: updatedUser
@@ -112,13 +204,34 @@ exports.updateUser = async (req, res, next) => {
 exports.deleteUser = async (req, res, next) => {
     try {
 
+        // Extraemos id
         const { id } = req.params;
 
-        await userService.deleteUser({ id });
+        // Validamos id
+        if (!id) {
+            return res.status(400).json({
+                status: "error",
+                message: "ID requerido",
+                data: null
+            });
+        }
 
-        res.json({
+        // Eliminamos usuario
+        const deleted = await userService.deleteUser({ id });
+
+        // Validamos si no existía
+        if (!deleted) {
+            return res.status(404).json({
+                status: "error",
+                message: "Usuario no encontrado",
+                data: null
+            });
+        }
+
+        return res.status(200).json({
             status: "success",
-            message: "Usuario eliminado correctamente"
+            message: "Usuario eliminado correctamente",
+            data: null
         });
 
     } catch (error) {

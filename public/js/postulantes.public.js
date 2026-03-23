@@ -1,116 +1,179 @@
-// ------------------------------------------------------
-// CONFIGURACIÓN
-// ------------------------------------------------------
+// --------------------------------------------------
+// TOKEN GLOBAL
+// --------------------------------------------------
 
-// URL base de tu backend
-const API = "http://localhost:3000/api";
-
-// Obtenemos el token guardado en el navegador (login previo)
-const token = localStorage.getItem("token");
-
-// ID de la mascota (puedes hacerlo dinámico después)
-const mascotaId = 1;
+// Obtenemos token desde localStorage o usamos string vacío
+let token = localStorage.getItem("token") || "";
 
 
-// ------------------------------------------------------
-// FUNCIÓN: CARGAR POSTULANTES
-// ------------------------------------------------------
+// --------------------------------------------------
+// LOGIN
+// --------------------------------------------------
 
-// Función async para obtener solicitudes desde el backend
-async function cargarPostulantes() {
+// Función async para iniciar sesión
+async function login() {
+
+    // Obtenemos valores desde inputs del HTML
+    const email = document.getElementById("loginEmail").value.trim();
+    const password = document.getElementById("loginPassword").value.trim();
+
+    // --------------------------------------------------
+    // VALIDACIÓN
+    // --------------------------------------------------
+
+    // Validamos campos obligatorios
+    if (!email || !password) {
+        mostrarMensaje("Completa todos los campos", "danger");
+        return; // detenemos ejecución
+    }
+
     try {
 
-        // Hacemos petición GET al backend
-        const res = await fetch(`${API}/solicitudes/mascota/${mascotaId}`, {
+        // --------------------------------------------------
+        // PETICIÓN AL BACKEND
+        // --------------------------------------------------
 
-            // Enviamos token en headers (autenticación)
+        const res = await fetch("/api/auth/login", {
+
+            method: "POST", // enviamos datos
+
             headers: {
-                "Authorization": `Bearer ${token}`
-            }
+                "Content-Type": "application/json"
+            },
+
+            body: JSON.stringify({ email, password })
         });
 
         // Convertimos respuesta a JSON
         const data = await res.json();
 
-        // Obtenemos el contenedor del HTML
-        const container = document.getElementById("lista-postulantes");
+        // --------------------------------------------------
+        // RESPUESTA
+        // --------------------------------------------------
 
-        // Limpiamos contenido anterior
-        container.innerHTML = "";
+        if (res.ok && data.status === "success") {
 
-        // Recorremos cada solicitud recibida
-        data.data.forEach(solicitud => {
+            // Guardamos token
+            token = data.data.token;
+            localStorage.setItem("token", token);
 
-            // Creamos un div por cada postulante
-            const div = document.createElement("div");
+            // Guardamos usuario completo
+            localStorage.setItem("user", JSON.stringify(data.data.user));
 
-            // Insertamos contenido dinámico
-            div.innerHTML = `
-                <h3>${solicitud.adoptante.nombre}</h3> <!-- Nombre usuario -->
-                <p>Email: ${solicitud.adoptante.email}</p> <!-- Email -->
-                <p>Mensaje: ${solicitud.mensaje || "Sin mensaje"}</p> <!-- Mensaje -->
-                <p>Estado: ${solicitud.estado}</p> <!-- Estado -->
+            mostrarMensaje("Login exitoso 🔐");
 
-                <!-- Botón para seleccionar adoptante -->
-                <button onclick="seleccionar(${solicitud.id})">
-                    Seleccionar adoptante
-                </button>
+            // --------------------------------------------------
+            // REDIRECCIÓN SEGÚN ROL
+            // --------------------------------------------------
 
-                <hr> <!-- Separador -->
-            `;
+            if (data.data.user.rol === "admin") {
+                window.location.href = "admin.html";
+            } else {
+                window.location.href = "mascotas.html";
+            }
 
-            // Agregamos el div al contenedor
-            container.appendChild(div);
-        });
+        } else {
+            mostrarMensaje(data.message || "Credenciales incorrectas", "danger");
+        }
 
     } catch (error) {
 
-        // Mostramos error en consola
-        console.error("Error al cargar postulantes:", error);
+        // Error de red o backend caído
+        console.error(error);
+
+        mostrarMensaje("Error en login", "danger");
     }
 }
 
 
-// ------------------------------------------------------
-// FUNCIÓN: SELECCIONAR ADOPTANTE
-// ------------------------------------------------------
+// --------------------------------------------------
+// CREAR USUARIO
+// --------------------------------------------------
 
-// Función que se ejecuta al hacer click en el botón
-async function seleccionar(id) {
+async function crearUsuario() {
+
+    // Obtenemos valores del formulario
+    const nombre = document.getElementById("nombre").value.trim();
+    const email = document.getElementById("email").value.trim();
+    const telefono = document.getElementById("telefono")?.value.trim();
+    const password = document.getElementById("password").value.trim();
+    const rol = document.getElementById("rol")?.value;
+
+    // --------------------------------------------------
+    // VALIDACIONES
+    // --------------------------------------------------
+
+    if (!nombre || !email || !password || !telefono || !rol) {
+        mostrarMensaje("Completa todos los campos", "danger");
+        return;
+    }
+
+    if (!email.includes("@")) {
+        mostrarMensaje("Correo inválido", "danger");
+        return;
+    }
+
+    if (password.length < 4) {
+        mostrarMensaje("La contraseña debe tener al menos 4 caracteres", "danger");
+        return;
+    }
+
     try {
 
-        // Hacemos petición PUT al backend
-        const res = await fetch(`${API}/solicitudes/seleccionar/${id}`, {
+        // Petición POST
+        const res = await fetch("/api/users", {
 
-            // Método PUT
-            method: "PUT",
+            method: "POST",
 
-            // Enviamos token
             headers: {
-                "Authorization": `Bearer ${token}`
-            }
+                "Content-Type": "application/json"
+            },
+
+            body: JSON.stringify({
+                nombre,
+                email,
+                password,
+                telefono,
+                rol
+            })
         });
 
-        // Convertimos respuesta a JSON
         const data = await res.json();
 
-        // Mostramos mensaje al usuario
-        alert(data.message);
+        if (res.ok) {
 
-        // Volvemos a cargar lista actualizada
-        cargarPostulantes();
+            mostrarMensaje(data.message || "Usuario creado correctamente");
+
+            // Redirigimos después de un pequeño delay
+            setTimeout(() => {
+                window.location.href = "index.html";
+            }, 1500);
+
+        } else {
+
+            mostrarMensaje(data.message || "Error al crear usuario", "danger");
+        }
 
     } catch (error) {
 
-        // Error en consola
-        console.error("Error al seleccionar adoptante:", error);
+        console.error(error);
+
+        mostrarMensaje("Error del servidor", "danger");
     }
 }
 
 
-// ------------------------------------------------------
-// INICIO
-// ------------------------------------------------------
+// --------------------------------------------------
+// LOGOUT
+// --------------------------------------------------
 
-// Ejecutamos función al cargar la página
-cargarPostulantes();
+// Función para cerrar sesión
+function logout() {
+
+    // Eliminamos datos del usuario
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+
+    // Redirigimos al login
+    window.location.href = "index.html";
+}

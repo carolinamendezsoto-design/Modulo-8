@@ -1,6 +1,6 @@
 <!DOCTYPE html> <!-- HTML5 -->
 
-<html lang="es">
+<html lang="es"> <!-- Idioma -->
 
 <head>
 
@@ -10,7 +10,7 @@
     <!-- Responsive -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <!-- TÍTULO -->
+    <!-- Título -->
     <title>🐾 Usuarios</title>
 
     <!-- Bootstrap -->
@@ -21,59 +21,93 @@
 
     <style>
 
-        /* FONDO */
+        /* -------------------------------------------------- */
+        /* FONDO GLOBAL */
+        /* -------------------------------------------------- */
+
         body {
+
             font-family: 'Poppins', sans-serif;
+
             background-image: url("img/Huellitas_de_Amor.jpg");
+
             background-size: cover;
+
             background-attachment: fixed;
+
+            padding: 20px;
         }
 
         /* OVERLAY */
         body::before {
+
             content: "";
+
             position: fixed;
+
             inset: 0;
+
             background: linear-gradient(
-                rgba(0,0,0,0.7),
-                rgba(0,0,0,0.5)
+                rgba(0,0,0,0.6),
+                rgba(0,0,0,0.4)
             );
+
             z-index: -1;
         }
 
         /* HEADER */
         .header {
-            background: rgba(255,255,255,0.1);
-            backdrop-filter: blur(10px);
-            padding: 15px 20px;
-            border-radius: 15px;
-            margin-bottom: 20px;
-            color: white;
-        }
 
-        /* TARJETA */
-        .card {
-            border-radius: 20px;
-            padding: 20px;
-            background: rgba(255,255,255,0.15);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255,255,255,0.2);
-            color: white;
-        }
-
-        /* ITEM */
-        .user-item {
-            padding: 15px;
-            border-radius: 12px;
-            margin-bottom: 10px;
-            background: rgba(255,255,255,0.1);
             display: flex;
+
             justify-content: space-between;
+
+            align-items: center;
+
+            margin-bottom: 20px;
+
+            color: white;
+        }
+
+        /* CARD PRINCIPAL */
+        .card {
+
+            border-radius: 20px;
+
+            padding: 20px;
+
+            background: rgba(255,255,255,0.15);
+
+            backdrop-filter: blur(12px);
+
+            border: 1px solid rgba(255,255,255,0.2);
+
+            color: white;
+
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+        }
+
+        /* ITEM USUARIO */
+        .user-item {
+
+            padding: 15px;
+
+            border-radius: 12px;
+
+            margin-bottom: 10px;
+
+            background: rgba(255,255,255,0.1);
+
+            display: flex;
+
+            justify-content: space-between;
+
             align-items: center;
         }
 
         /* BOTONES */
         .btn {
+
             border-radius: 10px;
         }
 
@@ -83,90 +117,76 @@
 
 <body>
 
-<div class="container mt-4">
+<div class="container">
 
     <!-- HEADER -->
-    <div class="header d-flex justify-content-between align-items-center">
+    <div class="header">
 
-        <h4>👤 Gestión de Usuarios</h4>
+        <h3>👤 Gestión de Usuarios</h3>
 
-        <button class="btn btn-danger btn-sm" onclick="logout()">
-            Cerrar sesión
-        </button>
+        <!-- BOTONES -->
+        <div>
+
+            <!-- VOLVER -->
+            <a href="admin.html" class="btn btn-light btn-sm me-2">
+                ← Volver
+            </a>
+
+            <!-- LOGOUT -->
+            <button class="btn btn-danger btn-sm" onclick="logout()">
+                Cerrar sesión
+            </button>
+
+        </div>
 
     </div>
 
-    <!-- TARJETA -->
+    <!-- CARD -->
     <div class="card">
 
-        <!-- BOTÓN -->
-        <button class="btn btn-primary mb-3" onclick="cargarUsuarios()">
-            Cargar usuarios
+        <!-- BOTÓN RECARGAR -->
+        <button 
+            class="btn btn-primary mb-3"
+            onclick="cargarUsuarios()"
+        >
+            🔄 Cargar usuarios
         </button>
 
-        <!-- LISTA -->
+        <!-- CONTENEDOR -->
         <div id="listaUsuarios"></div>
 
     </div>
 
 </div>
 
-<script src="js/utils.js"></script>
-<script src="js/auth.js"></script>
-<script src="js/usuarios.js"></script>
+<!-- SCRIPTS -->
+<script src="js/utils.js"></script> <!-- mensajes -->
+<script src="js/auth.js"></script> <!-- logout -->
+<script src="js/usuarios.js"></script> <!-- lógica usuarios -->
 
 <script>
 
-    // USUARIO
+    // --------------------------------------------------
+    // PROTECCIÓN ADMIN
+    // --------------------------------------------------
+
+    // Obtenemos usuario desde localStorage
     const user = JSON.parse(localStorage.getItem("user")) || {};
 
-    // PROTEGER
+    // Validamos acceso
     if (!user || user.rol !== "admin") {
-        alert("Acceso solo admin");
+
+        mostrarMensaje("Acceso solo admin", "danger");
+
         window.location.href = "mascotas.html";
     }
 
     // --------------------------------------------------
-    // RENDER PERSONALIZADO (🔥 MEJOR UI)
+    // AUTO CARGA
     // --------------------------------------------------
 
-    function renderUsuarios(lista) {
-
-        const cont = document.getElementById("listaUsuarios");
-
-        cont.innerHTML = "";
-
-        lista.forEach(u => {
-
-            cont.innerHTML += `
-                <div class="user-item">
-
-                    <div>
-                        <strong>${u.nombre}</strong><br>
-                        <small>${u.email}</small><br>
-                        <span class="badge bg-info">${u.rol}</span>
-                    </div>
-
-                    <div>
-                        <button 
-                            class="btn btn-warning btn-sm"
-                            onclick="cambiarRol(${u.id})"
-                        >
-                            Cambiar rol
-                        </button>
-
-                        <button 
-                            class="btn btn-danger btn-sm"
-                            onclick="eliminarUsuario(${u.id})"
-                        >
-                            Eliminar
-                        </button>
-                    </div>
-
-                </div>
-            `;
-        });
-    }
+    // Cargamos usuarios automáticamente
+    cargarUsuarios();
 
 </script>
 

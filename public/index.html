@@ -1,19 +1,19 @@
-<!DOCTYPE html> <!-- HTML5 -->
+<!DOCTYPE html> <!-- Indicamos que usamos HTML5 -->
 
-<html lang="es"> <!-- Idioma -->
+<html lang="es"> <!-- Idioma del documento -->
 
 <head>
 
-    <!-- Codificación -->
+    <!-- Codificación para caracteres especiales -->
     <meta charset="UTF-8">
 
-    <!-- Responsive -->
+    <!-- Hace la web responsive -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <!-- 🔥 TÍTULO -->
+    <!-- Título de la pestaña -->
     <title>🐾 Huellitas de Amor</title>
 
-    <!-- Bootstrap -->
+    <!-- Bootstrap para estilos -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 
     <!-- Fuente moderna -->
@@ -22,81 +22,79 @@
     <style>
 
         /* -------------------------------------------------- */
-        /* FONDO GLOBAL PRO */
+        /* CONFIGURACIÓN GLOBAL */
         /* -------------------------------------------------- */
 
         body {
 
-            font-family: 'Poppins', sans-serif;
+            font-family: 'Poppins', sans-serif; /* tipografía */
 
-            /* Imagen de fondo */
-            background-image: url("img/Huellitas_de_Amor.jpg");
+            background-image: url("img/Huellitas_de_Amor.jpg"); /* imagen fondo */
 
-            background-size: cover;
+            background-size: cover; /* cubre toda la pantalla */
 
-            background-repeat: no-repeat;
+            background-repeat: no-repeat; /* evita repetición */
 
-            background-attachment: fixed;
+            background-attachment: fixed; /* fondo fijo */
 
-            /* Centrado total */
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            display: flex; /* centrado */
 
-            min-height: 100vh;
+            align-items: center; /* centrado vertical */
+
+            justify-content: center; /* centrado horizontal */
+
+            min-height: 100vh; /* ocupa toda la pantalla */
         }
 
         /* -------------------------------------------------- */
-        /* OVERLAY OSCURO (🔥 EFECTO PRO) */
+        /* OVERLAY OSCURO (EFECTO PRO) */
         /* -------------------------------------------------- */
 
         body::before {
 
-            content: "";
+            content: ""; /* obligatorio */
 
-            position: fixed;
+            position: fixed; /* cubre toda la pantalla */
 
-            inset: 0;
+            inset: 0; /* ocupa todo */
 
-            /* 🔥 degradado elegante */
             background: linear-gradient(
-                rgba(0,0,0,0.6),
-                rgba(0,0,0,0.4)
+                rgba(0,0,0,0.6), /* oscuro arriba */
+                rgba(0,0,0,0.4)  /* más claro abajo */
             );
 
-            z-index: -1;
+            z-index: -1; /* queda detrás */
         }
 
         /* -------------------------------------------------- */
-        /* TARJETA GLASS (WOW) */
+        /* TARJETA PRINCIPAL */
         /* -------------------------------------------------- */
 
         .card {
 
-            border-radius: 25px;
+            border-radius: 25px; /* bordes redondeados */
 
-            padding: 35px;
+            padding: 35px; /* espacio interno */
 
-            width: 100%;
+            width: 100%; /* ancho completo */
 
-            max-width: 420px;
+            max-width: 420px; /* límite ancho */
 
-            /* 🔥 efecto vidrio */
-            background: rgba(255,255,255,0.15);
+            background: rgba(255,255,255,0.15); /* efecto vidrio */
 
-            backdrop-filter: blur(15px);
+            backdrop-filter: blur(15px); /* desenfoque */
 
-            border: 1px solid rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.2); /* borde sutil */
 
-            box-shadow: 0 25px 50px rgba(0,0,0,0.4);
+            box-shadow: 0 25px 50px rgba(0,0,0,0.4); /* sombra */
 
-            color: white;
+            color: white; /* texto blanco */
 
-            animation: fadeIn 0.6s ease;
+            animation: fadeIn 0.6s ease; /* animación */
         }
 
         /* -------------------------------------------------- */
-        /* ANIMACIÓN */
+        /* ANIMACIÓN ENTRADA */
         /* -------------------------------------------------- */
 
         @keyframes fadeIn {
@@ -118,30 +116,26 @@
 
         .title {
 
-            font-weight: 600;
-
             text-align: center;
+
+            font-weight: 600;
 
             margin-bottom: 10px;
         }
 
-        /* -------------------------------------------------- */
-        /* TEXTO */
-        /* -------------------------------------------------- */
-
+        /* TEXTO DESCRIPTIVO */
         .intro {
 
             font-size: 14px;
+
+            text-align: center;
 
             color: rgba(255,255,255,0.85);
 
             margin-bottom: 20px;
         }
 
-        /* -------------------------------------------------- */
         /* INPUTS */
-        /* -------------------------------------------------- */
-
         .form-control {
 
             border-radius: 12px;
@@ -151,32 +145,23 @@
             border: none;
         }
 
-        /* -------------------------------------------------- */
-        /* BOTÓN PRO */
-        /* -------------------------------------------------- */
-
+        /* BOTÓN */
         .btn-primary {
 
             border-radius: 12px;
 
-            font-weight: 500;
-
-            border: none;
-
             background: linear-gradient(135deg, #667eea, #764ba2);
 
-            transition: 0.3s;
+            border: none;
         }
 
+        /* EFECTO HOVER */
         .btn-primary:hover {
 
             transform: scale(1.05);
         }
 
-        /* -------------------------------------------------- */
-        /* PERRITO DECORATIVO 🐶 */
-        /* -------------------------------------------------- */
-
+        /* ICONO DECORATIVO */
         .dog {
 
             font-size: 40px;
@@ -184,20 +169,14 @@
             text-align: center;
 
             margin-bottom: 10px;
-
-            animation: bounce 1.5s infinite;
-        }
-
-        @keyframes bounce {
-
-            0%,100% { transform: translateY(0); }
-
-            50% { transform: translateY(-8px); }
         }
 
         /* LINK */
         a {
+
             color: #ddd;
+
+            text-decoration: none;
         }
 
     </style>
@@ -206,34 +185,21 @@
 
 <body>
 
-<!-- -------------------------------------------------- -->
-<!-- TARJETA -->
-<!-- -------------------------------------------------- -->
+<!-- TARJETA LOGIN -->
+<div class="card">
 
-<div class="card text-center">
-
-    <!-- 🐶 PERRITO -->
+    <!-- ICONO -->
     <div class="dog">🐶</div>
 
     <!-- TÍTULO -->
     <h2 class="title">Huellitas de Amor</h2>
 
-    <!-- INTRO -->
+    <!-- TEXTO -->
     <p class="intro">
-
-        Plataforma de adopción de mascotas enfocada en la comuna de Puente Alto.
-
-        <br><br>
-
-        Conectamos rescatistas con adoptantes para dar una segunda oportunidad.
-
-        <br><br>
-
-        Versión inicial (MVP).
-
+        Plataforma de adopción de mascotas en Puente Alto.
     </p>
 
-    <!-- EMAIL -->
+    <!-- INPUT EMAIL -->
     <input 
         type="email"
         id="loginEmail"
@@ -241,7 +207,7 @@
         placeholder="Correo electrónico"
     >
 
-    <!-- PASSWORD -->
+    <!-- INPUT PASSWORD -->
     <input 
         type="password"
         id="loginPassword"
@@ -249,7 +215,7 @@
         placeholder="Contraseña"
     >
 
-    <!-- BOTÓN -->
+    <!-- BOTÓN LOGIN -->
     <button 
         class="btn btn-primary w-100 mb-2"
         onclick="login()"
@@ -257,7 +223,7 @@
         Ingresar
     </button>
 
-    <!-- LINK -->
+    <!-- LINK REGISTRO -->
     <a href="registro.html">
         ¿No tienes cuenta? Crear cuenta
     </a>
@@ -265,8 +231,8 @@
 </div>
 
 <!-- SCRIPTS -->
-<script src="js/utils.js"></script>
-<script src="js/auth.js"></script>
+<script src="js/utils.js"></script> <!-- mensajes -->
+<script src="js/auth.js"></script> <!-- login -->
 
 </body>
 </html>

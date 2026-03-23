@@ -2,8 +2,7 @@
 // IMPORTAR REPOSITORY
 // ------------------------------------------------------
 
-// Importamos el repository de mascotas
-// Este se encarga de comunicarse con la base de datos
+// Importamos el repository de mascotas (acceso a DB)
 const mascotaRepository = require("../repositories/mascota.repository");
 
 
@@ -11,20 +10,18 @@ const mascotaRepository = require("../repositories/mascota.repository");
 // OBTENER TODAS LAS MASCOTAS (CON FILTROS PRO)
 // =======================================================
 
-const getMascotas = async (query) => {
+const getMascotas = async (query = {}) => {
 
     // --------------------------------------------------
     // CREAR OBJETO DE FILTROS
     // --------------------------------------------------
 
-    // Creamos un objeto vacío donde guardaremos filtros válidos
     const filtros = {};
 
     // --------------------------------------------------
     // FILTRO POR ESTADO
     // --------------------------------------------------
 
-    // Si viene ?estado=disponible
     if (query.estado) {
         filtros.estado = query.estado;
     }
@@ -33,7 +30,6 @@ const getMascotas = async (query) => {
     // FILTRO POR ENERGÍA
     // --------------------------------------------------
 
-    // Si viene ?energia=Media
     if (query.energia) {
         filtros.energia = query.energia;
     }
@@ -42,7 +38,6 @@ const getMascotas = async (query) => {
     // FILTRO POR PORTE
     // --------------------------------------------------
 
-    // Si viene ?porte=Pequeña
     if (query.porte) {
         filtros.porte = query.porte;
     }
@@ -51,7 +46,6 @@ const getMascotas = async (query) => {
     // LLAMAR AL REPOSITORY
     // --------------------------------------------------
 
-    // Enviamos solo los filtros válidos
     return await mascotaRepository.getMascotas(filtros);
 };
 
@@ -60,18 +54,30 @@ const getMascotas = async (query) => {
 // OBTENER MASCOTA POR ID
 // =======================================================
 
-const getMascotaById = async (params) => {
-
-    // Extraemos el id desde params
-    const { id } = params;
+const getMascotaById = async ({ id }) => {
 
     // Validamos que exista id
     if (!id) {
-        throw new Error("ID requerido");
+
+        const error = new Error("ID requerido");
+        error.statusCode = 400;
+
+        throw error;
     }
 
-    // Llamamos al repository con ese id
-    return await mascotaRepository.getMascotaById(id);
+    // Buscamos mascota
+    const mascota = await mascotaRepository.getMascotaById(id);
+
+    // Si no existe
+    if (!mascota) {
+
+        const error = new Error("Mascota no encontrada");
+        error.statusCode = 404;
+
+        throw error;
+    }
+
+    return mascota;
 };
 
 
@@ -85,23 +91,28 @@ const createMascota = async (data) => {
     // VALIDACIONES
     // --------------------------------------------------
 
-    // Validamos nombre
     if (!data.nombre) {
         throw new Error("El nombre es obligatorio");
     }
 
-    // Validamos edad
     if (!data.edad) {
         throw new Error("La edad es obligatoria");
     }
 
-    // Validamos descripción
     if (!data.descripcion || data.descripcion.length < 10) {
         throw new Error("La descripción debe tener al menos 10 caracteres");
     }
 
     // --------------------------------------------------
-    // ENVIAR AL REPOSITORY
+    // VALORES POR DEFECTO (🔥 PRO)
+    // --------------------------------------------------
+
+    if (!data.estado) {
+        data.estado = "disponible";
+    }
+
+    // --------------------------------------------------
+    // CREAR
     // --------------------------------------------------
 
     return await mascotaRepository.createMascota(data);
@@ -114,12 +125,26 @@ const createMascota = async (data) => {
 
 const updateMascota = async ({ id, data }) => {
 
-    // Validamos que venga id
     if (!id) {
-        throw new Error("ID requerido para actualizar");
+
+        const error = new Error("ID requerido para actualizar");
+        error.statusCode = 400;
+
+        throw error;
     }
 
-    // Llamamos al repository con id + datos
+    // Verificamos existencia
+    const mascota = await mascotaRepository.getMascotaById(id);
+
+    if (!mascota) {
+
+        const error = new Error("Mascota no encontrada");
+        error.statusCode = 404;
+
+        throw error;
+    }
+
+    // Actualizamos
     return await mascotaRepository.updateMascota(id, data);
 };
 
@@ -128,18 +153,30 @@ const updateMascota = async ({ id, data }) => {
 // ELIMINAR MASCOTA
 // =======================================================
 
-const deleteMascota = async (params) => {
+const deleteMascota = async ({ id }) => {
 
-    // Extraemos el id desde params
-    const { id } = params;
-
-    // Validamos que exista id
     if (!id) {
-        throw new Error("ID requerido para eliminar");
+
+        const error = new Error("ID requerido para eliminar");
+        error.statusCode = 400;
+
+        throw error;
     }
 
-    // Llamamos al repository
-    return await mascotaRepository.deleteMascota(id);
+    // Eliminamos
+    const deleted = await mascotaRepository.deleteMascota(id);
+
+    if (!deleted) {
+
+        const error = new Error("Mascota no encontrada");
+        error.statusCode = 404;
+
+        throw error;
+    }
+
+    return {
+        message: "Mascota eliminada correctamente"
+    };
 };
 
 
@@ -147,55 +184,54 @@ const deleteMascota = async (params) => {
 // MATCH DE MASCOTAS (🔥 NIVEL PRO)
 // =======================================================
 
-const getMatchMascotas = async (preferencias) => {
+const getMatchMascotas = async (preferencias = {}) => {
 
-    // --------------------------------------------------
-    // OBTENER TODAS LAS MASCOTAS
-    // --------------------------------------------------
+    // Traemos mascotas disponibles
+    const mascotas = await mascotaRepository.getMascotas({
+        estado: "disponible"
+    });
 
-    // Traemos todas las mascotas disponibles
-    const mascotas = await mascotaRepository.getMascotas({ estado: "disponible" });
-
-    // --------------------------------------------------
-    // CALCULAR COMPATIBILIDAD
-    // --------------------------------------------------
-
+    // Calculamos compatibilidad
     const resultado = mascotas.map(mascota => {
 
-        // Inicializamos puntaje
         let score = 0;
 
-        // --------------------------------------------------
-        // MATCH POR ENERGÍA
-        // --------------------------------------------------
-
+        // Match energía
         if (preferencias.energia && mascota.energia === preferencias.energia) {
             score += 1;
         }
 
-        // --------------------------------------------------
-        // MATCH POR PORTE
-        // --------------------------------------------------
-
+        // Match porte
         if (preferencias.porte && mascota.porte === preferencias.porte) {
             score += 1;
         }
 
-        // --------------------------------------------------
-        // RETORNAR RESULTADO
-        // --------------------------------------------------
-
         return {
-            ...mascota,   // datos de la mascota
-            match: score  // puntaje de compatibilidad
+            ...mascota.toJSON(), // 🔥 importante para evitar problemas de Sequelize
+            match: score
         };
     });
 
-    // --------------------------------------------------
-    // ORDENAR POR MEJOR MATCH
-    // --------------------------------------------------
-
+    // Ordenamos de mayor a menor compatibilidad
     return resultado.sort((a, b) => b.match - a.match);
+};
+
+
+// =======================================================
+// CAMBIAR ESTADO DE MASCOTA (🔥 PARA ADOPCIÓN)
+// =======================================================
+
+const cambiarEstadoMascota = async ({ id, estado }) => {
+
+    if (!id || !estado) {
+
+        const error = new Error("ID y estado son requeridos");
+        error.statusCode = 400;
+
+        throw error;
+    }
+
+    return await mascotaRepository.updateEstadoMascota(id, estado);
 };
 
 
@@ -209,5 +245,6 @@ module.exports = {
     createMascota,
     updateMascota,
     deleteMascota,
-    getMatchMascotas // 👈 NUEVO
+    getMatchMascotas,
+    cambiarEstadoMascota // 🔥 clave para adopción
 };

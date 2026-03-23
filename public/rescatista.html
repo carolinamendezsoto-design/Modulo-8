@@ -1,6 +1,6 @@
 <!DOCTYPE html> <!-- HTML5 -->
 
-<html lang="es">
+<html lang="es"> <!-- Idioma -->
 
 <head>
 
@@ -10,7 +10,7 @@
     <!-- Responsive -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <!-- TÍTULO -->
+    <!-- Título -->
     <title>🐾 Mis Mascotas</title>
 
     <!-- Bootstrap -->
@@ -21,56 +21,88 @@
 
     <style>
 
-        /* FONDO */
+        /* -------------------------------------------------- */
+        /* FONDO GLOBAL */
+        /* -------------------------------------------------- */
+
         body {
+
             font-family: 'Poppins', sans-serif;
+
             background-image: url("img/Huellitas_de_Amor.jpg");
+
             background-size: cover;
+
             background-attachment: fixed;
+
+            padding: 20px;
         }
 
         /* OVERLAY */
         body::before {
+
             content: "";
+
             position: fixed;
+
             inset: 0;
+
             background: linear-gradient(
-                rgba(0,0,0,0.7),
-                rgba(0,0,0,0.5)
+                rgba(0,0,0,0.65),
+                rgba(0,0,0,0.45)
             );
+
             z-index: -1;
         }
 
         /* HEADER */
         .header {
-            color: white;
+
+            display: flex;
+
+            justify-content: space-between;
+
+            align-items: center;
+
             margin-bottom: 20px;
+
+            color: white;
         }
 
-        /* TARJETAS */
+        /* CARD */
         .card {
+
             border-radius: 20px;
+
             padding: 20px;
+
             margin-bottom: 15px;
+
             background: rgba(255,255,255,0.15);
+
             backdrop-filter: blur(12px);
+
             border: 1px solid rgba(255,255,255,0.2);
+
             color: white;
         }
 
         /* SUB TARJETAS */
         .mini {
+
             background: rgba(255,255,255,0.1);
+
             padding: 10px;
+
             border-radius: 10px;
+
             margin-top: 10px;
         }
 
         /* BOTONES */
-        .btn-success {
+        .btn {
+
             border-radius: 10px;
-            background: linear-gradient(135deg, #28a745, #20c997);
-            border: none;
         }
 
     </style>
@@ -79,16 +111,26 @@
 
 <body>
 
-<div class="container mt-4">
+<div class="container">
 
     <!-- HEADER -->
-    <div class="header d-flex justify-content-between align-items-center">
+    <div class="header">
 
         <h3>🐶 Mis Mascotas</h3>
 
-        <button class="btn btn-danger btn-sm" onclick="logout()">
-            Cerrar sesión
-        </button>
+        <div>
+
+            <!-- CREAR -->
+            <a href="crear-mascota.html" class="btn btn-success btn-sm me-2">
+                + Nueva mascota
+            </a>
+
+            <!-- LOGOUT -->
+            <button class="btn btn-danger btn-sm" onclick="logout()">
+                Cerrar sesión
+            </button>
+
+        </div>
 
     </div>
 
@@ -97,55 +139,83 @@
 
 </div>
 
+<!-- SCRIPTS -->
+<script src="js/utils.js"></script>
 <script src="js/auth.js"></script>
 
 <script>
 
-    // TOKEN Y USUARIO
-    const token = localStorage.getItem("token");
-    const user = JSON.parse(localStorage.getItem("user")) || {};
+    // --------------------------------------------------
+    // VARIABLES
+    // --------------------------------------------------
 
-    // PROTEGER
+    const token = localStorage.getItem("token"); // token
+
+    const user = JSON.parse(localStorage.getItem("user")) || {}; // usuario
+
+
+    // --------------------------------------------------
+    // PROTECCIÓN
+    // --------------------------------------------------
+
     if (!user || user.rol !== "rescatista") {
 
-        alert("Acceso solo rescatista");
+        mostrarMensaje("Acceso solo rescatista", "danger");
 
         window.location.href = "mascotas.html";
     }
 
+
     // --------------------------------------------------
-    // CARGAR MASCOTAS DEL USUARIO
+    // CARGAR MASCOTAS
     // --------------------------------------------------
 
     async function cargarMisMascotas() {
 
-        const res = await fetch("/api/mascotas", {
-            headers: {
-                Authorization: "Bearer " + token
-            }
-        });
+        try {
 
-        const data = await res.json();
+            const res = await fetch("/api/mascotas", {
+                headers: {
+                    Authorization: "Bearer " + token
+                }
+            });
 
-        const mascotas = data.data || data;
+            const data = await res.json();
 
-        // 🔥 FILTRO
-        const misMascotas = mascotas.filter(m => m.userId === user.id);
+            const mascotas = data.data || [];
 
-        mostrarMascotas(misMascotas);
+            // Filtrar solo las del usuario
+            const misMascotas = mascotas.filter(m => m.userId === user.id);
+
+            mostrarMascotas(misMascotas);
+
+        } catch (error) {
+
+            console.error(error);
+
+            mostrarMensaje("Error al cargar mascotas", "danger");
+        }
     }
 
+
     // --------------------------------------------------
-    // MOSTRAR
+    // MOSTRAR MASCOTAS
     // --------------------------------------------------
 
-    function mostrarMascotas(mascotas) {
+    function mostrarMascotas(lista) {
 
         const cont = document.getElementById("contenedorMascotas");
 
         cont.innerHTML = "";
 
-        mascotas.forEach(m => {
+        if (!lista.length) {
+
+            cont.innerHTML = "<p class='text-white'>No tienes mascotas</p>";
+
+            return;
+        }
+
+        lista.forEach(m => {
 
             cont.innerHTML += `
                 <div class="card">
@@ -162,7 +232,7 @@
                         Ver solicitudes
                     </button>
 
-                    <!-- CONTENEDOR -->
+                    <!-- CONTENEDOR DINÁMICO -->
                     <div id="solicitudes-${m.id}"></div>
 
                 </div>
@@ -170,83 +240,110 @@
         });
     }
 
+
     // --------------------------------------------------
     // VER SOLICITUDES
     // --------------------------------------------------
 
     async function verSolicitudes(id) {
 
-        const res = await fetch(`/api/solicitudes/mascota/${id}`, {
-            headers: {
-                Authorization: "Bearer " + token
+        try {
+
+            const res = await fetch(`/api/solicitudes/mascota/${id}`, {
+                headers: {
+                    Authorization: "Bearer " + token
+                }
+            });
+
+            const data = await res.json();
+
+            const solicitudes = data.data || [];
+
+            const cont = document.getElementById(`solicitudes-${id}`);
+
+            if (!solicitudes.length) {
+
+                cont.innerHTML = "<p>No hay solicitudes</p>";
+
+                return;
             }
-        });
 
-        const data = await res.json();
+            cont.innerHTML = "";
 
-        const solicitudes = data.data;
+            solicitudes.forEach(s => {
 
-        const cont = document.getElementById(`solicitudes-${id}`);
+                cont.innerHTML += `
+                    <div class="mini">
 
-        if (!solicitudes.length) {
+                        <strong>${s.adoptante.nombre}</strong><br>
 
-            cont.innerHTML = "<p>No hay solicitudes</p>";
+                        <small>${s.adoptante.email}</small>
 
-            return;
+                        <p>${s.mensaje || ""}</p>
+
+                        <button 
+                            class="btn btn-success btn-sm"
+                            onclick="elegir(${s.id})"
+                        >
+                            Seleccionar ✅
+                        </button>
+
+                    </div>
+                `;
+            });
+
+        } catch (error) {
+
+            console.error(error);
+
+            mostrarMensaje("Error al cargar solicitudes", "danger");
         }
-
-        cont.innerHTML = "";
-
-        solicitudes.forEach(s => {
-
-            cont.innerHTML += `
-                <div class="mini">
-
-                    <strong>${s.adoptante.nombre}</strong><br>
-                    ${s.adoptante.email}<br>
-
-                    <p>${s.mensaje || ""}</p>
-
-                    <button 
-                        class="btn btn-success btn-sm"
-                        onclick="elegir(${s.id})"
-                    >
-                        Seleccionar ✅
-                    </button>
-
-                </div>
-            `;
-        });
     }
 
+
     // --------------------------------------------------
-    // ELEGIR
+    // ELEGIR ADOPTANTE
     // --------------------------------------------------
 
     async function elegir(id) {
 
-        const res = await fetch(`/api/solicitudes/seleccionar/${id}`, {
+        try {
 
-            method: "PUT",
+            const res = await fetch(`/api/solicitudes/seleccionar/${id}`, {
 
-            headers: {
-                Authorization: "Bearer " + token
+                method: "PUT",
+
+                headers: {
+                    Authorization: "Bearer " + token
+                }
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) {
+
+                mostrarMensaje(data.message || "Error", "danger");
+
+                return;
             }
-        });
 
-        if (res.ok) {
-
-            alert("Adopción completada 🎉");
+            mostrarMensaje("Adopción completada 🎉");
 
             location.reload();
 
-        } else {
+        } catch (error) {
 
-            alert("Error");
+            console.error(error);
+
+            mostrarMensaje("Error al seleccionar", "danger");
         }
     }
 
+
+    // --------------------------------------------------
     // INICIO
+    // --------------------------------------------------
+
     cargarMisMascotas();
 
 </script>

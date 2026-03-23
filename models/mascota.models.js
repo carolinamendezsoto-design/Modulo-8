@@ -2,106 +2,135 @@
 // IMPORTAR DEPENDENCIAS
 // ------------------------------------------------------
 
-// Importamos los tipos de datos de Sequelize (STRING, INTEGER, etc.)
+// Importamos tipos de datos de Sequelize
 const { DataTypes } = require("sequelize");
 
-// Importamos la instancia de conexión a la base de datos
+// Importamos la conexión a la base de datos
 const { sequelize } = require("../config/database");
-
-// Importamos modelos relacionados para crear relaciones
-const User = require("./user.models");
-const Solicitud = require("./solicitud.models");
 
 
 // ------------------------------------------------------
 // DEFINICIÓN DEL MODELO MASCOTA
 // ------------------------------------------------------
 
-// Definimos el modelo Mascota (tabla en la base de datos)
+// Definimos el modelo Mascota (tabla en la BD)
 const Mascota = sequelize.define("Mascota", {
 
-    // ID único de cada mascota
+    // --------------------------------------------------
+    // ID
+    // --------------------------------------------------
+
+    // Identificador único de la mascota
     id: {
-        type: DataTypes.INTEGER,      // tipo numérico
-        primaryKey: true,             // clave primaria
-        autoIncrement: true           // autoincremental
+        type: DataTypes.INTEGER,   // tipo número entero
+        primaryKey: true,          // clave primaria
+        autoIncrement: true        // autoincremental
     },
+
+    // --------------------------------------------------
+    // NOMBRE
+    // --------------------------------------------------
 
     // Nombre de la mascota
     nombre: {
-        type: DataTypes.STRING,       // texto corto
-        allowNull: false              // obligatorio
-    },
-
-    // Edad de la mascota
-    edad: {
-        type: DataTypes.INTEGER,      // número entero
-        allowNull: false              // obligatorio
-    },
-
-    // Tamaño o porte
-    porte: {
-        type: DataTypes.STRING,       // texto
-        allowNull: false              // obligatorio
-    },
-
-    // Nivel de energía
-    energia: {
-        type: DataTypes.STRING,       // texto
-        allowNull: false              // obligatorio
-    },
-
-    // Descripción de la mascota
-    descripcion: {
-        type: DataTypes.TEXT,         // texto largo
-        allowNull: false              // obligatorio
-    },
-
-    // Imagen (nombre del archivo subido con multer)
-    imagen: {
-        type: DataTypes.STRING        // opcional
-    },
-
-    // Estado de adopción
-    estado: {
-        type: DataTypes.STRING,       // texto
-        defaultValue: "disponible",   // valor inicial
+        type: DataTypes.STRING,    // texto corto
+        allowNull: false,          // obligatorio
         validate: {
-            isIn: [["disponible", "adoptado"]] // valores permitidos
+            notEmpty: true         // no permite vacío
         }
     },
 
-    // ID del usuario (rescatista que publica)
+    // --------------------------------------------------
+    // EDAD
+    // --------------------------------------------------
+
+    // Edad de la mascota
+    edad: {
+        type: DataTypes.INTEGER,   // número entero
+        allowNull: false,          // obligatorio
+        validate: {
+            isInt: true,           // debe ser entero
+            min: 0                 // no negativos
+        }
+    },
+
+    // --------------------------------------------------
+    // PORTE
+    // --------------------------------------------------
+
+    // Tamaño de la mascota
+    porte: {
+        type: DataTypes.STRING,    // texto
+        allowNull: false,          // obligatorio
+        validate: {
+            notEmpty: true         // no vacío
+        }
+    },
+
+    // --------------------------------------------------
+    // ENERGÍA
+    // --------------------------------------------------
+
+    // Nivel de energía
+    energia: {
+        type: DataTypes.STRING,    // texto
+        allowNull: false,          // obligatorio
+        validate: {
+            notEmpty: true
+        }
+    },
+
+    // --------------------------------------------------
+    // DESCRIPCIÓN
+    // --------------------------------------------------
+
+    // Descripción detallada de la mascota
+    descripcion: {
+        type: DataTypes.TEXT,      // texto largo
+        allowNull: false,          // obligatorio
+        validate: {
+            len: [10, 1000]        // mínimo 10 caracteres
+        }
+    },
+
+    // --------------------------------------------------
+    // IMAGEN
+    // --------------------------------------------------
+
+    // Nombre del archivo de imagen (subido con multer)
+    imagen: {
+        type: DataTypes.STRING,    // texto
+        allowNull: true            // opcional
+    },
+
+    // --------------------------------------------------
+    // ESTADO
+    // --------------------------------------------------
+
+    // Estado de adopción
+    estado: {
+        type: DataTypes.ENUM("disponible", "adoptado"), // valores permitidos
+        defaultValue: "disponible" // valor inicial
+    },
+
+    // --------------------------------------------------
+    // USER ID (FK)
+    // --------------------------------------------------
+
+    // ID del usuario que publica la mascota
     userId: {
-        type: DataTypes.INTEGER,      // número
-        allowNull: false              // obligatorio
+        type: DataTypes.INTEGER,   // número
+        allowNull: false,          // obligatorio
+        validate: {
+            isInt: true            // validación
+        }
     }
 
 }, {
-    timestamps: true // agrega createdAt y updatedAt automáticamente
-});
 
+    tableName: "mascotas", // nombre real en BD (buena práctica)
+    timestamps: true       // agrega createdAt y updatedAt
 
-// ------------------------------------------------------
-// RELACIONES
-// ------------------------------------------------------
-
-// Una mascota pertenece a un usuario (rescatista)
-Mascota.belongsTo(User, {
-    foreignKey: "userId",   // clave foránea
-    as: "rescatista"        // alias para consultas
-});
-
-// Un usuario puede tener muchas mascotas
-User.hasMany(Mascota, {
-    foreignKey: "userId",
-    as: "mascotas"
-});
-
-// Una mascota puede tener muchas solicitudes
-Mascota.hasMany(Solicitud, {
-    foreignKey: "mascotaId",
-    as: "solicitudes"
 });
 
 
@@ -109,5 +138,5 @@ Mascota.hasMany(Solicitud, {
 // EXPORTAR MODELO
 // ------------------------------------------------------
 
-// Exportamos el modelo para usarlo en controllers y services
+// Exportamos modelo para usar en services/controllers
 module.exports = Mascota;

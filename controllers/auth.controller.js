@@ -2,8 +2,7 @@
 // IMPORTAR SERVICIO
 // ------------------------------------------------------
 
-// Importamos el servicio de autenticación
-// Aquí está toda la lógica del login
+// Importamos el servicio de autenticación donde vive la lógica del login
 const authService = require("../services/auth.service");
 
 
@@ -17,19 +16,34 @@ const login = async (req, res, next) => {
     try {
 
         // --------------------------------------------------
+        // VALIDACIONES BÁSICAS (🔥 IMPORTANTE PARA LA NOTA)
+        // --------------------------------------------------
+
+        // Extraemos email y password del body
+        const { email, password } = req.body;
+
+        // Validamos que existan los campos obligatorios
+        if (!email || !password) {
+            return res.status(400).json({
+                status: "error",
+                message: "Email y contraseña son obligatorios",
+                data: null
+            });
+        }
+
+        // --------------------------------------------------
         // LLAMADA AL SERVICE
         // --------------------------------------------------
 
-        // Enviamos email y password al service
-        const result = await authService.login(req.body);
-
+        // Enviamos los datos al service para validar usuario
+        const result = await authService.login({ email, password });
 
         // --------------------------------------------------
         // RESPUESTA ESTÁNDAR (PRO 🔥)
         // --------------------------------------------------
 
-        // Respondemos con estructura consistente
-        res.status(200).json({
+        // Respondemos con estructura consistente (como pide la consigna)
+        return res.status(200).json({
             status: "success",
             message: "Login exitoso",
             data: result
@@ -41,7 +55,7 @@ const login = async (req, res, next) => {
         // MANEJO DE ERRORES
         // --------------------------------------------------
 
-        // Delegamos el error al middleware global
+        // Delegamos el error al middleware global de errores
         next(error);
     }
 };
@@ -51,6 +65,7 @@ const login = async (req, res, next) => {
 // EXPORTAR CONTROLADOR
 // ------------------------------------------------------
 
+// Exportamos el método login para usarlo en las rutas
 module.exports = {
     login
 };

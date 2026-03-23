@@ -2,10 +2,10 @@
 // IMPORTAR DEPENDENCIAS
 // ------------------------------------------------------
 
-// Importamos bcrypt para encriptar contraseñas
+// Librería para encriptar contraseñas
 const bcrypt = require("bcryptjs");
 
-// Importamos el repository (acceso a DB)
+// Repository (acceso a DB)
 const userRepository = require("../repositories/user.repository");
 
 
@@ -13,42 +13,34 @@ const userRepository = require("../repositories/user.repository");
 // OBTENER USUARIOS (CON FILTROS)
 // =======================================================
 
-exports.getUsers = async (query) => {
+const getUsers = async (query = {}) => {
 
-    // Creamos objeto de filtros
+    // Objeto de filtros
     const where = {};
 
-    // Si viene nombre → filtramos
-    if (query?.nombre) {
+    // Filtro por nombre
+    if (query.nombre) {
         where.nombre = query.nombre;
     }
 
-    // Si viene rol → filtramos (🔥 NUEVO)
-    if (query?.rol) {
+    // Filtro por rol
+    if (query.rol) {
         where.rol = query.rol;
     }
 
     // Consultamos DB
-    const usuarios = await userRepository.findAllUsers(where);
-
-    // Retornamos SOLO datos (controller arma respuesta)
-    return usuarios;
+    return await userRepository.findAllUsers(where);
 };
 
 
 // =======================================================
-// OBTENER USUARIOS CON POSTS (OPCIONAL)
+// OBTENER USUARIOS CON MASCOTAS (🔥 CORREGIDO)
 // =======================================================
 
-exports.getUsersWithPosts = async () => {
+const getUsersWithMascotas = async () => {
 
-    const usuarios = await userRepository.findUsersWithPosts();
-
-    return {
-        status: "success",
-        message: "Usuarios con posts obtenidos correctamente",
-        data: usuarios
-    };
+    // Llamamos al repository correcto
+    return await userRepository.findUsersWithMascotas();
 };
 
 
@@ -56,35 +48,36 @@ exports.getUsersWithPosts = async () => {
 // CREAR USUARIO
 // =======================================================
 
-exports.createUser = async (data) => {
+const createUser = async (data) => {
 
     // --------------------------------------------------
     // VALIDACIÓN
     // --------------------------------------------------
 
-    // Validamos campos obligatorios
     if (!data.nombre || !data.email || !data.password) {
 
         const error = new Error("Nombre, email y password son obligatorios");
         error.statusCode = 400;
+
         throw error;
     }
 
     // --------------------------------------------------
-    // VALIDAR ROL (🔥 IMPORTANTE)
+    // VALIDAR ROL
     // --------------------------------------------------
 
     const rolesValidos = ["admin", "adoptante", "rescatista"];
 
-    // Si no viene rol → asignamos adoptante
+    // Si no viene rol → default
     if (!data.rol) {
         data.rol = "adoptante";
     }
 
-    // Si rol no es válido → error
     if (!rolesValidos.includes(data.rol)) {
+
         const error = new Error("Rol inválido");
         error.statusCode = 400;
+
         throw error;
     }
 
@@ -102,20 +95,13 @@ exports.createUser = async (data) => {
 
     const usuario = await userRepository.createUser(data);
 
-    // --------------------------------------------------
-    // RESPUESTA SEGURA
-    // --------------------------------------------------
-
+    // Retornamos objeto limpio (SIN password)
     return {
-        status: "success",
-        message: "Usuario creado correctamente",
-        data: {
-            id: usuario.id,
-            nombre: usuario.nombre,
-            email: usuario.email,
-            telefono: usuario.telefono, // 🔥 NUEVO
-            rol: usuario.rol            // 🔥 NUEVO
-        }
+        id: usuario.id,
+        nombre: usuario.nombre,
+        email: usuario.email,
+        telefono: usuario.telefono,
+        rol: usuario.rol
     };
 };
 
@@ -124,17 +110,26 @@ exports.createUser = async (data) => {
 // OBTENER USUARIO POR ID
 // =======================================================
 
-exports.getUserById = async ({ id }) => {
+const getUserById = async ({ id }) => {
+
+    if (!id) {
+
+        const error = new Error("ID requerido");
+        error.statusCode = 400;
+
+        throw error;
+    }
 
     const usuario = await userRepository.findUserById(id);
 
     if (!usuario) {
+
         const error = new Error("Usuario no encontrado");
         error.statusCode = 404;
+
         throw error;
     }
 
-    // 🔥 ahora devolvemos solo el objeto limpio
     return usuario;
 };
 
@@ -143,18 +138,28 @@ exports.getUserById = async ({ id }) => {
 // ACTUALIZAR USUARIO
 // =======================================================
 
-exports.updateUser = async ({ id, data }) => {
+const updateUser = async ({ id, data }) => {
+
+    if (!id) {
+
+        const error = new Error("ID requerido");
+        error.statusCode = 400;
+
+        throw error;
+    }
 
     const usuario = await userRepository.findUserById(id);
 
     if (!usuario) {
+
         const error = new Error("Usuario no encontrado");
         error.statusCode = 404;
+
         throw error;
     }
 
     // --------------------------------------------------
-    // SI VIENE PASSWORD → ENCRIPTAR
+    // ENCRIPTAR PASSWORD SI VIENE
     // --------------------------------------------------
 
     if (data.password) {
@@ -165,7 +170,7 @@ exports.updateUser = async ({ id, data }) => {
     }
 
     // --------------------------------------------------
-    // VALIDAR ROL (🔥 IMPORTANTE)
+    // VALIDAR ROL
     // --------------------------------------------------
 
     if (data.rol) {
@@ -173,17 +178,18 @@ exports.updateUser = async ({ id, data }) => {
         const rolesValidos = ["admin", "adoptante", "rescatista"];
 
         if (!rolesValidos.includes(data.rol)) {
+
             const error = new Error("Rol inválido");
             error.statusCode = 400;
+
             throw error;
         }
     }
 
-    // Actualizamos en DB
+    // Actualizamos
     await userRepository.updateUser(usuario, data);
 
     return {
-        status: "success",
         message: "Usuario actualizado correctamente"
     };
 };
@@ -193,20 +199,29 @@ exports.updateUser = async ({ id, data }) => {
 // ELIMINAR USUARIO
 // =======================================================
 
-exports.deleteUser = async ({ id }) => {
+const deleteUser = async ({ id }) => {
+
+    if (!id) {
+
+        const error = new Error("ID requerido");
+        error.statusCode = 400;
+
+        throw error;
+    }
 
     const usuario = await userRepository.findUserById(id);
 
     if (!usuario) {
+
         const error = new Error("Usuario no encontrado");
         error.statusCode = 404;
+
         throw error;
     }
 
     await userRepository.deleteUser(usuario);
 
     return {
-        status: "success",
         message: "Usuario eliminado correctamente"
     };
 };
@@ -216,25 +231,38 @@ exports.deleteUser = async ({ id }) => {
 // CREAR USUARIO CON TRANSACCIÓN
 // =======================================================
 
-exports.createUserTransaction = async (data) => {
+const createUserTransaction = async (data) => {
 
     // Encriptamos password si viene
     if (data.password) {
+
         const hashedPassword = await bcrypt.hash(data.password, 10);
+
         data.password = hashedPassword;
     }
 
     const usuario = await userRepository.createUserWithTransaction(data);
 
     return {
-        status: "success",
-        message: "Usuario creado con transacción correctamente",
-        data: {
-            id: usuario.id,
-            nombre: usuario.nombre,
-            email: usuario.email,
-            telefono: usuario.telefono, // 🔥 NUEVO
-            rol: usuario.rol            // 🔥 NUEVO
-        }
+        id: usuario.id,
+        nombre: usuario.nombre,
+        email: usuario.email,
+        telefono: usuario.telefono,
+        rol: usuario.rol
     };
+};
+
+
+// ------------------------------------------------------
+// EXPORTAR
+// ------------------------------------------------------
+
+module.exports = {
+    getUsers,
+    getUsersWithMascotas, // 🔥 corregido
+    createUser,
+    getUserById,
+    updateUser,
+    deleteUser,
+    createUserTransaction
 };

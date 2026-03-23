@@ -1,57 +1,79 @@
-const User = require("./user");
+// ------------------------------------------------------
+// IMPORTAR MODELOS
+// ------------------------------------------------------
+
+// Importamos modelo de usuario
+const User = require("./user.models");
+
+// Importamos modelo de mascota
 const Mascota = require("./mascota.models");
-const Solicitud = require("./solicitud");
+
+// Importamos modelo de solicitud
+const Solicitud = require("./solicitud.models");
 
 
 // ------------------------------------------------------
-// RELACIONES 1:N
+// RELACIÓN 1:N (USUARIO → MASCOTAS)
 // ------------------------------------------------------
 
-// Usuario (rescatista) → Mascotas
-User.hasMany(Mascota, { foreignKey: "userId", as: "mascotas" });
-Mascota.belongsTo(User, { foreignKey: "userId", as: "rescatista" });
+// Un usuario (rescatista) puede tener muchas mascotas
+User.hasMany(Mascota, {
+    foreignKey: "userId", // clave foránea en Mascota
+    as: "mascotas"        // alias para consultas
+});
+
+// Una mascota pertenece a un usuario
+Mascota.belongsTo(User, {
+    foreignKey: "userId", // clave foránea
+    as: "rescatista"      // alias
+});
 
 
 // ------------------------------------------------------
-// RELACIÓN N:M (🔥 CLAVE PARA EL 7)
+// RELACIÓN N:M (ADOPTANTES ↔ MASCOTAS)
 // ------------------------------------------------------
 
-// Usuario (adoptante) ↔ Mascota (a través de Solicitud)
-
+// Un usuario (adoptante) puede postular a muchas mascotas
 User.belongsToMany(Mascota, {
-    through: Solicitud,
-    foreignKey: "adoptanteId",
-    otherKey: "mascotaId",
-    as: "postulaciones"
+    through: Solicitud,        // tabla intermedia
+    foreignKey: "adoptanteId", // FK en Solicitud
+    otherKey: "mascotaId",     // FK inversa
+    as: "postulaciones"        // alias
 });
 
+// Una mascota puede tener muchos adoptantes interesados
 Mascota.belongsToMany(User, {
-    through: Solicitud,
-    foreignKey: "mascotaId",
-    otherKey: "adoptanteId",
-    as: "interesados"
+    through: Solicitud,        // tabla intermedia
+    foreignKey: "mascotaId",   // FK en Solicitud
+    otherKey: "adoptanteId",   // FK inversa
+    as: "interesados"          // alias
 });
 
 
 // ------------------------------------------------------
-// RELACIONES DIRECTAS
+// RELACIONES DIRECTAS (SOLICITUD)
 // ------------------------------------------------------
 
+// Cada solicitud pertenece a un usuario (adoptante)
 Solicitud.belongsTo(User, {
-    foreignKey: "adoptanteId",
-    as: "adoptante",
-    onDelete: "CASCADE"
+    foreignKey: "adoptanteId", // FK
+    as: "adoptante",           // alias
+    onDelete: "CASCADE"        // elimina solicitudes si se borra usuario
 });
 
+// Cada solicitud pertenece a una mascota
 Solicitud.belongsTo(Mascota, {
-    foreignKey: "mascotaId",
-    as: "mascota",
-    onDelete: "CASCADE"
+    foreignKey: "mascotaId",   // FK
+    as: "mascota",             // alias
+    onDelete: "CASCADE"        // elimina solicitudes si se borra mascota
 });
 
 
 // ------------------------------------------------------
+// EXPORTAR MODELOS
+// ------------------------------------------------------
 
+// Exportamos todos los modelos centralizados
 module.exports = {
     User,
     Mascota,

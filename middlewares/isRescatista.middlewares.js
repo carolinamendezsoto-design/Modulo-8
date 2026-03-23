@@ -2,23 +2,39 @@
 // MIDDLEWARE: SOLO RESCATISTA
 // ------------------------------------------------------
 
-// Exportamos una función middleware de Express
+// Exportamos middleware de Express
 module.exports = (req, res, next) => {
 
-    // req.user viene desde el middleware de autenticación (auth)
-    // Aquí tenemos los datos del usuario logueado
-    const user = req.user;
+    // --------------------------------------------------
+    // VALIDAR AUTENTICACIÓN
+    // --------------------------------------------------
 
-    // Verificamos si el rol del usuario NO es "rescatista"
-    if (user.rol !== "rescatista") {
-
-        // Si no cumple → bloqueamos acceso
-        return res.status(403).json({
-            status: "error", // estado de error
-            message: "Solo rescatistas pueden realizar esta acción" // mensaje claro
+    // Validamos que el usuario esté autenticado
+    if (!req.user) {
+        return res.status(401).json({
+            status: "error", // error de autenticación
+            message: "Usuario no autenticado", // mensaje claro
+            data: null
         });
     }
 
-    // Si el usuario SÍ es rescatista → continúa la ejecución
+    // --------------------------------------------------
+    // VALIDAR ROL RESCATISTA
+    // --------------------------------------------------
+
+    // Si el rol NO es rescatista
+    if (req.user.rol !== "rescatista") {
+        return res.status(403).json({
+            status: "error", // error de permisos
+            message: "Solo rescatistas pueden realizar esta acción", // mensaje claro
+            data: null
+        });
+    }
+
+    // --------------------------------------------------
+    // CONTINUAR FLUJO
+    // --------------------------------------------------
+
+    // Si cumple, dejamos pasar al siguiente middleware o controller
     next();
 };

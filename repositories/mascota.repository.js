@@ -3,8 +3,9 @@
 // ------------------------------------------------------
 
 // Importamos el modelo Mascota desde Sequelize
-// Este modelo representa la tabla en la base de datos
-const Mascota = require("../models/mascota");
+// ⚠️ Asegúrate que la ruta coincida con tu estructura real
+const { Mascota } = require("../models"); 
+// 👆 Mejor práctica: importar desde index.js de models
 
 
 // =======================================================
@@ -12,11 +13,14 @@ const Mascota = require("../models/mascota");
 // =======================================================
 
 // Función que obtiene todas las mascotas
-// Puede recibir filtros (query) en el futuro
-const getMascotas = async (query) => {
+// Puede recibir filtros en el futuro (estado, usuario, etc.)
+const getMascotas = async (query = {}) => {
 
-    // Usamos findAll para traer todos los registros
-    return await Mascota.findAll();
+    // Retornamos todas las mascotas
+    // 👇 dejamos preparado "where" para filtros dinámicos
+    return await Mascota.findAll({
+        where: query
+    });
 
 };
 
@@ -28,7 +32,7 @@ const getMascotas = async (query) => {
 // Función que busca una mascota por su ID
 const getMascotaById = async (id) => {
 
-    // findByPk busca por primary key (id)
+    // Buscamos por clave primaria
     return await Mascota.findByPk(id);
 
 };
@@ -38,10 +42,10 @@ const getMascotaById = async (id) => {
 // CREAR MASCOTA
 // =======================================================
 
-// Función que crea una nueva mascota en la base de datos
+// Función que crea una nueva mascota
 const createMascota = async (data) => {
 
-    // create inserta un nuevo registro
+    // Insertamos un nuevo registro
     return await Mascota.create(data);
 
 };
@@ -54,10 +58,13 @@ const createMascota = async (data) => {
 // Función que actualiza una mascota existente
 const updateMascota = async (id, data) => {
 
-    // update modifica los campos según el id
-    await Mascota.update(data, {
+    // Actualizamos los datos
+    const [updated] = await Mascota.update(data, {
         where: { id }
     });
+
+    // Si no se actualizó nada, retornamos null
+    if (!updated) return null;
 
     // Retornamos la mascota actualizada
     return await Mascota.findByPk(id);
@@ -72,10 +79,32 @@ const updateMascota = async (id, data) => {
 // Función que elimina una mascota
 const deleteMascota = async (id) => {
 
-    // destroy elimina el registro según el id
-    return await Mascota.destroy({
+    // Eliminamos por id
+    const deleted = await Mascota.destroy({
         where: { id }
     });
+
+    // Retornamos true/false (más útil que número)
+    return deleted > 0;
+
+};
+
+
+// =======================================================
+// CAMBIAR ESTADO DE MASCOTA (🔥 IMPORTANTE PARA TU FLUJO)
+// =======================================================
+
+const updateEstadoMascota = async (id, estado) => {
+
+    // Cambiamos solo el estado (disponible → adoptado)
+    const [updated] = await Mascota.update(
+        { estado },
+        { where: { id } }
+    );
+
+    if (!updated) return null;
+
+    return await Mascota.findByPk(id);
 
 };
 
@@ -84,11 +113,11 @@ const deleteMascota = async (id) => {
 // EXPORTAR REPOSITORY
 // ------------------------------------------------------
 
-// Exportamos todas las funciones para usarlas en el service
 module.exports = {
     getMascotas,
     getMascotaById,
     createMascota,
     updateMascota,
-    deleteMascota
+    deleteMascota,
+    updateEstadoMascota // 🔥 nuevo método clave
 };

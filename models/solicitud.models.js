@@ -2,7 +2,10 @@
 // IMPORTAR DEPENDENCIAS
 // ------------------------------------------------------
 
+// Importamos tipos de datos de Sequelize
 const { DataTypes } = require("sequelize");
+
+// Importamos la conexión a la base de datos
 const { sequelize } = require("../config/database");
 
 
@@ -10,45 +13,87 @@ const { sequelize } = require("../config/database");
 // DEFINICIÓN DEL MODELO SOLICITUD
 // ------------------------------------------------------
 
+// Definimos el modelo Solicitud (tabla en la BD)
 const Solicitud = sequelize.define("Solicitud", {
 
+    // --------------------------------------------------
+    // ID
+    // --------------------------------------------------
+
+    // Identificador único de la solicitud
     id: {
-        type: DataTypes.INTEGER,
-        primaryKey: true,
-        autoIncrement: true
+        type: DataTypes.INTEGER,   // número entero
+        primaryKey: true,          // clave primaria
+        autoIncrement: true        // autoincremental
     },
 
+    // --------------------------------------------------
+    // MASCOTA ID (FK)
+    // --------------------------------------------------
+
+    // ID de la mascota a la que se postula
     mascotaId: {
-        type: DataTypes.INTEGER,
-        allowNull: false
+        type: DataTypes.INTEGER,   // número
+        allowNull: false,          // obligatorio
+        validate: {
+            isInt: true            // debe ser entero
+        }
     },
 
+    // --------------------------------------------------
+    // ADOPTANTE ID (FK)
+    // --------------------------------------------------
+
+    // ID del usuario que realiza la solicitud
     adoptanteId: {
-        type: DataTypes.INTEGER,
-        allowNull: false
+        type: DataTypes.INTEGER,   // número
+        allowNull: false,          // obligatorio
+        validate: {
+            isInt: true            // validación
+        }
     },
 
+    // --------------------------------------------------
+    // MENSAJE
+    // --------------------------------------------------
+
+    // Mensaje opcional del adoptante
     mensaje: {
-        type: DataTypes.TEXT
+        type: DataTypes.TEXT,      // texto largo
+        allowNull: true,           // opcional
+        validate: {
+            len: [0, 500]          // máximo 500 caracteres
+        }
     },
 
+    // --------------------------------------------------
+    // ESTADO
+    // --------------------------------------------------
+
+    // Estado de la solicitud
     estado: {
-        type: DataTypes.ENUM("pendiente", "aprobado", "rechazado"), // ENUM PRO
-        defaultValue: "pendiente"
+        type: DataTypes.ENUM("pendiente", "aprobado", "rechazado"), // ENUM profesional
+        defaultValue: "pendiente" // estado inicial
     }
 
 }, {
-    tableName: "solicitudes",
-    timestamps: true,
 
     // --------------------------------------------------
-    // RESTRICCIÓN: EVITAR POSTULACIONES DUPLICADAS
+    // CONFIGURACIÓN DEL MODELO
+    // --------------------------------------------------
+
+    tableName: "solicitudes", // nombre de la tabla en BD
+
+    timestamps: true, // createdAt y updatedAt
+
+    // --------------------------------------------------
+    // RESTRICCIÓN ÚNICA (🔥 CLAVE PARA EL 7)
     // --------------------------------------------------
 
     indexes: [
         {
-            unique: true,
-            fields: ["mascotaId", "adoptanteId"] // combinación única
+            unique: true, // hace única la combinación
+            fields: ["mascotaId", "adoptanteId"] // evita duplicados
         }
     ]
 });
@@ -58,4 +103,5 @@ const Solicitud = sequelize.define("Solicitud", {
 // EXPORTAR MODELO
 // ------------------------------------------------------
 
+// Exportamos modelo para usar en controllers/services
 module.exports = Solicitud;

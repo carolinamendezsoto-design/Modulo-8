@@ -1,74 +1,53 @@
-const Solicitud = require("../models/solicitud");
-const User = require("../models/user");
-const Mascota = require("../models/mascota");
-const { Op } = require("sequelize");
+// ------------------------------------------------------
+// IMPORTAR SERVICES
+// ------------------------------------------------------
+
+const solicitudService = require("../services/solicitud.service");
+const mascotaService = require("../services/mascota.service");
 
 
 // ======================================================
 // CREAR SOLICITUD
 // ======================================================
 
-exports.createSolicitud = async (req, res, next) => {
+const createSolicitud = async (req, res, next) => {
     try {
 
-        const { mascotaId, mensaje } = req.body;
-        const adoptanteId = req.user.id;
+        // Extraemos datos
+        const { mascotaId } = req.body;
+
+        // Usuario autenticado
+        const usuarioId = req.user.id;
         const rol = req.user.rol;
 
-        // Validar datos
+        // Validamos mascotaId
         if (!mascotaId) {
             return res.status(400).json({
                 status: "error",
-                message: "El campo mascotaId es obligatorio"
+                message: "mascotaId es obligatorio",
+                data: null
             });
         }
 
+        // Validamos rol
         if (rol !== "adoptante") {
             return res.status(403).json({
                 status: "error",
-                message: "Solo adoptantes pueden solicitar"
+                message: "Solo adoptantes pueden postular",
+                data: null
             });
         }
 
-        const mascota = await Mascota.findByPk(mascotaId);
-
-        if (!mascota) {
-            return res.status(404).json({
-                status: "error",
-                message: "Mascota no encontrada"
-            });
-        }
-
-        if (mascota.estado !== "disponible") {
-            return res.status(400).json({
-                status: "error",
-                message: "Mascota no disponible"
-            });
-        }
-
-        // Evitar duplicados
-        const existe = await Solicitud.findOne({
-            where: { mascotaId, adoptanteId }
+        // Creamos solicitud
+        const result = await solicitudService.createSolicitud({
+            usuarioId,
+            mascotaId
         });
 
-        if (existe) {
-            return res.status(400).json({
-                status: "error",
-                message: "Ya postulaste a esta mascota"
-            });
-        }
-
-        const nuevaSolicitud = await Solicitud.create({
-            mascotaId,
-            adoptanteId,
-            mensaje,
-            estado: "pendiente"
-        });
-
-        res.status(201).json({
+        return res.status(201).json({
             status: "success",
             message: "Solicitud creada correctamente",
-            data: nuevaSolicitud
+            data: result
         });
 
     } catch (error) {
@@ -78,62 +57,134 @@ exports.createSolicitud = async (req, res, next) => {
 
 
 // ======================================================
-// SELECCIONAR ADOPTANTE (LÓGICA FINAL)
+// OBTENER SOLICITUDES POR MASCOTA
 // ======================================================
 
-exports.seleccionarAdoptante = async (req, res, next) => {
+const getSolicitudesByMascota = async (req, res, next) => {
+    try {
+
+        const { mascotaId } = req.params;
+
+        const result = await solicitudService.getSolicitudesByMascota(mascotaId);
+
+        return res.status(200).json({
+            status: "success",
+            message: "Solicitudes obtenidas correctamente",
+            data: result
+        });
+
+    } catch (error) {
+        next(error);
+    }
+};
+
+
+// ======================================================
+// MIS SOLICITUDES
+// ======================================================
+
+const getMisSolicitudes = async (req, res, next) => {
+    try {
+
+        const usuarioId = req.user.id;
+
+        const result = await solicitudService.getSolicitudesByUsuario(usuarioId);
+
+        return res.status(200).json({
+            status: "success",
+            message: "Mis solicitudes obtenidas correctamente",
+            data: result
+        });
+
+    } catch (error) {
+        next(error);
+    }
+};
+
+
+// ======================================================
+// SELECCIONAR ADOPTANTE (🔥 FLUJO FINAL)
+// ======================================================
+
+const seleccionarAdoptante = async (req, res, next) => {
     try {
 
         const { id } = req.params;
-        const usuario = req.user;
 
-        const solicitud = await Solicitud.findByPk(id);
+        // Aprobamos solicitud
+        const solicitud = await solicitudService.updateSolicitudEstado(id, "aprobada");
 
-        if (!solicitud) {
-            return res.status(404).json({
-                status: "error",
-                message: "Solicitud no encontrada"
-            });
-        }
+        // Cambiamos estado mascota
+        await mascotaService.cambiarEstadoMascota({
+            id: solicitud.mascotaId,
+            estado: "adoptado"
+        });
 
-        const mascota = await Mascota.findByPk(solicitud.mascotaId);
-
-        // 🔥 SOLO dueño o admin puede aprobar
-        if (usuario.rol !== "admin" && mascota.userId !== usuario.id) {
-            return res.status(403).json({
-                status: "error",
-                message: "No autorizado para aprobar"
-            });
-        }
-
-        // Aprobar
-        solicitud.estado = "aprobado";
-        await solicitud.save();
-
-        // Rechazar otras
-        await Solicitud.update(
-            { estado: "rechazado" },
-            {
-                where: {
-                    mascotaId: solicitud.mascotaId,
-                    id: { [Op.ne]: id }
-                }
-            }
-        );
-
-        // Marcar mascota adoptada
-        await Mascota.update(
-            { estado: "adoptado" },
-            { where: { id: solicitud.mascotaId } }
-        );
-
-        res.json({
+        return res.status(200).json({
             status: "success",
-            message: "Adopción completada",
+            message: "Adopción completada correctamente",
             data: solicitud
         });
 
     } catch (error) {
         next(error);
     }
+};
+
+
+// ======================================================
+// RECHAZAR SOLICITUD
+// ======================================================
+
+const rechazarSolicitud = async (req, res, next) => {
+    try {
+
+        const { id } = req.params;
+
+        const solicitud = await solicitudService.updateSolicitudEstado(id, "rechazada");
+
+        return res.status(200).json({
+            status: "success",
+            message: "Solicitud rechazada",
+            data: solicitud
+        });
+
+    } catch (error) {
+        next(error);
+    }
+};
+
+
+// ======================================================
+// ADMIN → TODAS
+// ======================================================
+
+const getAllSolicitudes = async (req, res, next) => {
+    try {
+
+        const result = await solicitudService.getAllSolicitudes();
+
+        return res.status(200).json({
+            status: "success",
+            message: "Todas las solicitudes obtenidas",
+            data: result
+        });
+
+    } catch (error) {
+        next(error);
+    }
+};
+
+
+// ------------------------------------------------------
+// EXPORTAR
+// ------------------------------------------------------
+
+module.exports = {
+    createSolicitud,
+    getSolicitudesByMascota,
+    getMisSolicitudes,
+    seleccionarAdoptante,
+    rechazarSolicitud,
+    getAllSolicitudes
 };

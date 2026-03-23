@@ -2,31 +2,22 @@
 // IMPORTAR MODELOS
 // ------------------------------------------------------
 
-// Importamos el modelo User
-// Representa la tabla de usuarios en la base de datos
-const User = require("../models/user.models");
-
-// Importamos el modelo Mascota (ANTES era Post ❌)
-// Se usa para la relación entre usuarios y mascotas
-const Mascota = require("../models/mascota.models");
-
-// Importamos Sequelize para transacciones
-const { sequelize } = require("../config/database");
+// Importamos desde index (MEJOR PRÁCTICA)
+const { User, Mascota, sequelize } = require("../models");
 
 
 // =======================================================
 // OBTENER TODOS LOS USUARIOS (CON FILTROS)
 // =======================================================
 
-exports.findAllUsers = async (where) => {
+const findAllUsers = async (where = {}) => {
 
-    // Buscamos usuarios en la base de datos
     return await User.findAll({
 
-        // Aplicamos filtros (si existen)
+        // Aplicamos filtros dinámicos
         where,
 
-        // Excluimos la contraseña por seguridad
+        // Excluimos password por seguridad
         attributes: { exclude: ["password"] }
 
     });
@@ -38,23 +29,18 @@ exports.findAllUsers = async (where) => {
 // OBTENER USUARIOS CON MASCOTAS (RELACIÓN)
 // =======================================================
 
-exports.findUsersWithMascotas = async () => {
+const findUsersWithMascotas = async () => {
 
     return await User.findAll({
 
-        // Incluimos la relación con Mascota
-        include: {
-            model: Mascota,              // modelo relacionado
-            as: "mascotas",              // alias definido en user.js
-            attributes: [               // campos que queremos mostrar
-                "id",
-                "nombre",
-                "edad",
-                "estado"
-            ]
-        },
+        include: [
+            {
+                model: Mascota,
+                as: "mascotas", // ⚠️ debe coincidir con models/index.js
+                attributes: ["id", "nombre", "edad", "estado"]
+            }
+        ],
 
-        // Ocultamos password por seguridad
         attributes: { exclude: ["password"] }
 
     });
@@ -66,9 +52,8 @@ exports.findUsersWithMascotas = async () => {
 // CREAR USUARIO
 // =======================================================
 
-exports.createUser = async (data) => {
+const createUser = async (data) => {
 
-    // Creamos un nuevo usuario en la base de datos
     return await User.create(data);
 
 };
@@ -78,10 +63,11 @@ exports.createUser = async (data) => {
 // BUSCAR USUARIO POR ID
 // =======================================================
 
-exports.findUserById = async (id) => {
+const findUserById = async (id) => {
 
-    // Buscamos un usuario por su ID
-    return await User.findByPk(id);
+    return await User.findByPk(id, {
+        attributes: { exclude: ["password"] }
+    });
 
 };
 
@@ -90,9 +76,9 @@ exports.findUserById = async (id) => {
 // ACTUALIZAR USUARIO
 // =======================================================
 
-exports.updateUser = async (usuario, data) => {
+const updateUser = async (usuario, data) => {
 
-    // Actualizamos los datos del usuario existente
+    // Sequelize permite actualizar directamente la instancia
     return await usuario.update(data);
 
 };
@@ -102,9 +88,8 @@ exports.updateUser = async (usuario, data) => {
 // ELIMINAR USUARIO
 // =======================================================
 
-exports.deleteUser = async (usuario) => {
+const deleteUser = async (usuario) => {
 
-    // Eliminamos el usuario de la base de datos
     return await usuario.destroy();
 
 };
@@ -114,32 +99,41 @@ exports.deleteUser = async (usuario) => {
 // CREAR USUARIO CON TRANSACCIÓN
 // =======================================================
 
-exports.createUserWithTransaction = async (data) => {
+const createUserWithTransaction = async (data) => {
 
-    // Iniciamos una transacción
     const t = await sequelize.transaction();
 
     try {
 
-        // Creamos el usuario dentro de la transacción
         const usuario = await User.create(data, { transaction: t });
 
-        // Simulación de otra operación (ej: log)
-        console.log("Log: usuario creado ->", usuario.email);
+        // Simulación de log
+        console.log("Usuario creado:", usuario.email);
 
-        // Confirmamos la transacción (todo OK)
         await t.commit();
 
-        // Retornamos el usuario creado
         return usuario;
 
     } catch (error) {
 
-        // Si ocurre un error, revertimos todo
         await t.rollback();
 
-        // Lanzamos el error nuevamente
         throw error;
     }
 
+};
+
+
+// ------------------------------------------------------
+// EXPORTAR
+// ------------------------------------------------------
+
+module.exports = {
+    findAllUsers,
+    findUsersWithMascotas,
+    createUser,
+    findUserById,
+    updateUser,
+    deleteUser,
+    createUserWithTransaction
 };

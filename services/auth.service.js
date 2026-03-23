@@ -2,14 +2,14 @@
 // IMPORTAR DEPENDENCIAS
 // ------------------------------------------------------
 
-// Importamos bcrypt para comparar contraseñas encriptadas
+// Librería para comparar contraseñas encriptadas
 const bcrypt = require("bcryptjs");
 
-// Importamos jsonwebtoken para generar tokens JWT
+// Librería para generar tokens JWT
 const jwt = require("jsonwebtoken");
 
-// Importamos el modelo User para consultar la base de datos
-const User = require("../models/user");
+// Importamos repository (🔥 NO modelo directo)
+const userRepository = require("../repositories/user.repository");
 
 
 // ------------------------------------------------------
@@ -19,18 +19,21 @@ const User = require("../models/user");
 const login = async ({ email, password }) => {
 
     // --------------------------------------------------
-    // NORMALIZAR DATOS (🔥 SOLUCIÓN CLAVE)
+    // NORMALIZAR DATOS
     // --------------------------------------------------
 
-    // Eliminamos espacios y pasamos a minúsculas
+    // Eliminamos espacios y pasamos email a minúsculas
     const emailNormalizado = email?.trim().toLowerCase();
+
+    // Limpiamos password
     const passwordLimpia = password?.trim();
 
+
     // --------------------------------------------------
-    // VALIDACIÓN DE DATOS
+    // VALIDACIÓN
     // --------------------------------------------------
 
-    // Verificamos que existan email y password
+    // Verificamos que existan ambos campos
     if (!emailNormalizado || !passwordLimpia) {
 
         const error = new Error("Email y contraseña son obligatorios");
@@ -39,20 +42,18 @@ const login = async ({ email, password }) => {
         throw error;
     }
 
-    // --------------------------------------------------
-    // DEBUG (puedes borrar después)
-    // --------------------------------------------------
-
-    console.log("🔍 Buscando usuario con email:", emailNormalizado);
 
     // --------------------------------------------------
-    // BUSCAR USUARIO EN LA BASE DE DATOS
+    // BUSCAR USUARIO
     // --------------------------------------------------
 
-    // Buscamos usuario por email normalizado
-    const user = await User.findOne({
-        where: { email: emailNormalizado }
+    // Buscamos usuario usando repository
+    const usuarios = await userRepository.findAllUsers({
+        email: emailNormalizado
     });
+
+    // Tomamos el primero (email debería ser único)
+    const user = usuarios[0];
 
     // Si no existe usuario
     if (!user) {
@@ -63,14 +64,14 @@ const login = async ({ email, password }) => {
         throw error;
     }
 
+
     // --------------------------------------------------
-    // VALIDAR CONTRASEÑA
+    // VALIDAR PASSWORD
     // --------------------------------------------------
 
-    // Comparamos password ingresada con la encriptada en DB
+    // Comparamos password ingresada con hash
     const isMatch = await bcrypt.compare(passwordLimpia, user.password);
 
-    // Si no coincide
     if (!isMatch) {
 
         const error = new Error("Contraseña incorrecta");
@@ -79,33 +80,32 @@ const login = async ({ email, password }) => {
         throw error;
     }
 
+
     // --------------------------------------------------
     // GENERAR TOKEN JWT
     // --------------------------------------------------
 
-    // Creamos payload con datos del usuario
+    // Creamos payload con info clave
     const payload = {
-
-        id: user.id,       // ID usuario
-        email: user.email, // email
-        rol: user.rol      // 🔥 rol (clave para tu sistema)
+        id: user.id,
+        email: user.email,
+        rol: user.rol
     };
 
-    // Firmamos el token con secreto del .env
+    // Firmamos token
     const token = jwt.sign(
         payload,
         process.env.JWT_SECRET,
-        { expiresIn: "1h" } // expira en 1 hora
+        { expiresIn: "1h" }
     );
+
 
     // --------------------------------------------------
     // RESPUESTA FINAL
     // --------------------------------------------------
 
     return {
-
-        token, // token JWT
-
+        token,
         user: {
             id: user.id,
             email: user.email,
@@ -116,7 +116,7 @@ const login = async ({ email, password }) => {
 
 
 // ------------------------------------------------------
-// EXPORTAR FUNCIÓN
+// EXPORTAR
 // ------------------------------------------------------
 
 module.exports = {
