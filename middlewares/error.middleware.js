@@ -2,41 +2,40 @@
 // MIDDLEWARE GLOBAL DE ERRORES
 // ------------------------------------------------------
 
-// Definimos el middleware de errores de Express
-// IMPORTANTE: tiene 4 parámetros (err, req, res, next)
-// Eso es lo que le indica a Express que es un middleware de error
+// Este middleware captura TODOS los errores de la aplicación
+// IMPORTANTE: debe tener 4 parámetros para que Express lo reconozca
 const errorMiddleware = (err, req, res, next) => {
 
     // --------------------------------------------------
-    // LOG DEL ERROR (DEBUG)
+    // LOG DEL ERROR (DEBUG PROFESIONAL)
     // --------------------------------------------------
 
-    // Mostramos el error en consola para debugging en el servidor
-    // Esto ayuda a los desarrolladores a identificar el problema
-    console.error("🔥 Error:", err.message);
+    // Mostramos información completa del error en consola
+    console.error("🔥 ERROR DETECTADO:");
+    console.error("Mensaje:", err.message);
+    console.error("Stack:", err.stack);
 
     // --------------------------------------------------
     // DEFINIR STATUS CODE
     // --------------------------------------------------
 
-    // Si el error tiene statusCode lo usamos
-    // Si no, usamos 500 (error interno del servidor)
+    // Usamos statusCode si viene definido (errores controlados)
+    // Si no existe → error interno del servidor
     const statusCode = err.statusCode || 500;
 
     // --------------------------------------------------
-    // RESPUESTA AL CLIENTE
+    // RESPUESTA ESTANDARIZADA
     // --------------------------------------------------
 
-    // Enviamos respuesta JSON estructurada (como pide la consigna)
-    return res.status(statusCode).json({
+    res.status(statusCode).json({
 
-        // Indicamos que ocurrió un error
+        // Indicamos error
         status: "error",
 
-        // Enviamos el mensaje del error
+        // Mensaje claro para cliente
         message: err.message || "Error interno del servidor",
 
-        // Mantenemos consistencia de estructura en la API
+        // Siempre mantener estructura consistente
         data: null
     });
 };
@@ -46,5 +45,4 @@ const errorMiddleware = (err, req, res, next) => {
 // EXPORTAR MIDDLEWARE
 // ------------------------------------------------------
 
-// Exportamos el middleware para usarlo en app.js
 module.exports = errorMiddleware;

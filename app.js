@@ -2,16 +2,11 @@
 // IMPORTAR DEPENDENCIAS
 // ------------------------------------------------------
 
-// Importamos express (framework backend)
-const express = require("express");
+const express = require("express"); // Framework backend
+const path = require("path");       // Manejo de rutas
+const cors = require("cors");       // Permite conexión frontend-backend
 
-// Importamos path para manejar rutas de archivos
-const path = require("path");
-
-// Importamos CORS (permite conexión entre frontend y backend)
-const cors = require("cors");
-
-// Cargamos variables de entorno (.env)
+// Cargar variables de entorno
 require("dotenv").config();
 
 
@@ -19,41 +14,28 @@ require("dotenv").config();
 // IMPORTAR MIDDLEWARES
 // ------------------------------------------------------
 
-// Middleware de logs (muestra requests en consola)
-const logger = require("./middlewares/logger");
-
-// Middleware global de errores
-const errorMiddleware = require("./middlewares/error.middleware");
+const logger = require("./middlewares/logger"); // Logger de requests
+const errorMiddleware = require("./middlewares/error.middleware"); // Manejo global de errores
 
 
 // ------------------------------------------------------
 // IMPORTAR MODELOS
 // ------------------------------------------------------
 
-// ⚠️ Solo se importan para que Sequelize los registre internamente
-
-require("./models/user");       // modelo User
-require("./models/mascota");   // modelo Mascota
-require("./models/solicitud"); // modelo Solicitud
+// Se importan solo para registrar en Sequelize
+require("./models/user");
+require("./models/mascota");
+require("./models/solicitud");
 
 
 // ------------------------------------------------------
 // IMPORTAR RUTAS
 // ------------------------------------------------------
 
-// Rutas de usuarios
 const userRoutes = require("./routes/users");
-
-// Rutas de autenticación
 const authRoutes = require("./routes/auth");
-
-// Rutas de subida de archivos
 const uploadRoutes = require("./routes/upload");
-
-// Rutas de mascotas
 const mascotaRoutes = require("./routes/mascota.routes");
-
-// Rutas de solicitudes
 const solicitudRoutes = require("./routes/solicitud.routes");
 
 
@@ -61,21 +43,20 @@ const solicitudRoutes = require("./routes/solicitud.routes");
 // CREAR APP
 // ------------------------------------------------------
 
-// Inicializamos la aplicación Express
 const app = express();
 
 
 // ------------------------------------------------------
-// MIDDLEWARES
+// MIDDLEWARES GLOBALES
 // ------------------------------------------------------
 
-// Permite recibir JSON en el body
+// Permitir recibir JSON en requests
 app.use(express.json());
 
-// Habilita CORS (evita error entre puertos)
+// Permitir CORS (evita errores entre puertos)
 app.use(cors());
 
-// Logger de peticiones
+// Logger de peticiones HTTP
 app.use(logger);
 
 
@@ -83,10 +64,10 @@ app.use(logger);
 // ARCHIVOS ESTÁTICOS
 // ------------------------------------------------------
 
-// Servimos frontend (carpeta public)
+// Servir frontend
 app.use(express.static(path.join(__dirname, "public")));
 
-// Servimos imágenes (carpeta uploads)
+// Servir imágenes subidas
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 
@@ -94,12 +75,12 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 // RUTAS BÁSICAS
 // ------------------------------------------------------
 
-// Ruta principal → devuelve index.html
+// Ruta principal
 app.get("/", (req, res) => {
     res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
-// Ruta de prueba → status del servidor
+// Ruta de salud del servidor (health check)
 app.get("/status", (req, res) => {
     res.json({
         status: "success",
@@ -113,20 +94,34 @@ app.get("/status", (req, res) => {
 // RUTAS API
 // ------------------------------------------------------
 
-// Todas las rutas tienen prefijo /api
+// Prefijo /api para mantener orden REST
 
-app.use("/api/users", userRoutes);         // usuarios
-app.use("/api/auth", authRoutes);          // login
-app.use("/api/upload", uploadRoutes);      // subida imágenes
-app.use("/api/mascotas", mascotaRoutes);   // mascotas
-app.use("/api/solicitudes", solicitudRoutes); // solicitudes
+app.use("/api/users", userRoutes);
+app.use("/api/auth", authRoutes);
+app.use("/api/upload", uploadRoutes);
+app.use("/api/mascotas", mascotaRoutes);
+app.use("/api/solicitudes", solicitudRoutes);
+
+
+// ------------------------------------------------------
+// MIDDLEWARE 404 (NUEVO 🔥 MUY IMPORTANTE)
+// ------------------------------------------------------
+
+// Si ninguna ruta coincide, devolvemos error controlado
+app.use((req, res, next) => {
+    res.status(404).json({
+        status: "error",
+        message: "Ruta no encontrada",
+        data: null
+    });
+});
 
 
 // ------------------------------------------------------
 // MIDDLEWARE DE ERRORES
 // ------------------------------------------------------
 
-// ⚠️ Siempre al final
+// ⚠️ SIEMPRE AL FINAL
 app.use(errorMiddleware);
 
 
@@ -134,5 +129,4 @@ app.use(errorMiddleware);
 // EXPORTAR APP
 // ------------------------------------------------------
 
-// Exportamos la app (NO se ejecuta aquí)
 module.exports = app;

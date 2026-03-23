@@ -2,13 +2,13 @@
 // IMPORTAR DEPENDENCIAS
 // ------------------------------------------------------
 
-// Importamos la app ya configurada
+// App principal ya configurada
 const app = require("./app");
 
-// Importamos conexión a base de datos
+// Configuración de base de datos
 const { connectDB, sequelize } = require("./config/database");
 
-// Cargamos variables de entorno
+// Variables de entorno
 require("dotenv").config();
 
 
@@ -16,7 +16,6 @@ require("dotenv").config();
 // CONFIGURAR PUERTO
 // ------------------------------------------------------
 
-// Usamos el puerto del .env o 3000
 const PORT = process.env.PORT || 3000;
 
 
@@ -34,13 +33,16 @@ const startServer = async () => {
 
         await connectDB();
 
+        console.log("✅ Base de datos conectada");
+
+
         // --------------------------------------------------
         // SINCRONIZAR MODELOS
         // --------------------------------------------------
 
         await sequelize.sync();
 
-        console.log("✅ Base de datos sincronizada correctamente");
+        console.log("✅ Modelos sincronizados correctamente");
 
 
         // --------------------------------------------------
@@ -53,15 +55,36 @@ const startServer = async () => {
 
     } catch (error) {
 
-        // Si falla algo al iniciar
-        console.error("❌ Error al iniciar servidor:", error.message);
+        // --------------------------------------------------
+        // ERROR CRÍTICO DE ARRANQUE
+        // --------------------------------------------------
+
+        console.error("❌ ERROR CRÍTICO AL INICIAR:");
+        console.error(error.message);
+
+        // Salimos del proceso (esto es nivel profesional)
+        process.exit(1);
     }
 };
+
+
+// ------------------------------------------------------
+// MANEJO DE ERRORES GLOBALES (PRO LEVEL 🔥)
+// ------------------------------------------------------
+
+// Captura errores no manejados en promesas
+process.on("unhandledRejection", (err) => {
+    console.error("❌ Unhandled Rejection:", err.message);
+});
+
+// Captura errores síncronos no controlados
+process.on("uncaughtException", (err) => {
+    console.error("❌ Uncaught Exception:", err.message);
+});
 
 
 // ------------------------------------------------------
 // EJECUTAR SERVIDOR
 // ------------------------------------------------------
 
-// Llamamos a la función principal
 startServer();
