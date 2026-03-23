@@ -2,7 +2,7 @@
 // TOKEN GLOBAL
 // --------------------------------------------------
 
-// Obtenemos token desde localStorage o usamos string vacío
+// Obtenemos el token guardado en localStorage o usamos string vacío si no existe
 let token = localStorage.getItem("token") || "";
 
 
@@ -10,21 +10,27 @@ let token = localStorage.getItem("token") || "";
 // LOGIN
 // --------------------------------------------------
 
-// Función async para iniciar sesión
+// Función asíncrona para iniciar sesión
 async function login() {
 
-    // Obtenemos valores desde inputs del HTML
+    // Obtenemos el valor del input de email desde el HTML
     const email = document.getElementById("loginEmail").value.trim();
+
+    // Obtenemos el valor del input de contraseña desde el HTML
     const password = document.getElementById("loginPassword").value.trim();
 
     // --------------------------------------------------
     // VALIDACIÓN
     // --------------------------------------------------
 
-    // Validamos campos obligatorios
+    // Validamos que ambos campos estén completos
     if (!email || !password) {
+
+        // Mostramos mensaje de error al usuario
         mostrarMensaje("Completa todos los campos", "danger");
-        return; // detenemos ejecución
+
+        // Detenemos la ejecución
+        return;
     }
 
     try {
@@ -33,54 +39,73 @@ async function login() {
         // PETICIÓN AL BACKEND
         // --------------------------------------------------
 
+        // Enviamos petición POST al endpoint de login
         const res = await fetch("/api/auth/login", {
 
-            method: "POST", // enviamos datos
+            // Indicamos método HTTP POST
+            method: "POST",
 
+            // Definimos headers
             headers: {
+
+                // Indicamos que enviamos JSON
                 "Content-Type": "application/json"
             },
 
+            // Convertimos los datos a JSON
             body: JSON.stringify({ email, password })
         });
 
-        // Convertimos respuesta a JSON
+        // Convertimos la respuesta del backend a JSON
         const data = await res.json();
 
         // --------------------------------------------------
         // RESPUESTA
         // --------------------------------------------------
 
+        // Validamos que la respuesta sea exitosa
         if (res.ok && data.status === "success") {
 
-            // Guardamos token
+            // Guardamos el token en variable global
             token = data.data.token;
+
+            // Guardamos el token en localStorage para futuras peticiones
             localStorage.setItem("token", token);
 
-            // Guardamos usuario completo
+            // Guardamos los datos del usuario en localStorage
             localStorage.setItem("user", JSON.stringify(data.data.user));
 
+            // Mostramos mensaje de éxito
             mostrarMensaje("Login exitoso 🔐");
 
             // --------------------------------------------------
             // REDIRECCIÓN SEGÚN ROL
             // --------------------------------------------------
 
+            // Si el usuario es administrador
             if (data.data.user.rol === "admin") {
+
+                // Redirigimos al panel admin
                 window.location.href = "admin.html";
+
             } else {
+
+                // Si no es admin, lo llevamos a mascotas
                 window.location.href = "mascotas.html";
             }
 
         } else {
+
+            // Si el login falla, mostramos error
             mostrarMensaje(data.message || "Credenciales incorrectas", "danger");
         }
 
     } catch (error) {
 
-        // Error de red o backend caído
+        // Mostramos error en consola (debug)
         console.error(error);
 
+        // Mostramos error en pantalla
         mostrarMensaje("Error en login", "danger");
     }
 }
@@ -90,45 +115,75 @@ async function login() {
 // CREAR USUARIO
 // --------------------------------------------------
 
+// Función para registrar un nuevo usuario
 async function crearUsuario() {
 
-    // Obtenemos valores del formulario
+    // Obtenemos nombre desde el input
     const nombre = document.getElementById("nombre").value.trim();
+
+    // Obtenemos email desde el input
     const email = document.getElementById("email").value.trim();
+
+    // Obtenemos teléfono (puede no existir, por eso usamos ?.)
     const telefono = document.getElementById("telefono")?.value.trim();
+
+    // Obtenemos contraseña desde el input
     const password = document.getElementById("password").value.trim();
+
+    // Obtenemos rol seleccionado
     const rol = document.getElementById("rol")?.value;
 
     // --------------------------------------------------
     // VALIDACIONES
     // --------------------------------------------------
 
+    // Validamos que todos los campos estén completos
     if (!nombre || !email || !password || !telefono || !rol) {
+
+        // Mostramos error
         mostrarMensaje("Completa todos los campos", "danger");
+
         return;
     }
 
+    // Validamos formato básico de email
     if (!email.includes("@")) {
+
+        // Mostramos error
         mostrarMensaje("Correo inválido", "danger");
+
         return;
     }
 
+    // Validamos longitud mínima de contraseña
     if (password.length < 4) {
+
+        // Mostramos error
         mostrarMensaje("La contraseña debe tener al menos 4 caracteres", "danger");
+
         return;
     }
 
     try {
 
-        // Petición POST
+        // --------------------------------------------------
+        // PETICIÓN AL BACKEND
+        // --------------------------------------------------
+
+        // Enviamos petición POST para crear usuario
         const res = await fetch("/api/users", {
 
+            // Método HTTP POST
             method: "POST",
 
+            // Headers
             headers: {
+
+                // Indicamos JSON
                 "Content-Type": "application/json"
             },
 
+            // Enviamos datos del usuario
             body: JSON.stringify({
                 nombre,
                 email,
@@ -138,26 +193,35 @@ async function crearUsuario() {
             })
         });
 
+        // Convertimos respuesta a JSON
         const data = await res.json();
 
+        // Si la respuesta es exitosa
         if (res.ok) {
 
+            // Mostramos mensaje de éxito
             mostrarMensaje(data.message || "Usuario creado correctamente");
 
-            // Redirigimos después de un pequeño delay
+            // Esperamos 1.5 segundos antes de redirigir
             setTimeout(() => {
+
+                // Redirigimos al login
                 window.location.href = "index.html";
+
             }, 1500);
 
         } else {
 
+            // Mostramos error del backend
             mostrarMensaje(data.message || "Error al crear usuario", "danger");
         }
 
     } catch (error) {
 
+        // Mostramos error en consola
         console.error(error);
 
+        // Mostramos error visual
         mostrarMensaje("Error del servidor", "danger");
     }
 }
@@ -170,8 +234,10 @@ async function crearUsuario() {
 // Función para cerrar sesión
 function logout() {
 
-    // Eliminamos datos del usuario
+    // Eliminamos el token del almacenamiento
     localStorage.removeItem("token");
+
+    // Eliminamos datos del usuario
     localStorage.removeItem("user");
 
     // Redirigimos al login

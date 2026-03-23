@@ -1,30 +1,27 @@
 // --------------------------------------------------
-// TOKEN GLOBAL
+// FUNCIÓN PARA CARGAR POSTULANTES
 // --------------------------------------------------
 
-// Obtenemos token desde localStorage o usamos string vacío
-let token = localStorage.getItem("token") || "";
-
-
-// --------------------------------------------------
-// LOGIN
-// --------------------------------------------------
-
-// Función async para iniciar sesión
-async function login() {
-
-    // Obtenemos valores desde inputs del HTML
-    const email = document.getElementById("loginEmail").value.trim();
-    const password = document.getElementById("loginPassword").value.trim();
+// Función async para obtener postulaciones desde el backend
+async function cargarPostulantes() {
 
     // --------------------------------------------------
-    // VALIDACIÓN
+    // OBTENER TOKEN
     // --------------------------------------------------
 
-    // Validamos campos obligatorios
-    if (!email || !password) {
-        mostrarMensaje("Completa todos los campos", "danger");
-        return; // detenemos ejecución
+    // Recuperamos el token desde localStorage
+    const token = localStorage.getItem("token");
+
+    // Si no hay token → usuario no autenticado
+    if (!token) {
+
+        // Mostramos mensaje
+        mostrarMensaje("No autorizado", "danger");
+
+        // Redirigimos al login
+        window.location.href = "index.html";
+
+        return;
     }
 
     try {
@@ -33,147 +30,193 @@ async function login() {
         // PETICIÓN AL BACKEND
         // --------------------------------------------------
 
-        const res = await fetch("/api/auth/login", {
+        // Hacemos request GET para obtener postulaciones
+        const res = await fetch("/api/solicitudes", {
 
-            method: "POST", // enviamos datos
-
+            // Enviamos headers con token
             headers: {
-                "Content-Type": "application/json"
-            },
-
-            body: JSON.stringify({ email, password })
+                "Authorization": "Bearer " + token
+            }
         });
 
         // Convertimos respuesta a JSON
         const data = await res.json();
 
-        // --------------------------------------------------
-        // RESPUESTA
-        // --------------------------------------------------
+        // Si hay error
+        if (!res.ok) {
 
-        if (res.ok && data.status === "success") {
+            mostrarMensaje(data.message || "Error al cargar postulantes", "danger");
 
-            // Guardamos token
-            token = data.data.token;
-            localStorage.setItem("token", token);
-
-            // Guardamos usuario completo
-            localStorage.setItem("user", JSON.stringify(data.data.user));
-
-            mostrarMensaje("Login exitoso 🔐");
-
-            // --------------------------------------------------
-            // REDIRECCIÓN SEGÚN ROL
-            // --------------------------------------------------
-
-            if (data.data.user.rol === "admin") {
-                window.location.href = "admin.html";
-            } else {
-                window.location.href = "mascotas.html";
-            }
-
-        } else {
-            mostrarMensaje(data.message || "Credenciales incorrectas", "danger");
+            return;
         }
+
+        // --------------------------------------------------
+        // CONTENEDOR HTML
+        // --------------------------------------------------
+
+        // Obtenemos contenedor donde mostrar postulantes
+        const contenedor = document.getElementById("listaPostulantes");
+
+        // Si no existe → evitar error
+        if (!contenedor) return;
+
+        // Limpiamos contenido previo
+        contenedor.innerHTML = "";
+
+        // Si no hay postulaciones
+        if (!data.data.length) {
+
+            contenedor.innerHTML = "<p>No hay postulaciones</p>";
+
+            return;
+        }
+
+        // --------------------------------------------------
+        // RECORRER POSTULACIONES
+        // --------------------------------------------------
+
+        data.data.forEach(postulacion => {
+
+            // Creamos contenedor div
+            const div = document.createElement("div");
+
+            // Clases Bootstrap
+            div.className = "card mb-3 p-3";
+
+            // Insertamos contenido dinámico
+            div.innerHTML = `
+                <h5>🐶 Mascota: ${postulacion.mascota?.nombre || "Sin nombre"}</h5>
+
+                <p>👤 Usuario: ${postulacion.usuario?.nombre || "Desconocido"}</p>
+
+                <p>📌 Estado: 
+                    <strong>${postulacion.estado}</strong>
+                </p>
+
+                <div class="d-flex gap-2">
+
+                    <button 
+                        class="btn btn-success btn-sm"
+                        onclick="aprobarSolicitud(${postulacion.id})"
+                    >
+                        Aprobar
+                    </button>
+
+                    <button 
+                        class="btn btn-danger btn-sm"
+                        onclick="rechazarSolicitud(${postulacion.id})"
+                    >
+                        Rechazar
+                    </button>
+
+                </div>
+            `;
+
+            // Insertamos en el DOM
+            contenedor.appendChild(div);
+        });
 
     } catch (error) {
 
-        // Error de red o backend caído
+        // Error en consola
         console.error(error);
 
-        mostrarMensaje("Error en login", "danger");
+        // Mensaje al usuario
+        mostrarMensaje("Error al cargar postulantes", "danger");
     }
 }
 
 
 // --------------------------------------------------
-// CREAR USUARIO
+// APROBAR SOLICITUD
 // --------------------------------------------------
 
-async function crearUsuario() {
+// Función para aprobar adopción
+async function aprobarSolicitud(id) {
 
-    // Obtenemos valores del formulario
-    const nombre = document.getElementById("nombre").value.trim();
-    const email = document.getElementById("email").value.trim();
-    const telefono = document.getElementById("telefono")?.value.trim();
-    const password = document.getElementById("password").value.trim();
-    const rol = document.getElementById("rol")?.value;
-
-    // --------------------------------------------------
-    // VALIDACIONES
-    // --------------------------------------------------
-
-    if (!nombre || !email || !password || !telefono || !rol) {
-        mostrarMensaje("Completa todos los campos", "danger");
-        return;
-    }
-
-    if (!email.includes("@")) {
-        mostrarMensaje("Correo inválido", "danger");
-        return;
-    }
-
-    if (password.length < 4) {
-        mostrarMensaje("La contraseña debe tener al menos 4 caracteres", "danger");
-        return;
-    }
+    // Obtenemos token
+    const token = localStorage.getItem("token");
 
     try {
 
-        // Petición POST
-        const res = await fetch("/api/users", {
+        // Enviamos petición PUT
+        const res = await fetch(`/api/solicitudes/${id}/aprobar`, {
 
-            method: "POST",
+            method: "PUT",
 
             headers: {
-                "Content-Type": "application/json"
-            },
-
-            body: JSON.stringify({
-                nombre,
-                email,
-                password,
-                telefono,
-                rol
-            })
+                "Authorization": "Bearer " + token
+            }
         });
 
         const data = await res.json();
 
-        if (res.ok) {
+        if (!res.ok) {
 
-            mostrarMensaje(data.message || "Usuario creado correctamente");
+            mostrarMensaje(data.message || "Error al aprobar", "danger");
 
-            // Redirigimos después de un pequeño delay
-            setTimeout(() => {
-                window.location.href = "index.html";
-            }, 1500);
-
-        } else {
-
-            mostrarMensaje(data.message || "Error al crear usuario", "danger");
+            return;
         }
+
+        mostrarMensaje("Solicitud aprobada");
+
+        // Recargamos lista
+        cargarPostulantes();
 
     } catch (error) {
 
         console.error(error);
 
-        mostrarMensaje("Error del servidor", "danger");
+        mostrarMensaje("Error al aprobar", "danger");
     }
 }
 
 
 // --------------------------------------------------
-// LOGOUT
+// RECHAZAR SOLICITUD
 // --------------------------------------------------
 
-// Función para cerrar sesión
-function logout() {
+// Función para rechazar adopción
+async function rechazarSolicitud(id) {
 
-    // Eliminamos datos del usuario
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
+    const token = localStorage.getItem("token");
 
-    // Redirigimos al login
-    window.location.href = "index.html";
+    try {
+
+        const res = await fetch(`/api/solicitudes/${id}/rechazar`, {
+
+            method: "PUT",
+
+            headers: {
+                "Authorization": "Bearer " + token
+            }
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+
+            mostrarMensaje(data.message || "Error al rechazar", "danger");
+
+            return;
+        }
+
+        mostrarMensaje("Solicitud rechazada");
+
+        cargarPostulantes();
+
+    } catch (error) {
+
+        console.error(error);
+
+        mostrarMensaje("Error al rechazar", "danger");
+    }
 }
+
+
+// --------------------------------------------------
+// AUTO CARGA
+// --------------------------------------------------
+
+// Ejecutamos automáticamente al cargar la página
+cargarPostulantes();

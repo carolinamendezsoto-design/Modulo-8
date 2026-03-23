@@ -2,13 +2,13 @@
 // IMPORTAR DEPENDENCIAS
 // ------------------------------------------------------
 
-// Librería para comparar contraseñas encriptadas
+// Librería para comparar contraseñas encriptadas (bcrypt)
 const bcrypt = require("bcryptjs");
 
 // Librería para generar tokens JWT
 const jwt = require("jsonwebtoken");
 
-// Importamos repository (🔥 NO modelo directo)
+// Importamos repository (🔥 NO usamos modelo directo → arquitectura limpia)
 const userRepository = require("../repositories/user.repository");
 
 
@@ -16,49 +16,60 @@ const userRepository = require("../repositories/user.repository");
 // FUNCIÓN LOGIN
 // ------------------------------------------------------
 
+// Función principal para autenticación de usuario
+// Recibe email y password desde controller
 const login = async ({ email, password }) => {
 
     // --------------------------------------------------
     // NORMALIZAR DATOS
     // --------------------------------------------------
 
-    // Eliminamos espacios y pasamos email a minúsculas
+    // Eliminamos espacios y convertimos email a minúsculas
+    // Esto evita errores por mayúsculas o espacios accidentales
     const emailNormalizado = email?.trim().toLowerCase();
 
-    // Limpiamos password
+    // Limpiamos password eliminando espacios innecesarios
     const passwordLimpia = password?.trim();
 
 
     // --------------------------------------------------
-    // VALIDACIÓN
+    // VALIDACIÓN DE INPUT
     // --------------------------------------------------
 
-    // Verificamos que existan ambos campos
+    // Verificamos que ambos campos existan
     if (!emailNormalizado || !passwordLimpia) {
 
+        // Creamos error controlado
         const error = new Error("Email y contraseña son obligatorios");
+
+        // Asignamos status HTTP
         error.statusCode = 400;
 
+        // Lanzamos error al middleware global
         throw error;
     }
 
 
     // --------------------------------------------------
-    // BUSCAR USUARIO
+    // BUSCAR USUARIO EN BASE DE DATOS
     // --------------------------------------------------
 
-    // Buscamos usuario usando repository
-    const usuarios = await userRepository.findAllUsers({
-        email: emailNormalizado
-    });
+    // 🔥 CORRECCIÓN IMPORTANTE:
+    // Antes se usaba findAllUsers (incorrecto para login)
+    // Ahora usamos una función específica → findUserByEmail
 
-    // Tomamos el primero (email debería ser único)
-    const user = usuarios[0];
+    const user = await userRepository.findUserByEmail(emailNormalizado);
 
-    // Si no existe usuario
+
+    // --------------------------------------------------
+    // VALIDAR EXISTENCIA DE USUARIO
+    // --------------------------------------------------
+
+    // Si no encontramos usuario con ese email
     if (!user) {
 
         const error = new Error("Usuario no encontrado");
+
         error.statusCode = 404;
 
         throw error;
@@ -69,12 +80,14 @@ const login = async ({ email, password }) => {
     // VALIDAR PASSWORD
     // --------------------------------------------------
 
-    // Comparamos password ingresada con hash
+    // Comparamos password ingresada con el hash almacenado
     const isMatch = await bcrypt.compare(passwordLimpia, user.password);
 
+    // Si no coincide → error de autenticación
     if (!isMatch) {
 
         const error = new Error("Contraseña incorrecta");
+
         error.statusCode = 401;
 
         throw error;
@@ -85,18 +98,18 @@ const login = async ({ email, password }) => {
     // GENERAR TOKEN JWT
     // --------------------------------------------------
 
-    // Creamos payload con info clave
+    // Creamos payload con información relevante del usuario
     const payload = {
-        id: user.id,
-        email: user.email,
-        rol: user.rol
+        id: user.id,         // ID del usuario
+        email: user.email,   // Email
+        rol: user.rol        // Rol (admin, adoptante, etc.)
     };
 
-    // Firmamos token
+    // Generamos token firmado con clave secreta
     const token = jwt.sign(
-        payload,
-        process.env.JWT_SECRET,
-        { expiresIn: "1h" }
+        payload,                    // datos
+        process.env.JWT_SECRET,     // clave secreta
+        { expiresIn: "1h" }         // expiración
     );
 
 
@@ -104,6 +117,7 @@ const login = async ({ email, password }) => {
     // RESPUESTA FINAL
     // --------------------------------------------------
 
+    // Retornamos token + info del usuario (sin password)
     return {
         token,
         user: {
@@ -116,9 +130,10 @@ const login = async ({ email, password }) => {
 
 
 // ------------------------------------------------------
-// EXPORTAR
+// EXPORTAR FUNCIONES
 // ------------------------------------------------------
 
+// Exportamos login para usarlo en controller
 module.exports = {
     login
 };

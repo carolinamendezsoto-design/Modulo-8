@@ -2,7 +2,7 @@
 // IMPORTAR SERVICE
 // ------------------------------------------------------
 
-// Importamos el servicio donde vive la lógica de usuarios
+// Importamos el service donde vive la lógica de negocio
 const userService = require("../services/user.service");
 
 
@@ -10,13 +10,11 @@ const userService = require("../services/user.service");
 // GET USERS
 // ------------------------------------------------------
 
-exports.getUsers = async (req, res, next) => {
+const getUsers = async (req, res, next) => {
     try {
 
-        // Llamamos al service pasando filtros opcionales (query params)
         const users = await userService.getUsers(req.query);
 
-        // Respuesta estándar API
         return res.status(200).json({
             status: "success",
             message: "Usuarios obtenidos correctamente",
@@ -24,7 +22,28 @@ exports.getUsers = async (req, res, next) => {
         });
 
     } catch (error) {
-        next(error); // delegamos al middleware global
+        next(error);
+    }
+};
+
+
+// ------------------------------------------------------
+// GET USERS WITH MASCOTAS 🔥 NUEVO
+// ------------------------------------------------------
+
+const getUsersWithMascotas = async (req, res, next) => {
+    try {
+
+        const users = await userService.getUsersWithMascotas();
+
+        return res.status(200).json({
+            status: "success",
+            message: "Usuarios con mascotas obtenidos correctamente",
+            data: users
+        });
+
+    } catch (error) {
+        next(error);
     }
 };
 
@@ -33,25 +52,21 @@ exports.getUsers = async (req, res, next) => {
 // GET USER BY ID
 // ------------------------------------------------------
 
-exports.getUserById = async (req, res, next) => {
+const getUserById = async (req, res, next) => {
     try {
 
-        // Extraemos id desde la URL
         const { id } = req.params;
 
-        // Validamos que exista el id
         if (!id) {
             return res.status(400).json({
                 status: "error",
-                message: "ID de usuario requerido",
+                message: "ID requerido",
                 data: null
             });
         }
 
-        // Llamamos al service
         const user = await userService.getUserById({ id });
 
-        // Validamos si no existe
         if (!user) {
             return res.status(404).json({
                 status: "error",
@@ -60,7 +75,6 @@ exports.getUserById = async (req, res, next) => {
             });
         }
 
-        // Respuesta correcta
         return res.status(200).json({
             status: "success",
             message: "Usuario obtenido correctamente",
@@ -77,46 +91,18 @@ exports.getUserById = async (req, res, next) => {
 // CREATE USER
 // ------------------------------------------------------
 
-exports.createUser = async (req, res, next) => {
+const createUser = async (req, res, next) => {
     try {
 
-        // Extraemos datos del body
         const { nombre, email, password, telefono, rol } = req.body;
 
-        // --------------------------------------------------
-        // VALIDACIONES (🔥 IMPORTANTE)
-        // --------------------------------------------------
-
-        // Validamos campos obligatorios
         if (!nombre || !email || !password) {
             return res.status(400).json({
                 status: "error",
-                message: "Nombre, email y contraseña son obligatorios",
+                message: "Campos obligatorios faltantes",
                 data: null
             });
         }
-
-        // Validamos formato básico de email
-        if (!email.includes("@")) {
-            return res.status(400).json({
-                status: "error",
-                message: "Email inválido",
-                data: null
-            });
-        }
-
-        // Validamos longitud de contraseña
-        if (password.length < 6) {
-            return res.status(400).json({
-                status: "error",
-                message: "La contraseña debe tener al menos 6 caracteres",
-                data: null
-            });
-        }
-
-        // --------------------------------------------------
-        // CREAR USUARIO
-        // --------------------------------------------------
 
         const newUser = await userService.createUser({
             nombre,
@@ -126,7 +112,6 @@ exports.createUser = async (req, res, next) => {
             rol
         });
 
-        // Respuesta exitosa
         return res.status(201).json({
             status: "success",
             message: "Usuario creado correctamente",
@@ -140,55 +125,44 @@ exports.createUser = async (req, res, next) => {
 
 
 // ------------------------------------------------------
+// CREATE USER TRANSACTION 🔥 NUEVO
+// ------------------------------------------------------
+
+const createUserTransaction = async (req, res, next) => {
+    try {
+
+        const user = await userService.createUserTransaction(req.body);
+
+        return res.status(201).json({
+            status: "success",
+            message: "Usuario creado con transacción",
+            data: user
+        });
+
+    } catch (error) {
+        next(error);
+    }
+};
+
+
+// ------------------------------------------------------
 // UPDATE USER
 // ------------------------------------------------------
 
-exports.updateUser = async (req, res, next) => {
+const updateUser = async (req, res, next) => {
     try {
 
-        // Extraemos id
         const { id } = req.params;
 
-        // Validamos id
-        if (!id) {
-            return res.status(400).json({
-                status: "error",
-                message: "ID requerido",
-                data: null
-            });
-        }
-
-        // --------------------------------------------------
-        // VALIDACIÓN BÁSICA DE DATOS
-        // --------------------------------------------------
-
-        if (req.body.email && !req.body.email.includes("@")) {
-            return res.status(400).json({
-                status: "error",
-                message: "Email inválido",
-                data: null
-            });
-        }
-
-        // Llamamos al service
-        const updatedUser = await userService.updateUser({
+        const updated = await userService.updateUser({
             id,
             data: req.body
         });
 
-        // Validamos si no existe
-        if (!updatedUser) {
-            return res.status(404).json({
-                status: "error",
-                message: "Usuario no encontrado",
-                data: null
-            });
-        }
-
         return res.status(200).json({
             status: "success",
-            message: "Usuario actualizado correctamente",
-            data: updatedUser
+            message: "Usuario actualizado",
+            data: updated
         });
 
     } catch (error) {
@@ -201,40 +175,35 @@ exports.updateUser = async (req, res, next) => {
 // DELETE USER
 // ------------------------------------------------------
 
-exports.deleteUser = async (req, res, next) => {
+const deleteUser = async (req, res, next) => {
     try {
 
-        // Extraemos id
         const { id } = req.params;
 
-        // Validamos id
-        if (!id) {
-            return res.status(400).json({
-                status: "error",
-                message: "ID requerido",
-                data: null
-            });
-        }
-
-        // Eliminamos usuario
-        const deleted = await userService.deleteUser({ id });
-
-        // Validamos si no existía
-        if (!deleted) {
-            return res.status(404).json({
-                status: "error",
-                message: "Usuario no encontrado",
-                data: null
-            });
-        }
+        await userService.deleteUser({ id });
 
         return res.status(200).json({
             status: "success",
-            message: "Usuario eliminado correctamente",
+            message: "Usuario eliminado",
             data: null
         });
 
     } catch (error) {
         next(error);
     }
+};
+
+
+// ------------------------------------------------------
+// EXPORTAR TODO 🔥 CLAVE
+// ------------------------------------------------------
+
+module.exports = {
+    getUsers,
+    getUsersWithMascotas,
+    getUserById,
+    createUser,
+    createUserTransaction,
+    updateUser,
+    deleteUser
 };

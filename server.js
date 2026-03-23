@@ -2,10 +2,10 @@
 // IMPORTAR DEPENDENCIAS
 // ------------------------------------------------------
 
-// App principal ya configurada
+// App principal (Express configurado)
 const app = require("./app");
 
-// Configuración de base de datos
+// Conexión a base de datos
 const { connectDB, sequelize } = require("./config/database");
 
 // Variables de entorno
@@ -16,6 +16,7 @@ require("dotenv").config();
 // CONFIGURAR PUERTO
 // ------------------------------------------------------
 
+// Puerto desde .env o fallback
 const PORT = process.env.PORT || 3000;
 
 
@@ -33,13 +34,14 @@ const startServer = async () => {
 
         await connectDB();
 
-        console.log("✅ Base de datos conectada");
+        console.log("✅ Base de datos conectada correctamente");
 
 
         // --------------------------------------------------
         // SINCRONIZAR MODELOS
         // --------------------------------------------------
 
+        // Crea tablas si no existen
         await sequelize.sync();
 
         console.log("✅ Modelos sincronizados correctamente");
@@ -49,42 +51,62 @@ const startServer = async () => {
         // INICIAR SERVIDOR
         // --------------------------------------------------
 
-        app.listen(PORT, () => {
+        const server = app.listen(PORT, () => {
             console.log(`🚀 Servidor corriendo en http://localhost:${PORT}`);
+        });
+
+
+        // --------------------------------------------------
+        // CIERRE GRACEFUL (PRO)
+        // --------------------------------------------------
+
+        process.on("SIGTERM", () => {
+            console.log("⚠️ Cerrando servidor (SIGTERM)...");
+            server.close(() => {
+                console.log("💤 Servidor cerrado correctamente");
+                process.exit(0);
+            });
+        });
+
+        process.on("SIGINT", () => {
+            console.log("⚠️ Cerrando servidor (SIGINT)...");
+            server.close(() => {
+                console.log("💤 Servidor cerrado correctamente");
+                process.exit(0);
+            });
         });
 
     } catch (error) {
 
         // --------------------------------------------------
-        // ERROR CRÍTICO DE ARRANQUE
+        // ERROR CRÍTICO
         // --------------------------------------------------
 
-        console.error("❌ ERROR CRÍTICO AL INICIAR:");
+        console.error("❌ Error crítico al iniciar:");
         console.error(error.message);
 
-        // Salimos del proceso (esto es nivel profesional)
         process.exit(1);
     }
 };
 
 
 // ------------------------------------------------------
-// MANEJO DE ERRORES GLOBALES (PRO LEVEL 🔥)
+// ERRORES GLOBALES
 // ------------------------------------------------------
 
-// Captura errores no manejados en promesas
+// Promesas no manejadas
 process.on("unhandledRejection", (err) => {
     console.error("❌ Unhandled Rejection:", err.message);
 });
 
-// Captura errores síncronos no controlados
+// Errores síncronos
 process.on("uncaughtException", (err) => {
     console.error("❌ Uncaught Exception:", err.message);
 });
 
 
 // ------------------------------------------------------
-// EJECUTAR SERVIDOR
+// EJECUTAR
 // ------------------------------------------------------
 
 startServer();

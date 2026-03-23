@@ -2,7 +2,9 @@
 // MIDDLEWARE GENÉRICO DE ROLES
 // ------------------------------------------------------
 
-// Esta función genera middlewares según roles permitidos
+// Esta función permite restringir rutas por rol
+// Ejemplo: authorizeRoles("admin")
+
 const authorizeRoles = (...rolesPermitidos) => {
 
     // Retorna un middleware de Express
@@ -12,7 +14,7 @@ const authorizeRoles = (...rolesPermitidos) => {
         // VALIDAR AUTENTICACIÓN
         // --------------------------------------------------
 
-        // Verificamos que exista usuario en request (authMiddleware)
+        // Si no existe usuario → no pasó auth
         if (!req.user) {
             return res.status(401).json({
                 status: "error",
@@ -20,6 +22,7 @@ const authorizeRoles = (...rolesPermitidos) => {
                 data: null
             });
         }
+
 
         // --------------------------------------------------
         // VALIDAR ROL
@@ -33,6 +36,7 @@ const authorizeRoles = (...rolesPermitidos) => {
                 data: null
             });
         }
+
 
         // --------------------------------------------------
         // CONTINUAR

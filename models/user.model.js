@@ -9,7 +9,7 @@ const { DataTypes } = require("sequelize");
 const { sequelize } = require("../config/database");
 
 // Librería para encriptar contraseñas
-const bcrypt = require("bcrypt");
+const bcryptjs = require("bcryptjs");
 
 
 // ------------------------------------------------------
@@ -140,10 +140,10 @@ User.beforeCreate(async (user) => {
     user.email = user.email.toLowerCase().trim();
 
     // Generar salt
-    const salt = await bcrypt.genSalt(10);
+    const salt = await bcryptjs.genSalt(10);
 
     // Encriptar password
-    user.password = await bcrypt.hash(user.password, salt);
+    user.password = await bcryptjs.hash(user.password, salt);
 });
 
 
@@ -153,8 +153,8 @@ User.beforeUpdate(async (user) => {
 
     if (user.changed("password")) {
 
-        const salt = await bcrypt.genSalt(10);
-        user.password = await bcrypt.hash(user.password, salt);
+        const salt = await bcryptjs.genSalt(10);
+        user.password = await bcryptjs.hash(user.password, salt);
     }
 });
 
@@ -165,7 +165,7 @@ User.beforeUpdate(async (user) => {
 
 User.prototype.comparePassword = async function (password) {
 
-    return await bcrypt.compare(password, this.password);
+    return await bcryptjs.compare(password, this.password);
 };
 
 

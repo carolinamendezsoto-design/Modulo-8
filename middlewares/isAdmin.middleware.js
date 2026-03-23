@@ -2,18 +2,19 @@
 // IMPORTAR MIDDLEWARE GENÉRICO
 // ------------------------------------------------------
 
-const authorizeRoles = require("./authorizeRoles");
+const authorizeRoles = require("./authorizeRoles.middleware");
 
 
 // ------------------------------------------------------
-// MIDDLEWARE: SOLO RESCATISTA
+// MIDDLEWARE: SOLO ADMIN
 // ------------------------------------------------------
 
-const isRescatista = authorizeRoles("rescatista");
+// Creamos middleware específico para rol admin
+const isAdmin = authorizeRoles("admin");
 
 
 // ------------------------------------------------------
 // EXPORTAR
 // ------------------------------------------------------
 
-module.exports = isRescatista;
+module.exports = isAdmin;

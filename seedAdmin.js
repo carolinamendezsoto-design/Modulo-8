@@ -9,7 +9,7 @@ require("dotenv").config();
 const { sequelize } = require("./config/database");
 
 // Importamos el modelo User (⚠️ idealmente desde index de models)
-const { User } = require("./models");
+const { User } = require("./models./index.model");
 
 // Librería para encriptar contraseñas
 const bcrypt = require("bcryptjs");

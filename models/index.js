@@ -5,13 +5,13 @@
 // 🔥 IMPORTANTE: nombres consistentes (sin .models si no lo usas en todos)
 
 // Modelo de usuarios
-const User = require("./user");
+const User = require("./user.model");
 
 // Modelo de mascotas
-const Mascota = require("./mascota");
+const Mascota = require("./mascota.model");
 
 // Modelo de solicitudes (tabla intermedia)
-const Solicitud = require("./solicitud");
+const Solicitud = require("./solicitud.model");
 
 
 // ------------------------------------------------------

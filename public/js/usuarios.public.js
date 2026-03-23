@@ -2,20 +2,26 @@
 // FUNCIÓN PARA CARGAR USUARIOS
 // --------------------------------------------------
 
-// Función async que obtiene usuarios desde el backend
+// Definimos función asíncrona para obtener usuarios desde el backend
 async function cargarUsuarios() {
 
     // --------------------------------------------------
     // OBTENER TOKEN
     // --------------------------------------------------
 
-    // Recuperamos token desde localStorage
+    // Obtenemos el token guardado en el navegador (localStorage)
     const token = localStorage.getItem("token");
 
-    // Validamos que exista
+    // Validamos si NO existe token (usuario no autenticado)
     if (!token) {
+
+        // Mostramos mensaje de error en pantalla
         mostrarMensaje("No autorizado", "danger");
+
+        // Redirigimos al usuario al login
         window.location.href = "index.html";
+
+        // Detenemos ejecución de la función
         return;
     }
 
@@ -25,43 +31,63 @@ async function cargarUsuarios() {
         // PETICIÓN AL BACKEND
         // --------------------------------------------------
 
+        // Realizamos petición GET a la API para obtener usuarios
         const res = await fetch("/api/users", {
+
+            // Enviamos headers en la petición
             headers: {
-                "Authorization": "Bearer " + token // enviamos token
+
+                // Incluimos el token en formato Bearer para autenticación
+                "Authorization": "Bearer " + token
             }
         });
 
-        // Si token inválido o expirado
+        // Si el backend responde 401 (token inválido o expirado)
         if (res.status === 401) {
+
+            // Eliminamos datos guardados del usuario
             localStorage.clear();
+
+            // Redirigimos al login
             window.location.href = "index.html";
+
+            // Detenemos ejecución
             return;
         }
 
-        // Convertimos respuesta
+        // Convertimos la respuesta a formato JSON
         const data = await res.json();
 
-        // Validamos respuesta
+        // Validamos si la respuesta NO es correcta
         if (!res.ok || data.status !== "success") {
+
+            // Mostramos mensaje de error
             mostrarMensaje(data.message || "Error al cargar usuarios", "danger");
+
+            // Detenemos ejecución
             return;
         }
 
         // --------------------------------------------------
-        // OBTENER CONTENEDOR
+        // OBTENER CONTENEDOR HTML
         // --------------------------------------------------
 
+        // Buscamos el elemento donde se mostrarán los usuarios
         const lista = document.getElementById("listaUsuarios");
 
-        // Si no existe el contenedor, evitamos error
+        // Si no existe el elemento, evitamos error
         if (!lista) return;
 
-        // Limpiamos contenido anterior
+        // Limpiamos el contenido previo
         lista.innerHTML = "";
 
-        // Si no hay usuarios
+        // Si el array de usuarios está vacío
         if (!data.data.length) {
+
+            // Mostramos mensaje en pantalla
             lista.innerHTML = "<p>No hay usuarios</p>";
+
+            // Detenemos ejecución
             return;
         }
 
@@ -69,15 +95,16 @@ async function cargarUsuarios() {
         // RECORRER USUARIOS
         // --------------------------------------------------
 
+        // Iteramos cada usuario recibido desde el backend
         data.data.forEach(usuario => {
 
-            // Creamos elemento <li>
+            // Creamos un elemento <li>
             const li = document.createElement("li");
 
-            // Le agregamos clase Bootstrap
+            // Le asignamos clases de Bootstrap
             li.className = "list-group-item";
 
-            // Insertamos HTML dinámico
+            // Insertamos contenido dinámico con template string
             li.innerHTML = `
                 <strong>${usuario.nombre}</strong> 
                 
@@ -92,7 +119,6 @@ async function cargarUsuarios() {
 
                 <div class="mt-2 d-flex gap-2">
 
-                    <!-- SELECT PARA CAMBIAR ROL -->
                     <select 
                         class="form-select form-select-sm w-auto"
                         onchange="cambiarRol(${usuario.id}, this.value)"
@@ -102,7 +128,6 @@ async function cargarUsuarios() {
                         <option value="admin" ${usuario.rol === "admin" ? "selected" : ""}>Admin</option>
                     </select>
 
-                    <!-- BOTÓN ELIMINAR -->
                     <button 
                         class="btn btn-danger btn-sm"
                         onclick="eliminarUsuario(${usuario.id})"
@@ -113,15 +138,16 @@ async function cargarUsuarios() {
                 </div>
             `;
 
-            // Agregamos al DOM
+            // Agregamos el elemento al DOM
             lista.appendChild(li);
         });
 
     } catch (error) {
 
-        // Error inesperado
+        // Mostramos error en consola
         console.error(error);
 
+        // Mostramos mensaje al usuario
         mostrarMensaje("Error al cargar usuarios", "danger");
     }
 }
@@ -131,43 +157,53 @@ async function cargarUsuarios() {
 // CAMBIAR ROL DE USUARIO
 // --------------------------------------------------
 
-// Función para actualizar rol
+// Función para actualizar el rol de un usuario
 async function cambiarRol(userId, nuevoRol) {
 
-    // Obtenemos token
+    // Obtenemos token desde localStorage
     const token = localStorage.getItem("token");
 
     try {
 
-        // Petición PUT al backend
+        // Enviamos petición PUT al backend
         const res = await fetch(`/api/users/${userId}`, {
 
+            // Método HTTP PUT
             method: "PUT",
 
+            // Headers necesarios
             headers: {
                 "Content-Type": "application/json",
                 "Authorization": "Bearer " + token
             },
 
+            // Enviamos el nuevo rol en formato JSON
             body: JSON.stringify({
                 rol: nuevoRol
             })
         });
 
+        // Convertimos respuesta a JSON
         const data = await res.json();
 
-        // Validamos respuesta
+        // Validamos si hubo error
         if (!res.ok) {
+
+            // Mostramos mensaje de error
             mostrarMensaje(data.message || "Error al actualizar rol", "danger");
+
             return;
         }
 
+        // Mostramos mensaje de éxito
         mostrarMensaje("Rol actualizado correctamente");
 
     } catch (error) {
 
+        // Mostramos error en consola
         console.error(error);
 
+        // Mostramos error en pantalla
         mostrarMensaje("Error al cambiar rol", "danger");
     }
 }
@@ -177,37 +213,42 @@ async function cambiarRol(userId, nuevoRol) {
 // ELIMINAR USUARIO
 // --------------------------------------------------
 
-// Función para eliminar usuario
+// Función para eliminar un usuario
 async function eliminarUsuario(userId) {
 
     // Obtenemos token
     const token = localStorage.getItem("token");
 
     // Confirmación antes de eliminar
-    if (!confirm("¿Seguro que quieres eliminar este usuario?")) {
-        return;
-    }
+    if (!confirm("¿Seguro que quieres eliminar este usuario?")) return;
 
     try {
 
-        // Petición DELETE
+        // Enviamos petición DELETE
         const res = await fetch(`/api/users/${userId}`, {
 
+            // Método HTTP DELETE
             method: "DELETE",
 
+            // Enviamos token
             headers: {
                 "Authorization": "Bearer " + token
             }
         });
 
+        // Convertimos respuesta a JSON
         const data = await res.json();
 
-        // Validamos respuesta
+        // Validamos error
         if (!res.ok) {
+
+            // Mostramos error
             mostrarMensaje(data.message || "Error al eliminar usuario", "danger");
+
             return;
         }
 
+        // Mostramos éxito
         mostrarMensaje("Usuario eliminado correctamente");
 
         // Recargamos lista
@@ -215,8 +256,10 @@ async function eliminarUsuario(userId) {
 
     } catch (error) {
 
+        // Error en consola
         console.error(error);
 
+        // Error visual
         mostrarMensaje("Error al eliminar usuario", "danger");
     }
 }
@@ -226,5 +269,5 @@ async function eliminarUsuario(userId) {
 // AUTO CARGA
 // --------------------------------------------------
 
-// Ejecutamos automáticamente al cargar la página
+// Ejecutamos la función automáticamente al cargar la página
 cargarUsuarios();

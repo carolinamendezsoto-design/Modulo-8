@@ -2,11 +2,16 @@
 // IMPORTAR DEPENDENCIAS
 // ------------------------------------------------------
 
-const express = require("express");     // Framework backend
-const path = require("path");           // Manejo de rutas del sistema
-const cors = require("cors");           // Permite conexión frontend-backend
+// Importamos Express → framework principal para crear el servidor HTTP
+const express = require("express");
 
-// Variables de entorno (.env)
+// Importamos path → permite construir rutas seguras entre sistemas (Windows/Linux)
+const path = require("path");
+
+// Importamos cors → permite comunicación entre frontend y backend (distintos puertos/dominios)
+const cors = require("cors");
+
+// Cargamos variables de entorno desde el archivo .env
 require("dotenv").config();
 
 
@@ -14,60 +19,77 @@ require("dotenv").config();
 // IMPORTAR MIDDLEWARES
 // ------------------------------------------------------
 
-const logger = require("./middlewares/logger");              // Logger de requests
-const errorMiddleware = require("./middlewares/error.middleware"); // Manejo global de errores
+// Middleware logger → registra cada request (método, ruta, etc.)
+// ⚠️ Asegúrate que el archivo exista como: logger.middleware.js
+const logger = require("./middlewares/logger.middleware");
+
+// Middleware global de errores → captura errores de toda la app
+// ⚠️ Asegúrate que el archivo exista como: error.middleware.js
+const errorMiddleware = require("./middlewares/error.middleware");
 
 
 // ------------------------------------------------------
-// IMPORTAR MODELOS (REGISTRO EN SEQUELIZE)
+// IMPORTAR MODELOS
 // ------------------------------------------------------
 
-// 🔥 Esto asegura que Sequelize cargue los modelos
-require("./models/user");
-require("./models/mascota");
-require("./models/solicitud");
+// ⚠️ IMPORTANTE:
+// Estos require no se usan directamente,
+// pero ejecutan el código de los modelos para que Sequelize:
+// - registre tablas
+// - registre relaciones (associations)
+
+// Modelo User
+require("./models/user.model");
+
+// Modelo Mascota
+require("./models/mascota.model");
+
+// Modelo Solicitud
+require("./models/solicitud.model");
 
 
 // ------------------------------------------------------
 // IMPORTAR RUTAS
 // ------------------------------------------------------
 
-const userRoutes = require("./routes/users");
-const authRoutes = require("./routes/auth");
-const uploadRoutes = require("./routes/upload");
+// Importamos rutas modulares (arquitectura limpia)
+
+// Rutas de usuarios
+const userRoutes = require("./routes/users.routes");
+
+// Rutas de autenticación (login, verify)
+const authRoutes = require("./routes/auth.routes");
+
+// Rutas de subida de archivos (multer)
+const uploadRoutes = require("./routes/upload.routes");
+
+// Rutas de mascotas
 const mascotaRoutes = require("./routes/mascota.routes");
+
+// Rutas de solicitudes (adopciones)
 const solicitudRoutes = require("./routes/solicitud.routes");
 
 
 // ------------------------------------------------------
-// CREAR INSTANCIA DE EXPRESS
+// CREAR APP EXPRESS
 // ------------------------------------------------------
 
+// Creamos la instancia principal de Express
 const app = express();
-
-
-// ------------------------------------------------------
-// CONFIGURACIÓN GLOBAL
-// ------------------------------------------------------
-
-// 🔥 Puerto desde .env o fallback
-const PORT = process.env.PORT || 3000;
 
 
 // ------------------------------------------------------
 // MIDDLEWARES GLOBALES
 // ------------------------------------------------------
 
-// Permite recibir JSON en body
-app.use(express.json());
-
-// 🔥 Mejora pro: limitar tamaño del body (seguridad)
+// Permite que el servidor entienda JSON en las requests
+// limit evita ataques con payloads demasiado grandes
 app.use(express.json({ limit: "10mb" }));
 
-// Habilita CORS (permite conexión frontend)
+// Habilita CORS → permite que frontend (React, HTML, etc.) consuma la API
 app.use(cors());
 
-// Logger de peticiones HTTP
+// Ejecuta el logger en cada request entrante
 app.use(logger);
 
 
@@ -75,10 +97,12 @@ app.use(logger);
 // ARCHIVOS ESTÁTICOS
 // ------------------------------------------------------
 
-// Servir frontend (HTML, CSS, JS)
+// Sirve archivos del frontend (HTML, CSS, JS)
+// Ej: http://localhost:3000/index.html
 app.use(express.static(path.join(__dirname, "public")));
 
-// Servir imágenes subidas
+// Sirve imágenes subidas por usuarios (multer)
+// Ej: http://localhost:3000/uploads/imagen.jpg
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 
@@ -86,20 +110,16 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 // RUTAS BASE
 // ------------------------------------------------------
 
-// Ruta raíz → carga index.html
+// Ruta raíz → devuelve el index.html del frontend
 app.get("/", (req, res) => {
     res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
-// 🔥 Health check (muy usado en producción)
+// Ruta de estado → útil para monitoreo (deploy, health check)
 app.get("/status", (req, res) => {
     res.json({
         status: "success",
-        message: "Servidor activo",
-        data: {
-            uptime: process.uptime(),        // tiempo activo del server
-            timestamp: new Date()            // fecha actual
-        }
+        message: "Servidor activo"
     });
 });
 
@@ -108,25 +128,33 @@ app.get("/status", (req, res) => {
 // RUTAS API
 // ------------------------------------------------------
 
-// Prefijo /api → organización REST
+// Prefijo /api → buena práctica REST para separar frontend de backend
 
+// Rutas de usuarios
 app.use("/api/users", userRoutes);
+
+// Rutas de autenticación
 app.use("/api/auth", authRoutes);
+
+// Rutas de subida de archivos
 app.use("/api/upload", uploadRoutes);
+
+// Rutas de mascotas
 app.use("/api/mascotas", mascotaRoutes);
+
+// Rutas de solicitudes (flujo de adopción)
 app.use("/api/solicitudes", solicitudRoutes);
 
 
 // ------------------------------------------------------
-// MIDDLEWARE 404
+// MIDDLEWARE 404 (NOT FOUND)
 // ------------------------------------------------------
 
-// Si ninguna ruta coincide → error controlado
-app.use((req, res, next) => {
+// Si ninguna ruta coincide, Express llega aquí
+app.use((req, res) => {
     res.status(404).json({
         status: "error",
-        message: `Ruta no encontrada: ${req.originalUrl}`,
-        data: null
+        message: `Ruta no encontrada: ${req.originalUrl}` // mejora pro
     });
 });
 
@@ -135,7 +163,8 @@ app.use((req, res, next) => {
 // MIDDLEWARE GLOBAL DE ERRORES
 // ------------------------------------------------------
 
-// ⚠️ SIEMPRE AL FINAL
+// Captura cualquier error lanzado en controllers/services
+// ⚠️ SIEMPRE debe ir al final
 app.use(errorMiddleware);
 
 
@@ -143,4 +172,5 @@ app.use(errorMiddleware);
 // EXPORTAR APP
 // ------------------------------------------------------
 
+// Exportamos la app para que server.js la use con app.listen()
 module.exports = app;

@@ -3,8 +3,7 @@
 // ------------------------------------------------------
 
 // Importamos el modelo desde el index de models (mejor práctica)
-const { Mascota } = require("../models");
-
+const db = require("../models");
 
 // =======================================================
 // OBTENER TODAS LAS MASCOTAS (CON FILTROS DINÁMICOS)

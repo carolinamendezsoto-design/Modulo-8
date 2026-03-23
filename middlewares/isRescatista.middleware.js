@@ -2,18 +2,18 @@
 // IMPORTAR MIDDLEWARE GENÉRICO
 // ------------------------------------------------------
 
-const authorizeRoles = require("./authorizeRoles");
+const authorizeRoles = require("./authorizeRoles.middleware");
 
 
 // ------------------------------------------------------
-// MIDDLEWARE: SOLO ADOPTANTE
+// MIDDLEWARE: SOLO RESCATISTA
 // ------------------------------------------------------
 
-const isAdoptante = authorizeRoles("adoptante");
+const isRescatista = authorizeRoles("rescatista");
 
 
 // ------------------------------------------------------
 // EXPORTAR
 // ------------------------------------------------------
 
-module.exports = isAdoptante;
+module.exports = isRescatista;

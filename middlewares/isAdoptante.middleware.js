@@ -2,19 +2,18 @@
 // IMPORTAR MIDDLEWARE GENÉRICO
 // ------------------------------------------------------
 
-const authorizeRoles = require("./authorizeRoles");
+const authorizeRoles = require("./authorizeRoles.middleware");
 
 
 // ------------------------------------------------------
-// MIDDLEWARE: SOLO ADMIN
+// MIDDLEWARE: SOLO ADOPTANTE
 // ------------------------------------------------------
 
-// Creamos middleware específico para admin
-const isAdmin = authorizeRoles("admin");
+const isAdoptante = authorizeRoles("adoptante");
 
 
 // ------------------------------------------------------
 // EXPORTAR
 // ------------------------------------------------------
 
-module.exports = isAdmin;
+module.exports = isAdoptante;

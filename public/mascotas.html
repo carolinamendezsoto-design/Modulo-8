@@ -21,107 +21,71 @@
 
     <style>
 
-        /* -------------------------------------------------- */
-        /* FONDO GLOBAL */
-        /* -------------------------------------------------- */
-
+        /* BODY */
         body {
-
-            font-family: 'Poppins', sans-serif; /* tipografía */
-
-            background-image: url("img/Huellitas_de_Amor.jpg"); /* fondo */
-
-            background-size: cover; /* cubrir */
-
-            background-attachment: fixed; /* fijo */
-
+            font-family: 'Poppins', sans-serif;
+            background-image: url("img/Huellitas_de_Amor.jpg");
+            background-size: cover;
+            background-attachment: fixed;
             padding: 20px;
         }
 
         /* OVERLAY */
         body::before {
-
             content: "";
-
             position: fixed;
-
             inset: 0;
-
             background: linear-gradient(
                 rgba(0,0,0,0.6),
                 rgba(0,0,0,0.4)
             );
-
             z-index: -1;
         }
 
         /* HEADER */
         .header {
-
             display: flex;
-
             justify-content: space-between;
-
             align-items: center;
-
             margin-bottom: 20px;
-
             color: white;
         }
 
         /* GRID */
         .contenedor {
-
             display: grid;
-
             grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-
             gap: 20px;
         }
 
         /* CARD */
         .card {
-
             border-radius: 20px;
-
             padding: 15px;
-
             background: rgba(255,255,255,0.15);
-
             backdrop-filter: blur(12px);
-
             border: 1px solid rgba(255,255,255,0.2);
-
             color: white;
-
             box-shadow: 0 15px 40px rgba(0,0,0,0.3);
-
             transition: 0.3s;
         }
 
         /* HOVER */
         .card:hover {
-
             transform: translateY(-5px);
         }
 
         /* IMAGEN */
         .img {
-
             width: 100%;
-
             height: 180px;
-
             object-fit: cover;
-
             border-radius: 15px;
-
             margin-bottom: 10px;
         }
 
         /* BOTONES */
         .btn {
-
             border-radius: 10px;
         }
 
@@ -156,16 +120,16 @@
 <script>
 
     // --------------------------------------------------
-    // VARIABLES
+    // VARIABLES GLOBALES
     // --------------------------------------------------
 
-    const API = "/api/mascotas"; // endpoint
+    const API = "/api/mascotas"; // endpoint backend
 
-    const contenedor = document.getElementById("contenedor"); // DOM
+    const contenedor = document.getElementById("contenedor"); // contenedor HTML
 
-    const token = localStorage.getItem("token"); // token
+    const token = localStorage.getItem("token"); // token JWT
 
-    const user = JSON.parse(localStorage.getItem("user")) || {}; // usuario
+    const user = JSON.parse(localStorage.getItem("user")) || null; // usuario
 
 
     // --------------------------------------------------
@@ -176,21 +140,30 @@
 
         try {
 
+            // Mensaje carga
+            contenedor.innerHTML = "<p class='text-white'>Cargando mascotas...</p>";
+
+            // Request
             const res = await fetch(API);
 
             const data = await res.json();
 
+            // Validación backend
+            if (!res.ok) {
+                throw new Error(data.message || "Error al obtener mascotas");
+            }
+
             const mascotas = data.data || [];
 
-            contenedor.innerHTML = ""; // limpiar
+            contenedor.innerHTML = "";
 
-            // Si no hay mascotas
+            // Si no hay
             if (!mascotas.length) {
-                contenedor.innerHTML = "<p class='text-white'>No hay mascotas</p>";
+                contenedor.innerHTML = "<p class='text-white'>No hay mascotas disponibles</p>";
                 return;
             }
 
-            // Recorrer mascotas
+            // Render
             mascotas.forEach(m => {
 
                 const card = document.createElement("div");
@@ -201,21 +174,17 @@
 
                 card.innerHTML = `
 
-                    <!-- IMAGEN -->
                     <img 
                         src="${m.imagen ? "/uploads/" + m.imagen : "img/default.jpg"}" 
                         class="img"
                     >
 
-                    <!-- NOMBRE -->
                     <h5>${m.nombre}</h5>
 
-                    <!-- INFO -->
-                    <p>Edad: ${m.edad}</p>
+                    <p><strong>Edad:</strong> ${m.edad}</p>
 
                     <p>${m.descripcion}</p>
 
-                    <!-- ESTADO -->
                     <p>
                         Estado: 
                         <strong style="color:${adoptado ? "red" : "lightgreen"};">
@@ -223,7 +192,6 @@
                         </strong>
                     </p>
 
-                    <!-- BOTÓN ADOPTAR -->
                     <button 
                         class="btn btn-success w-100 mb-2"
                         onclick="adoptar(${m.id})"
@@ -232,8 +200,7 @@
                         ❤️ Adoptar
                     </button>
 
-                    <!-- BOTÓN POSTULANTES -->
-                    ${user.rol === "rescatista" ? `
+                    ${user && user.rol === "rescatista" ? `
                         <button 
                             class="btn btn-primary w-100"
                             onclick="verPostulantes(${m.id})"
@@ -251,7 +218,7 @@
 
             console.error(error);
 
-            mostrarMensaje("Error al cargar mascotas", "danger");
+            mostrarMensaje(error.message, "danger");
         }
     }
 
@@ -262,8 +229,9 @@
 
     async function adoptar(id) {
 
+        // Validar login
         if (!token) {
-            mostrarMensaje("Debes iniciar sesión", "danger");
+            mostrarMensaje("Debes iniciar sesión", "warning");
             return;
         }
 
@@ -284,17 +252,16 @@
             const data = await res.json();
 
             if (!res.ok) {
-                mostrarMensaje(data.message || "Error", "danger");
-                return;
+                throw new Error(data.message || "Error al adoptar");
             }
 
-            mostrarMensaje("Solicitud enviada 🐾");
+            mostrarMensaje("Solicitud enviada 🐾", "success");
 
         } catch (error) {
 
             console.error(error);
 
-            mostrarMensaje("Error al adoptar", "danger");
+            mostrarMensaje(error.message, "danger");
         }
     }
 
@@ -310,7 +277,7 @@
 
 
     // --------------------------------------------------
-    // INICIO
+    // INIT
     // --------------------------------------------------
 
     obtenerMascotas();

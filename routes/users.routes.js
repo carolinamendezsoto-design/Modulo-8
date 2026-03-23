@@ -5,7 +5,7 @@
 // Importamos express para manejar rutas HTTP
 const express = require("express");
 
-// Creamos una instancia del router
+// Creamos una instancia del router de Express
 const router = express.Router();
 
 
@@ -14,7 +14,6 @@ const router = express.Router();
 // ------------------------------------------------------
 
 // Middleware que valida el token JWT
-// ⚠️ IMPORTANTE: unificamos nombre (antes estaba inconsistente)
 const auth = require("../middlewares/auth.middleware");
 
 
@@ -22,7 +21,8 @@ const auth = require("../middlewares/auth.middleware");
 // IMPORTAR CONTROLADOR
 // ------------------------------------------------------
 
-// Controlador de usuarios (lógica de negocio)
+// Importamos el controlador de usuarios
+// Aquí viven los handlers que se ejecutan en cada ruta
 const userController = require("../controllers/user.controller");
 
 
@@ -38,82 +38,74 @@ const userController = require("../controllers/user.controller");
 // Endpoint: GET /api/users
 router.get(
     "/",                     // ruta base
-    auth,                    // requiere token
-    userController.getUsers // controller
+    auth,                    // middleware → valida JWT
+    userController.getUsers  // handler → función del controller
 );
 
 
 // =======================================================
-// OBTENER USUARIOS CON MASCOTAS (🔥 CORREGIDO)
+// OBTENER USUARIOS CON MASCOTAS
 // =======================================================
-
-// ⚠️ IMPORTANTE:
-// Esta ruta va antes de "/:id" para evitar conflictos
 
 // Endpoint: GET /api/users/mascotas/all
 router.get(
-    "/mascotas/all",                    // ruta específica (ANTES decía posts ❌)
-    auth,                               // protegido
-    userController.getUsersWithMascotas // controller corregido
+    "/mascotas/all",
+    auth,
+    userController.getUsersWithMascotas // 🔥 AHORA EXISTE
 );
 
 
 // =======================================================
-// OBTENER USUARIO POR ID (PROTEGIDA)
+// OBTENER USUARIO POR ID
 // =======================================================
 
-// Endpoint: GET /api/users/:id
 router.get(
-    "/:id",                    // parámetro dinámico
-    auth,                      // requiere token
-    userController.getUserById // controller
+    "/:id",
+    auth,
+    userController.getUserById
 );
 
 
 // =======================================================
-// CREAR USUARIO (PÚBLICA)
+// CREAR USUARIO
 // =======================================================
 
-// Endpoint: POST /api/users
 router.post(
-    "/",                       // ruta base
-    userController.createUser // no requiere auth
+    "/",
+    userController.createUser
 );
 
 
 // =======================================================
-// ACTUALIZAR USUARIO (PROTEGIDA)
+// ACTUALIZAR USUARIO
 // =======================================================
 
-// Endpoint: PUT /api/users/:id
 router.put(
-    "/:id",                    // id del usuario
-    auth,                      // protegido
-    userController.updateUser // controller
+    "/:id",
+    auth,
+    userController.updateUser
 );
 
 
 // =======================================================
-// ELIMINAR USUARIO (PROTEGIDA)
+// ELIMINAR USUARIO
 // =======================================================
 
-// Endpoint: DELETE /api/users/:id
 router.delete(
-    "/:id",                    // id del usuario
-    auth,                      // protegido
-    userController.deleteUser // controller
+    "/:id",
+    auth,
+    userController.deleteUser
 );
 
 
 // =======================================================
-// CREAR USUARIO CON TRANSACCIÓN (🔥 NIVEL PRO)
+// CREAR USUARIO CON TRANSACCIÓN
 // =======================================================
 
-// Endpoint: POST /api/users/transaction
 router.post(
-    "/transaction",                        // ruta específica
-    auth,                                  // protegido
-    userController.createUserTransaction   // controller
+    "/transaction",
+    auth,
+    userController.createUserTransaction // 🔥 AHORA EXISTE
 );
 
 
@@ -121,5 +113,4 @@ router.post(
 // EXPORTAR ROUTER
 // ------------------------------------------------------
 
-// Exportamos el router para usarlo en index.js
 module.exports = router;
