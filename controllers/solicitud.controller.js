@@ -2,10 +2,10 @@
 // IMPORTAR SERVICES
 // ------------------------------------------------------
 
-// Service de solicitudes (lógica de negocio)
+// Service de solicitudes (contiene lógica de negocio)
 const solicitudService = require("../services/solicitud.service");
 
-// Service de mascotas (para flujo de adopción)
+// Service de mascotas (para actualizar estado en adopción)
 const mascotaService = require("../services/mascota.service");
 
 
@@ -18,36 +18,38 @@ const createSolicitud = async (req, res, next) => {
     try {
 
         // --------------------------------------------------
-        // EXTRAER DATOS
+        // EXTRAER DATOS DEL REQUEST
         // --------------------------------------------------
 
+        // Obtenemos el ID de la mascota desde el body
         const { mascotaId } = req.body;
 
-        // Usuario autenticado (desde middleware auth)
-        const adoptanteId = req.user.id;
+        // Obtenemos el usuario autenticado desde el middleware JWT
+        const usuarioId = req.user.id;
 
         // --------------------------------------------------
-        // LLAMAR SERVICE
+        // LLAMAR AL SERVICE
         // --------------------------------------------------
 
-        const result = await solicitudService.createSolicitud({
-            adoptanteId,
+        // Enviamos datos al service (NO lógica aquí)
+        const nuevaSolicitud = await solicitudService.createSolicitud({
+            usuarioId,
             mascotaId
         });
 
         // --------------------------------------------------
-        // RESPUESTA
+        // RESPUESTA ESTÁNDAR API
         // --------------------------------------------------
 
         return res.status(201).json({
             status: "success",
             message: "Solicitud creada correctamente",
-            data: result
+            data: nuevaSolicitud
         });
 
     } catch (error) {
 
-        // Pasamos error al middleware global
+        // Delegamos el manejo de errores al middleware global
         next(error);
     }
 };
@@ -62,14 +64,17 @@ const getSolicitudesByMascota = async (req, res, next) => {
 
     try {
 
+        // Extraemos ID de la mascota desde params
         const { mascotaId } = req.params;
 
-        const result = await solicitudService.getSolicitudesByMascota(mascotaId);
+        // Llamamos al service
+        const solicitudes = await solicitudService.getSolicitudesByMascota(mascotaId);
 
+        // Respondemos con estructura estándar
         return res.status(200).json({
             status: "success",
             message: "Solicitudes obtenidas correctamente",
-            data: result
+            data: solicitudes
         });
 
     } catch (error) {
@@ -81,21 +86,23 @@ const getSolicitudesByMascota = async (req, res, next) => {
 
 
 // ======================================================
-// MIS SOLICITUDES
+// OBTENER MIS SOLICITUDES (ADOPTANTE)
 // ======================================================
 
 const getMisSolicitudes = async (req, res, next) => {
 
     try {
 
-        const adoptanteId = req.user.id;
+        // ID del usuario autenticado
+        const usuarioId = req.user.id;
 
-        const result = await solicitudService.getSolicitudesByUsuario(adoptanteId);
+        // Consultamos sus solicitudes
+        const solicitudes = await solicitudService.getSolicitudesByUsuario(usuarioId);
 
         return res.status(200).json({
             status: "success",
             message: "Mis solicitudes obtenidas correctamente",
-            data: result
+            data: solicitudes
         });
 
     } catch (error) {
@@ -107,37 +114,42 @@ const getMisSolicitudes = async (req, res, next) => {
 
 
 // ======================================================
-// SELECCIONAR ADOPTANTE (🔥 FLUJO FINAL)
+// SELECCIONAR ADOPTANTE (FLUJO FINAL DE ADOPCIÓN)
 // ======================================================
 
 const seleccionarAdoptante = async (req, res, next) => {
 
     try {
 
+        // ID de la solicitud a aprobar
         const { id } = req.params;
 
         // --------------------------------------------------
-        // APROBAR SOLICITUD
+        // 1. APROBAR SOLICITUD
         // --------------------------------------------------
 
-        const solicitud = await solicitudService.updateSolicitudEstado(
+        const solicitudAprobada = await solicitudService.updateSolicitudEstado(
             id,
             "aprobado"
         );
 
         // --------------------------------------------------
-        // CAMBIAR ESTADO DE MASCOTA
+        // 2. CAMBIAR ESTADO DE LA MASCOTA
         // --------------------------------------------------
 
         await mascotaService.cambiarEstadoMascota({
-            id: solicitud.mascotaId,
+            id: solicitudAprobada.mascotaId,
             estado: "adoptado"
         });
+
+        // --------------------------------------------------
+        // RESPUESTA FINAL
+        // --------------------------------------------------
 
         return res.status(200).json({
             status: "success",
             message: "Adopción completada correctamente",
-            data: solicitud
+            data: solicitudAprobada
         });
 
     } catch (error) {
@@ -156,17 +168,19 @@ const rechazarSolicitud = async (req, res, next) => {
 
     try {
 
+        // ID de la solicitud
         const { id } = req.params;
 
-        const solicitud = await solicitudService.updateSolicitudEstado(
+        // Actualizamos estado a rechazado
+        const solicitudRechazada = await solicitudService.updateSolicitudEstado(
             id,
             "rechazado"
         );
 
         return res.status(200).json({
             status: "success",
-            message: "Solicitud rechazada",
-            data: solicitud
+            message: "Solicitud rechazada correctamente",
+            data: solicitudRechazada
         });
 
     } catch (error) {
@@ -178,19 +192,20 @@ const rechazarSolicitud = async (req, res, next) => {
 
 
 // ======================================================
-// ADMIN → TODAS
+// OBTENER TODAS LAS SOLICITUDES (ADMIN)
 // ======================================================
 
 const getAllSolicitudes = async (req, res, next) => {
 
     try {
 
-        const result = await solicitudService.getAllSolicitudes();
+        // Llamamos al service
+        const solicitudes = await solicitudService.getAllSolicitudes();
 
         return res.status(200).json({
             status: "success",
-            message: "Todas las solicitudes obtenidas",
-            data: result
+            message: "Todas las solicitudes obtenidas correctamente",
+            data: solicitudes
         });
 
     } catch (error) {
@@ -201,7 +216,7 @@ const getAllSolicitudes = async (req, res, next) => {
 
 
 // ------------------------------------------------------
-// EXPORTAR
+// EXPORTAR CONTROLADORES
 // ------------------------------------------------------
 
 module.exports = {
