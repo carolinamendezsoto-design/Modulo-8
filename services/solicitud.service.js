@@ -1,124 +1,103 @@
 // ------------------------------------------------------
-// IMPORTAR REPOSITORY
+// IMPORTAR MODELOS
 // ------------------------------------------------------
 
-const solicitudRepository = require("../repositories/solicitud.repository");
+const { Solicitud, User } = require("../models");
+
+// Importamos operadores de Sequelize
+const { Op } = require("sequelize");
 
 
-// =======================================================
+// ------------------------------------------------------
 // CREAR SOLICITUD
-// =======================================================
+// ------------------------------------------------------
 
-const createSolicitud = async ({ usuarioId, mascotaId }) => {
+const createSolicitud = async ({ usuarioId, mascotaId, mensaje }) => {
 
-    // --------------------------------------------------
-    // VALIDACIONES
-    // --------------------------------------------------
+    // Validamos usuario
+    if (!usuarioId) throw new Error("usuarioId requerido");
 
-    if (!usuarioId || !mascotaId) {
-        const error = new Error("usuarioId y mascotaId son requeridos");
-        error.statusCode = 400;
-        throw error;
-    }
+    // Validamos mascota
+    if (!mascotaId) throw new Error("mascotaId requerido");
 
-    // --------------------------------------------------
-    // CREACIÓN
-    // --------------------------------------------------
+    // Creamos solicitud
+    return await Solicitud.create({
 
-    const nuevaSolicitud = await solicitudRepository.createSolicitud({
-        usuarioId,
-        mascotaId
+        adoptanteId: usuarioId, // 🔥 clave correcta
+
+        mascotaId,
+
+        mensaje, // 🔥 ahora guardamos mensaje real
+
+        estado: "pendiente"
     });
-
-    return nuevaSolicitud;
 };
 
 
-
-// =======================================================
-// OBTENER SOLICITUDES POR MASCOTA
-// =======================================================
+// ------------------------------------------------------
+// OBTENER POSTULANTES
+// ------------------------------------------------------
 
 const getSolicitudesByMascota = async (mascotaId) => {
 
-    if (!mascotaId) {
-        const error = new Error("mascotaId es requerido");
-        error.statusCode = 400;
-        throw error;
-    }
+    return await Solicitud.findAll({
 
-    const solicitudes = await solicitudRepository.getSolicitudesByMascota(mascotaId);
+        where: { mascotaId },
 
-    return solicitudes;
-};
+        include: [
+            {
+                model: User,
 
+                as: "adoptante", // 🔥 debe coincidir con models/index
 
-
-// =======================================================
-// OBTENER SOLICITUDES POR USUARIO
-// =======================================================
-
-const getSolicitudesByUsuario = async (usuarioId) => {
-
-    if (!usuarioId) {
-        const error = new Error("usuarioId es requerido");
-        error.statusCode = 400;
-        throw error;
-    }
-
-    const solicitudes = await solicitudRepository.getSolicitudesByUsuario(usuarioId);
-
-    return solicitudes;
-};
-
-
-
-// =======================================================
-// CAMBIAR ESTADO DE SOLICITUD
-// =======================================================
-
-const updateSolicitudEstado = async (id, estado) => {
-
-    if (!id || !estado) {
-        const error = new Error("ID y estado requeridos");
-        error.statusCode = 400;
-        throw error;
-    }
-
-    const solicitudActualizada = await solicitudRepository.updateSolicitudEstado(id, estado);
-
-    if (!solicitudActualizada) {
-        const error = new Error("Solicitud no encontrada");
-        error.statusCode = 404;
-        throw error;
-    }
-
-    return solicitudActualizada;
-};
-
-
-
-// =======================================================
-// OBTENER TODAS LAS SOLICITUDES (ADMIN)
-// =======================================================
-
-const getAllSolicitudes = async () => {
-
-    // Sin validaciones → protegido por middleware de roles
-    const solicitudes = await solicitudRepository.getAllSolicitudes();
-
-    return solicitudes;
+                attributes: ["id", "nombre", "email"]
+            }
+        ]
+    });
 };
 
 
 // ------------------------------------------------------
-// EXPORTAR SERVICE
+// APROBAR Y RECHAZAR OTROS
+// ------------------------------------------------------
+
+const updateSolicitudEstado = async (id, estado) => {
+
+    // Buscamos solicitud
+    const solicitud = await Solicitud.findByPk(id);
+
+    if (!solicitud) throw new Error("Solicitud no encontrada");
+
+    // Actualizamos estado
+    solicitud.estado = estado;
+
+    await solicitud.save();
+
+    // Si se aprueba
+    if (estado === "aprobado") {
+
+        // Rechazamos las demás
+        await Solicitud.update(
+            { estado: "rechazado" },
+            {
+                where: {
+                    mascotaId: solicitud.mascotaId,
+                    id: { [Op.ne]: id }
+                }
+            }
+        );
+    }
+
+    return solicitud;
+};
+
+
+// ------------------------------------------------------
+// EXPORTAR
 // ------------------------------------------------------
 
 module.exports = {
     createSolicitud,
     getSolicitudesByMascota,
-    getSolicitudesByUsuario,
-    updateSolicitudEstado,
-    getAllSolicitudes
+    updateSolicitudEstado
 };

@@ -1,26 +1,30 @@
 // ------------------------------------------------------
+// IMPORTAR VARIABLES DE ENTORNO
+// ------------------------------------------------------
+
+// Cargamos variables desde el archivo .env (DB, JWT, etc.)
+require("dotenv").config();
+
+
+// ------------------------------------------------------
 // IMPORTAR DEPENDENCIAS
 // ------------------------------------------------------
 
-// Cargamos variables de entorno desde el archivo .env
-require("dotenv").config();
-
-// Importamos la instancia de sequelize desde la configuración de la base de datos
+// Importamos sequelize para conectar a la base de datos
 const { sequelize } = require("./config/database");
 
-// Importamos el modelo User desde la carpeta models
-// Node automáticamente usa el index.js
+// Importamos el modelo User desde models/index.js
 const { User } = require("./models");
 
-// ❌ ELIMINAMOS bcrypt
-// Porque el modelo User ya encripta la contraseña automáticamente con hooks
+// Importamos bcrypt para encriptar contraseñas manualmente
+const bcrypt = require("bcryptjs");
 
 
 // ------------------------------------------------------
 // FUNCIÓN PRINCIPAL
 // ------------------------------------------------------
 
-// Función async para crear usuario administrador
+// Definimos función async para poder usar await
 async function crearAdmin() {
 
     try {
@@ -32,46 +36,61 @@ async function crearAdmin() {
         // Verificamos conexión con PostgreSQL
         await sequelize.authenticate();
 
-        // Mensaje de éxito
-        console.log("✅ Conectado a la base de datos");
+        // Mensaje en consola si conecta correctamente
+        console.log("✅ DB conectada correctamente");
 
 
         // --------------------------------------------------
-        // BUSCAR SI YA EXISTE ADMIN
+        // BUSCAR ADMIN EXISTENTE
         // --------------------------------------------------
 
-        // Buscamos usuario con email admin
-        const adminExistente = await User.findOne({
-
+        // Buscamos si ya existe un admin con ese email
+        const existing = await User.findOne({
             where: { email: "admin@admin.com" }
-
         });
 
-        // Si existe → lo eliminamos
-        if (adminExistente) {
 
-            await adminExistente.destroy();
+        // Si existe → lo eliminamos para evitar duplicados
+        if (existing) {
 
-            console.log("🗑️ Admin antiguo eliminado");
+            // Eliminamos registro existente
+            await existing.destroy();
+
+            // Log informativo
+            console.log("🗑️ Admin anterior eliminado");
         }
 
 
         // --------------------------------------------------
-        // CREAR ADMIN (SIN ENCRIPTAR AQUÍ)
+        // ENCRIPTAR PASSWORD (CLAVE DEL SISTEMA)
         // --------------------------------------------------
 
-        // Creamos el usuario
-        // ⚠️ IMPORTANTE:
-        // NO usamos bcrypt aquí
-        // El modelo User.beforeCreate encripta automáticamente
+        // Generamos hash de la contraseña "123456"
+        // El 10 es el salt (nivel de seguridad)
+        const hashedPassword = await bcrypt.hash("123456", 10);
+
+
+        // --------------------------------------------------
+        // CREAR ADMIN
+        // --------------------------------------------------
+
+        // Creamos nuevo usuario admin en la base de datos
         const admin = await User.create({
 
-            nombre: "Admin",                 // nombre del usuario
-            email: "admin@admin.com",        // email
-            password: "123456",                // password en texto plano (el modelo la encripta)
-            telefono: "999999999",           // teléfono
-            rol: "admin"                     // rol del sistema
+            // Nombre del usuario
+            nombre: "Admin",
 
+            // Email único
+            email: "admin@admin.com",
+
+            // Password encriptado (🔥 nunca guardar texto plano)
+            password: hashedPassword,
+
+            // Teléfono de ejemplo
+            telefono: "999999999",
+
+            // Rol del sistema
+            rol: "admin"
         });
 
 
@@ -79,14 +98,15 @@ async function crearAdmin() {
         // RESPUESTA EN CONSOLA
         // --------------------------------------------------
 
-        console.log("🔥 Admin creado correctamente:");
-        console.log(admin.toJSON());
+        // Mostramos confirmación
+        console.log("🔥 Admin creado correctamente:", admin.email);
 
 
         // --------------------------------------------------
-        // FINALIZAR PROCESO
+        // FINALIZAR SCRIPT
         // --------------------------------------------------
 
+        // Terminamos proceso correctamente
         process.exit(0);
 
     } catch (error) {
@@ -95,15 +115,18 @@ async function crearAdmin() {
         // MANEJO DE ERRORES
         // --------------------------------------------------
 
+        // Mostramos error en consola
         console.error("❌ Error al crear admin:", error.message);
 
+        // Terminamos proceso con error
         process.exit(1);
     }
 }
 
 
 // ------------------------------------------------------
-// EJECUTAR SCRIPT
+// EJECUTAR FUNCIÓN
 // ------------------------------------------------------
 
+// Llamamos a la función para ejecutar el script
 crearAdmin();

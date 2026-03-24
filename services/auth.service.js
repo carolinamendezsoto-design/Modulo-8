@@ -1,212 +1,102 @@
-// ------------------------------------------------------
-// IMPORTAR DEPENDENCIAS
-// ------------------------------------------------------
-
-// Librería para encriptar y comparar contraseñas
+// Importamos bcrypt para encriptar y comparar contraseñas
 const bcrypt = require("bcryptjs");
 
-// Librería para generar tokens JWT
+// Importamos jsonwebtoken para generar tokens
 const jwt = require("jsonwebtoken");
 
-// Importamos repository (arquitectura limpia)
+// Importamos repository (acceso a DB)
 const userRepository = require("../repositories/user.repository");
 
 
 // ------------------------------------------------------
-// FUNCIÓN REGISTER (🔥 NUEVA)
+// REGISTER
 // ------------------------------------------------------
 
-// Función para registrar un nuevo usuario
 const register = async ({ nombre, email, telefono, password, rol }) => {
 
-    // --------------------------------------------------
-    // NORMALIZAR DATOS
-    // --------------------------------------------------
-
-    // Limpiamos y normalizamos email
+    // Limpiamos email (minúsculas y sin espacios)
     const emailNormalizado = email?.trim().toLowerCase();
 
-    // Limpiamos nombre
-    const nombreLimpio = nombre?.trim();
-
-    // Limpiamos teléfono
-    const telefonoLimpio = telefono?.trim();
-
-    // Limpiamos password
+    // Limpiamos contraseña
     const passwordLimpia = password?.trim();
 
-    // DEBUG
-    console.log("📩 Registrando usuario:", emailNormalizado);
-
-
-    // --------------------------------------------------
-    // VALIDACIONES
-    // --------------------------------------------------
-
     // Validamos campos obligatorios
-    if (!nombreLimpio || !emailNormalizado || !telefonoLimpio || !passwordLimpia || !rol) {
-
-        const error = new Error("Todos los campos son obligatorios");
-        error.statusCode = 400;
-        throw error;
+    if (!nombre || !emailNormalizado || !telefono || !passwordLimpia || !rol) {
+        throw new Error("Todos los campos son obligatorios");
     }
 
-
-    // --------------------------------------------------
-    // VERIFICAR SI USUARIO YA EXISTE
-    // --------------------------------------------------
-
-    // Buscamos usuario por email
+    // Buscamos si ya existe usuario
     const existingUser = await userRepository.findUserByEmail(emailNormalizado);
 
+    // Si existe → error
     if (existingUser) {
-
-        const error = new Error("El usuario ya está registrado");
-        error.statusCode = 400;
-        throw error;
+        throw new Error("El usuario ya existe");
     }
 
-
-    // --------------------------------------------------
-    // ENCRIPTAR PASSWORD
-    // --------------------------------------------------
-
-    // Generamos hash seguro
+    // 🔥 Encriptamos contraseña (ÚNICO LUGAR donde se hace)
     const hashedPassword = await bcrypt.hash(passwordLimpia, 10);
 
-
-    // --------------------------------------------------
-    // CREAR USUARIO EN BD
-    // --------------------------------------------------
-
-    // Usamos repository (arquitectura limpia)
+    // Creamos usuario en DB
     const newUser = await userRepository.createUser({
-        nombre: nombreLimpio,
+        nombre,
         email: emailNormalizado,
-        telefono: telefonoLimpio,
+        telefono,
         password: hashedPassword,
         rol
     });
 
-    // DEBUG
-    console.log("✅ Usuario creado:", newUser.email);
-
-
-    // --------------------------------------------------
-    // RESPUESTA (SIN PASSWORD)
-    // --------------------------------------------------
-
+    // Retornamos datos sin password
     return {
         id: newUser.id,
-        nombre: newUser.nombre,
         email: newUser.email,
         rol: newUser.rol
     };
 };
 
 
-
 // ------------------------------------------------------
-// FUNCIÓN LOGIN
+// LOGIN
 // ------------------------------------------------------
 
 const login = async ({ email, password }) => {
 
-    // --------------------------------------------------
-    // NORMALIZAR DATOS
-    // --------------------------------------------------
-
+    // Normalizamos email
     const emailNormalizado = email?.trim().toLowerCase();
+
+    // Limpiamos password
     const passwordLimpia = password?.trim();
 
-    console.log("📩 Email recibido:", emailNormalizado);
-
-
-    // --------------------------------------------------
-    // VALIDACIÓN
-    // --------------------------------------------------
-
-    if (!emailNormalizado || !passwordLimpia) {
-
-        const error = new Error("Email y contraseña son obligatorios");
-        error.statusCode = 400;
-        throw error;
-    }
-
-
-    // --------------------------------------------------
-    // BUSCAR USUARIO
-    // --------------------------------------------------
-
+    // Buscamos usuario en DB
     const user = await userRepository.findUserByEmail(emailNormalizado);
 
-    console.log("👀 Usuario encontrado:", user ? user.email : null);
+    // Si no existe → error
+    if (!user) throw new Error("Usuario no encontrado");
 
-
-    // --------------------------------------------------
-    // VALIDAR EXISTENCIA
-    // --------------------------------------------------
-
-    if (!user) {
-
-        const error = new Error("Usuario no encontrado");
-        error.statusCode = 404;
-        throw error;
-    }
-
-
-    // --------------------------------------------------
-    // VALIDAR PASSWORD
-    // --------------------------------------------------
-
+    // Comparamos password ingresada vs hash en DB
     const isMatch = await bcrypt.compare(passwordLimpia, user.password);
 
-    if (!isMatch) {
+    // Si no coincide → error
+    if (!isMatch) throw new Error("Contraseña incorrecta");
 
-        const error = new Error("Contraseña incorrecta");
-        error.statusCode = 401;
-        throw error;
-    }
-
-
-    // --------------------------------------------------
-    // GENERAR TOKEN JWT
-    // --------------------------------------------------
-
+    // Creamos payload del token
     const payload = {
         id: user.id,
-        email: user.email,
         rol: user.rol
     };
 
-    const token = jwt.sign(
-        payload,
-        process.env.JWT_SECRET,
-        { expiresIn: "1h" }
-    );
+    // Generamos token JWT
+    const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "1h" });
 
-
-    // --------------------------------------------------
-    // RESPUESTA FINAL
-    // --------------------------------------------------
-
+    // Retornamos token + usuario
     return {
         token,
-        user: {
-            id: user.id,
-            email: user.email,
-            rol: user.rol
-        }
+        user
     };
 };
 
 
-
-// ------------------------------------------------------
-// EXPORTAR (🔥 FIX CLAVE)
-// ------------------------------------------------------
-
+// Exportamos funciones
 module.exports = {
-    register, // 🔥 ahora existe → soluciona tu 500
+    register,
     login
 };

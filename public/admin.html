@@ -1,104 +1,108 @@
-<!DOCTYPE html>
-<html lang="es">
+<!DOCTYPE html> <!-- Declaramos HTML5 -->
+
+<html lang="es"> <!-- Idioma español -->
 
 <head>
 
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- ================= META ================= -->
 
-<title>🐾 Panel Admin</title>
+<meta charset="UTF-8"> <!-- Permite caracteres especiales -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Responsive -->
 
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<title>🐾 Panel Admin</title> <!-- Título pestaña -->
 
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+<!-- ================= LIBRERÍAS ================= -->
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"> <!-- Bootstrap CSS -->
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet"> <!-- Fuente -->
+
+<!-- ================= ESTILOS ================= -->
 
 <style>
 
-/* FUENTE Y FONDO */
+/* Fuente global y fondo */
 body {
-    font-family: 'Poppins', sans-serif;
-    background-image: url("img/Huellitas_de_Amor.jpg");
-    background-size: cover;
-    background-attachment: fixed;
-    padding: 30px;
+    font-family:'Poppins', sans-serif; /* tipografía */
+    background:url("img/Huellitas_de_Amor.jpg") center/cover fixed; /* imagen fondo */
+    min-height:100vh; /* asegura altura completa */
 }
 
-/* OVERLAY OSCURO */
+/* Overlay oscuro para contraste */
 body::before {
-    content: "";
-    position: fixed;
-    inset: 0;
-    background: linear-gradient(
-        rgba(0,0,0,0.6),
-        rgba(0,0,0,0.4)
-    );
-    z-index: -1;
+    content:""; /* obligatorio */
+    position:fixed; /* ocupa pantalla */
+    inset:0; /* full */
+    background:rgba(0,0,0,0.6); /* oscurece */
+    z-index:-1; /* detrás */
 }
 
-/* HEADER */
+/* Header superior */
 .header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 30px;
-    color: white;
+    display:flex; /* flexbox */
+    justify-content:space-between; /* separación */
+    align-items:center; /* centrado vertical */
+    margin-bottom:30px; /* espacio abajo */
+    color:white; /* texto blanco */
 }
 
-/* GRID */
+/* Contenedor grid responsive */
 .grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-    gap: 25px;
+    display:grid; /* grid layout */
+    grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); /* responsive */
+    gap:25px; /* espacio entre cards */
 }
 
-/* CARD GLASS */
+/* Tarjetas glass */
 .card {
-    border-radius: 20px;
-    padding: 25px;
-    text-align: center;
-    background: rgba(255,255,255,0.15);
-    backdrop-filter: blur(12px);
-    border: 1px solid rgba(255,255,255,0.2);
-    color: white;
-    box-shadow: 0 15px 40px rgba(0,0,0,0.3);
-    transition: 0.3s;
+    border-radius:20px; /* bordes */
+    padding:25px; /* espacio interno */
+    text-align:center; /* centrado */
+    background:rgba(255,255,255,0.15); /* transparencia */
+    backdrop-filter:blur(12px); /* efecto glass */
+    border:1px solid rgba(255,255,255,0.2); /* borde */
+    color:white; /* texto */
+    box-shadow:0 15px 40px rgba(0,0,0,0.4); /* sombra */
+    transition:0.3s; /* animación suave */
 }
 
-/* HOVER */
+/* Hover tarjeta */
 .card:hover {
-    transform: translateY(-8px) scale(1.02);
+    transform:translateY(-8px) scale(1.03); /* elevación */
 }
 
-/* ICONOS */
+/* Iconos grandes */
 .icon {
-    font-size: 38px;
-    margin-bottom: 10px;
+    font-size:40px; /* tamaño */
+    margin-bottom:10px; /* separación */
 }
 
-/* BOTONES */
+/* Botones */
 .btn {
-    border-radius: 10px;
+    border-radius:10px; /* bordes suaves */
 }
 
 </style>
 
 </head>
 
-<body>
+<!-- ================= BODY ================= -->
 
-<div class="container">
+<body class="p-4"> <!-- padding global -->
 
-    <!-- HEADER -->
+<div class="container"> <!-- contenedor bootstrap -->
+
+    <!-- ================= HEADER ================= -->
     <div class="header">
 
-        <h2>🐾 Panel Administrador</h2>
+        <h2>🐾 Panel Administrador</h2> <!-- título -->
 
         <div>
 
-            <!-- Nombre admin -->
-            <span id="nombreAdmin" class="me-3 fw-bold"></span>
+            <!-- Nombre dinámico -->
+            <span id="nombreAdmin" class="me-3 fw-bold"></span> <!-- se llena con JS -->
 
-            <!-- Logout -->
+            <!-- Botón logout -->
             <button class="btn btn-danger btn-sm" onclick="logout()">
                 Cerrar sesión
             </button>
@@ -107,17 +111,17 @@ body::before {
 
     </div>
 
-    <!-- GRID -->
+    <!-- ================= GRID ================= -->
     <div class="grid">
 
-        <!-- USUARIOS -->
+        <!-- CARD USUARIOS -->
         <div class="card">
 
-            <div class="icon">👥</div>
+            <div class="icon">👥</div> <!-- icono -->
 
-            <h4>Usuarios</h4>
+            <h4>Usuarios</h4> <!-- título -->
 
-            <p>Gestiona usuarios</p>
+            <p>Gestiona usuarios del sistema</p> <!-- descripción -->
 
             <a href="usuarios.html" class="btn btn-primary w-100">
                 Ir
@@ -125,14 +129,14 @@ body::before {
 
         </div>
 
-        <!-- MASCOTAS -->
+        <!-- CARD MASCOTAS -->
         <div class="card">
 
             <div class="icon">🐶</div>
 
             <h4>Mascotas</h4>
 
-            <p>Ver mascotas</p>
+            <p>Explorar mascotas disponibles</p>
 
             <a href="mascotas.html" class="btn btn-success w-100">
                 Ir
@@ -140,14 +144,14 @@ body::before {
 
         </div>
 
-        <!-- SOLICITUDES -->
+        <!-- CARD SOLICITUDES -->
         <div class="card">
 
             <div class="icon">💌</div>
 
             <h4>Solicitudes</h4>
 
-            <p>Revisar adopciones</p>
+            <p>Gestionar adopciones</p>
 
             <a href="postulantes.html" class="btn btn-warning w-100">
                 Ir
@@ -159,38 +163,48 @@ body::before {
 
 </div>
 
-<!-- SCRIPTS -->
-<script src="js/utils.js"></script>
-<script src="js/auth.js"></script>
+<!-- ================= SCRIPTS ================= -->
+
+<script src="js/utils.js"></script> <!-- funciones UI -->
+<script src="js/auth.js"></script> <!-- login / logout -->
 
 <script>
 
-// PROTECCIÓN
-const token = localStorage.getItem("token");
+// ================= TOKEN =================
+const token = localStorage.getItem("token"); // obtenemos token guardado
 
-let user = null;
+// ================= USER =================
+let user = null; // inicializamos variable
 
 try {
-    user = JSON.parse(localStorage.getItem("user"));
+    user = JSON.parse(localStorage.getItem("user")); // intentamos parsear
 } catch {
-    user = null;
+    user = null; // fallback si falla
 }
 
-if (!token || !user || user.rol !== "admin") {
+// ================= NORMALIZACIÓN ROL =================
+const rol = user?.rol?.toLowerCase()?.trim(); // aseguramos formato consistente
 
-    mostrarMensaje("Acceso solo admin", "danger");
+// ================= PROTECCIÓN =================
+if (!token || !user || rol !== "admin") { // validamos acceso
 
-    setTimeout(() => {
-        window.location.href = "index.html";
+    mostrarMensaje("Acceso solo admin", "danger"); // mensaje UX
+
+    setTimeout(()=> { // delay para que se vea el mensaje
+        window.location.href = "index.html"; // redirige
     }, 800);
 }
 
-// MOSTRAR NOMBRE
-const nombreAdmin = document.getElementById("nombreAdmin");
+// ================= MOSTRAR NOMBRE =================
+const nombreAdmin = document.getElementById("nombreAdmin"); // elemento DOM
 
-if (user) {
-    nombreAdmin.textContent = "👤 " + (user.nombre || "Admin");
+if (user) { // si existe usuario
+
+    nombreAdmin.textContent = "👤 " + (user.nombre || "Administrador"); // mostramos nombre
 }
+
+// ================= DEBUG OPCIONAL =================
+console.log("Usuario logueado:", user); // útil para revisar datos
 
 </script>
 

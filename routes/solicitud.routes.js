@@ -2,7 +2,10 @@
 // IMPORTAR DEPENDENCIAS
 // ------------------------------------------------------
 
+// Importamos express para crear rutas
 const express = require("express");
+
+// Creamos una instancia del router
 const router = express.Router();
 
 
@@ -10,6 +13,7 @@ const router = express.Router();
 // IMPORTAR CONTROLADOR
 // ------------------------------------------------------
 
+// Importamos el controlador de solicitudes
 const solicitudController = require("../controllers/solicitud.controller");
 
 
@@ -17,35 +21,33 @@ const solicitudController = require("../controllers/solicitud.controller");
 // IMPORTAR MIDDLEWARE
 // ------------------------------------------------------
 
+// Importamos middleware de autenticación (JWT)
 const auth = require("../middlewares/auth.middleware");
 
 
-// =======================================================
-// 🔥 RUTAS ESPECÍFICAS (ANTES DE /:id)
-// =======================================================
-
-
 // ------------------------------------------------------
-// MIS SOLICITUDES (USUARIO)
+// CREAR SOLICITUD
 // ------------------------------------------------------
 
-// GET /api/solicitudes/mis-solicitudes
-router.get(
-    "/mis-solicitudes",
-    auth,
-    solicitudController.getMisSolicitudes
+// Endpoint: POST /api/solicitudes
+// Crea una nueva solicitud de adopción
+router.post(
+    "/",                              // Ruta base
+    auth,                             // Requiere usuario autenticado
+    solicitudController.createSolicitud // Controlador que crea la solicitud
 );
 
 
 // ------------------------------------------------------
-// SOLICITUDES POR MASCOTA (POSTULANTES)
+// OBTENER POSTULANTES POR MASCOTA
 // ------------------------------------------------------
 
-// GET /api/solicitudes/mascota/:mascotaId
+// Endpoint: GET /api/solicitudes/mascota/:id
+// Obtiene todas las solicitudes de una mascota específica
 router.get(
-    "/mascota/:mascotaId",
-    auth,
-    solicitudController.getSolicitudesByMascota
+    "/mascota/:id",                   // Recibe id de mascota
+    auth,                             // Requiere login
+    solicitudController.getSolicitudesByMascota // Controlador
 );
 
 
@@ -53,52 +55,12 @@ router.get(
 // SELECCIONAR ADOPTANTE
 // ------------------------------------------------------
 
-// PUT /api/solicitudes/:id/seleccionar
+// Endpoint: PUT /api/solicitudes/seleccionar/:id
+// Permite aprobar una solicitud y completar la adopción
 router.put(
-    "/:id/seleccionar",
-    auth,
-    solicitudController.seleccionarAdoptante
-);
-
-
-// ------------------------------------------------------
-// RECHAZAR SOLICITUD
-// ------------------------------------------------------
-
-// PUT /api/solicitudes/:id/rechazar
-router.put(
-    "/:id/rechazar",
-    auth,
-    solicitudController.rechazarSolicitud
-);
-
-
-// =======================================================
-// 📦 CRUD / CONSULTAS GENERALES
-// =======================================================
-
-
-// ------------------------------------------------------
-// CREAR SOLICITUD
-// ------------------------------------------------------
-
-// POST /api/solicitudes
-router.post(
-    "/",
-    auth,
-    solicitudController.createSolicitud
-);
-
-
-// ------------------------------------------------------
-// OBTENER TODAS (ADMIN)
-// ------------------------------------------------------
-
-// GET /api/solicitudes
-router.get(
-    "/",
-    auth,
-    solicitudController.getAllSolicitudes
+    "/seleccionar/:id",               // Recibe id de solicitud
+    auth,                             // Protegido
+    solicitudController.seleccionarAdoptante // Controlador
 );
 
 
@@ -106,4 +68,5 @@ router.get(
 // EXPORTAR ROUTER
 // ------------------------------------------------------
 
+// Exportamos router para usarlo en app.js
 module.exports = router;

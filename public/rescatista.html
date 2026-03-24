@@ -1,10 +1,13 @@
-<!DOCTYPE html> <!-- Documento HTML5 -->
-<html lang="es"> <!-- Idioma -->
+<!DOCTYPE html> <!-- HTML5 -->
+
+<html lang="es"> <!-- idioma -->
 
 <head>
 
-<meta charset="UTF-8"> <!-- Codificación -->
-<title>Panel Rescatista</title> <!-- Título -->
+<meta charset="UTF-8"> <!-- caracteres -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- responsive -->
+
+<title>🐾 Panel Rescatista</title> <!-- título -->
 
 <!-- Bootstrap -->
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -14,76 +17,56 @@
 
 <style>
 
-/* -------------------------------------------------- */
-/* FONDO GLOBAL CONSISTENTE */
-/* -------------------------------------------------- */
-
+/* Fondo */
 body {
-    font-family: 'Poppins', sans-serif; /* Fuente */
-    background-image: url("img/Huellitas_de_Amor.jpg"); /* Imagen fondo */
-    background-size: cover; /* Ajuste */
-    background-attachment: fixed; /* Fijo */
-    min-height: 100vh; /* Altura */
-    color: white; /* Texto */
+    font-family:'Poppins', sans-serif; /* fuente */
+    background:url("img/Huellitas_de_Amor.jpg") center/cover fixed; /* fondo */
+    min-height:100vh; /* altura */
+    color:white; /* texto */
 }
 
-/* Overlay oscuro */
+/* Overlay */
 body::before {
-    content: "";
-    position: fixed;
-    inset: 0;
-    background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.5));
-    z-index: -1;
+    content:"";
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,0.6);
+    z-index:-1;
 }
 
-/* -------------------------------------------------- */
-/* CONTENEDOR PRINCIPAL */
-/* -------------------------------------------------- */
-
+/* Contenedor principal */
 .container-box {
-    background: rgba(255,255,255,0.15); /* glass */
-    backdrop-filter: blur(15px); /* blur */
-    border-radius: 25px; /* bordes */
-    padding: 25px; /* espacio */
-    box-shadow: 0 25px 50px rgba(0,0,0,0.4); /* sombra */
+    background:rgba(255,255,255,0.15);
+    backdrop-filter:blur(12px);
+    border-radius:25px;
+    padding:25px;
+    box-shadow:0 25px 50px rgba(0,0,0,0.4);
 }
 
-/* -------------------------------------------------- */
-/* HEADER */
-/* -------------------------------------------------- */
-
+/* Header */
 .top-bar {
-    display: flex; /* flex */
-    justify-content: space-between; /* separación */
-    align-items: center; /* centrado */
-    margin-bottom: 20px; /* espacio */
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:20px;
 }
 
-/* -------------------------------------------------- */
-/* TARJETAS */
-/* -------------------------------------------------- */
-
+/* Cards */
 .card {
-    border-radius: 20px; /* bordes */
-    background: rgba(255,255,255,0.15); /* glass */
-    backdrop-filter: blur(12px); /* blur */
-    border: 1px solid rgba(255,255,255,0.2); /* borde */
-    box-shadow: 0 15px 40px rgba(0,0,0,0.3); /* sombra */
-    transition: 0.3s;
-}
-
-/* Hover */
-.card:hover {
-    transform: translateY(-5px);
+    border-radius:20px;
+    background:rgba(255,255,255,0.15);
+    backdrop-filter:blur(12px);
+    border:1px solid rgba(255,255,255,0.2);
+    box-shadow:0 15px 40px rgba(0,0,0,0.3);
 }
 
 /* Imagen */
 .card img {
-    width: 100%;
-    height: 180px;
-    object-fit: cover;
-    border-radius: 12px;
-    margin-bottom: 10px;
+    width:100%;
+    height:180px;
+    object-fit:cover;
+    border-radius:12px;
+    margin-bottom:10px;
 }
 
 </style>
@@ -103,12 +86,12 @@ body::before {
 
             <div>
 
-                <!-- Crear -->
+                <!-- crear -->
                 <a href="crear-mascota.html" class="btn btn-success me-2">
                     ➕ Crear Mascota
                 </a>
 
-                <!-- Logout -->
+                <!-- logout -->
                 <button onclick="logout()" class="btn btn-danger">
                     Cerrar sesión
                 </button>
@@ -117,7 +100,7 @@ body::before {
 
         </div>
 
-        <!-- CONTENEDOR -->
+        <!-- LISTA -->
         <div id="contenedorMascotas" class="row"></div>
 
     </div>
@@ -129,42 +112,27 @@ body::before {
 
 <script>
 
-// --------------------------------------------------
-// TOKEN
-// --------------------------------------------------
+// ================= TOKEN =================
+const token = localStorage.getItem("token");
 
-const token = localStorage.getItem("token"); // obtenemos token
-
-// --------------------------------------------------
-// USER
-// --------------------------------------------------
-
-let user = null; // inicializamos
+// ================= USER =================
+let user = null;
 
 try {
-    user = JSON.parse(localStorage.getItem("user")); // parse seguro
+    user = JSON.parse(localStorage.getItem("user"));
 } catch {
-    user = null; // fallback
+    user = null;
 }
 
-// --------------------------------------------------
-// ROL
-// --------------------------------------------------
+// ================= ROL =================
+const rol = user?.rol?.toLowerCase()?.trim();
 
-const rol = user?.rol?.toLowerCase()?.trim(); // normalizamos
-
-// --------------------------------------------------
-// PROTECCIÓN
-// --------------------------------------------------
-
+// ================= PROTECCIÓN =================
 if (!token || !user || rol !== "rescatista") {
-    window.location.href = "index.html"; // redirige si no cumple
+    window.location.href = "index.html";
 }
 
-// --------------------------------------------------
-// CARGAR MASCOTAS
-// --------------------------------------------------
-
+// ================= CARGAR MASCOTAS =================
 async function cargarMascotas() {
 
     const contenedor = document.getElementById("contenedorMascotas");
@@ -172,14 +140,11 @@ async function cargarMascotas() {
     try {
 
         const res = await fetch("/api/mascotas", {
-            headers: {
-                Authorization: "Bearer " + token
-            }
+            headers:{ Authorization:"Bearer "+token }
         });
 
         const data = await res.json();
 
-        // Filtramos solo las del usuario
         const mascotas = (data.data || []).filter(m => m.userId === user.id);
 
         contenedor.innerHTML = "";
@@ -191,7 +156,6 @@ async function cargarMascotas() {
 
         mascotas.forEach(m => {
 
-            // 🔥 imagen correcta
             const imagen = m.imagen 
                 ? `/uploads/${m.imagen}` 
                 : "img/default.jpg";
@@ -200,23 +164,19 @@ async function cargarMascotas() {
                 <div class="col-md-4">
                     <div class="card p-3 text-white mb-3">
 
-                        <!-- Imagen -->
                         <img src="${imagen}" alt="mascota">
 
-                        <!-- Nombre -->
                         <h5>${m.nombre}</h5>
 
-                        <!-- Raza -->
                         <p><strong>Raza:</strong> ${m.raza || "No definida"}</p>
 
-                        <!-- Edad -->
                         <p><strong>Edad:</strong> ${m.edad}</p>
 
-                        <!-- Estado -->
                         <p><strong>${m.estado}</strong></p>
 
-                        <!-- Botón -->
-                        <button onclick="verPostulantes(${m.id})" class="btn btn-primary mt-2">
+                        <button 
+                            onclick="verPostulantes(${m.id})"
+                            class="btn btn-primary mt-2">
                             Ver postulantes
                         </button>
 
@@ -227,22 +187,17 @@ async function cargarMascotas() {
 
     } catch (error) {
 
-        console.error("Error cargando mascotas:", error);
+        console.error(error);
+        mostrarMensaje("Error cargando mascotas", "danger");
     }
 }
 
-// --------------------------------------------------
-// REDIRECCIÓN
-// --------------------------------------------------
-
+// ================= REDIRECCIÓN =================
 function verPostulantes(id) {
     window.location.href = "postulantes.html?id=" + id;
 }
 
-// --------------------------------------------------
-// INIT
-// --------------------------------------------------
-
+// ================= INIT =================
 cargarMascotas();
 
 </script>

@@ -1,283 +1,315 @@
-<!-- ===================================================== -->
-<!-- DOCUMENTO HTML5 -->
-<!-- ===================================================== -->
-<!DOCTYPE html>
+<!DOCTYPE html> <!-- Indicamos HTML5 -->
 
-<html lang="es">
+<html lang="es"> <!-- Idioma español -->
 
 <head>
 
-    <!-- Codificación UTF-8 -->
-    <meta charset="UTF-8">
+<!-- ================= META ================= -->
 
-    <!-- Responsive -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8"> <!-- Permite caracteres especiales -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Responsive -->
 
-    <!-- Título -->
-    <title>🐾 Mascotas</title>
+<title>🐾 Mascotas</title> <!-- Título pestaña -->
 
-    <!-- Bootstrap -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<!-- ================= BOOTSTRAP ================= -->
 
-    <!-- Fuente -->
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"> <!-- Librería CSS -->
 
-    <style>
+<!-- ================= ESTILOS ================= -->
 
-        /* Fuente y fondo */
-        body {
-            font-family: 'Poppins', sans-serif;
-            background-image: url("img/Huellitas_de_Amor.jpg");
-            background-size: cover;
-            background-attachment: fixed;
-        }
+<style>
 
-        /* Overlay oscuro */
-        body::before {
-            content: "";
-            position: fixed;
-            inset: 0;
-            background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.5));
-            z-index: -1;
-        }
+/* Overlay oscuro para mejorar contraste del fondo */
+body::before {
+    content:""; /* obligatorio en pseudo-elementos */
+    position:fixed; /* ocupa toda la pantalla */
+    inset:0; /* top, right, bottom, left = 0 */
+    background:rgba(0,0,0,0.6); /* oscurece */
+    z-index:-1; /* queda detrás */
+}
 
-        /* Card estilo glass */
-        .card {
-            border-radius: 20px;
-            background: rgba(255,255,255,0.15);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255,255,255,0.2);
-            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
-        }
+/* Tarjetas estilo glassmorphism */
+.card {
+    border-radius:20px; /* bordes redondeados */
+    backdrop-filter:blur(12px); /* efecto vidrio */
+    background:rgba(255,255,255,0.15); /* transparencia */
+    border:1px solid rgba(255,255,255,0.2); /* borde suave */
+    box-shadow:0 15px 40px rgba(0,0,0,0.4); /* sombra */
+}
 
-        /* Imagen */
-        .card img {
-            width: 100%;
-            height: 180px;
-            object-fit: cover;
-            border-radius: 12px;
-            margin-bottom: 10px;
-        }
+/* Animación hover */
+.card:hover {
+    transform:translateY(-5px); /* levanta tarjeta */
+}
 
-    </style>
+/* Animación campana */
+@keyframes vibrar {
+    0%{transform:rotate(0);} /* inicio */
+    25%{transform:rotate(-10deg);} /* izquierda */
+    50%{transform:rotate(10deg);} /* derecha */
+    75%{transform:rotate(-6deg);} /* leve */
+    100%{transform:rotate(0);} /* vuelve */
+}
+
+/* Clase cuando hay notificaciones */
+.campana-activa {
+    animation:vibrar 0.6s infinite; /* animación infinita */
+}
+
+</style>
 
 </head>
 
-<body class="p-4 text-white">
+<!-- ================= BODY ================= -->
 
-<div class="container">
+<body class="p-4 text-white" style="background:url('img/Huellitas_de_Amor.jpg') center/cover fixed;"> <!-- fondo + padding -->
 
-    <!-- HEADER -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
+<div class="container"> <!-- contenedor bootstrap -->
 
-        <h3>🐶 Mascotas disponibles</h3>
+    <!-- ================= HEADER ================= -->
+    <div class="d-flex justify-content-between align-items-center mb-4"> <!-- flex header -->
 
-        <div>
+        <h3>🐶 Mascotas</h3> <!-- título -->
 
-            <!-- Volver -->
-            <a id="btnVolver" class="btn btn-light btn-sm me-2 fw-bold"></a>
+        <div class="d-flex align-items-center gap-3"> <!-- contenedor botones -->
 
-            <!-- Logout -->
-            <button class="btn btn-danger btn-sm" onclick="logout()">Cerrar sesión</button>
+            <!-- CAMPANA -->
+            <div id="campana" style="position:relative; cursor:pointer;" onclick="irNotificaciones()"> <!-- clickable -->
+
+                <span style="font-size:26px;">🔔</span> <!-- icono -->
+
+                <!-- CONTADOR -->
+                <span id="contadorNoti"
+                    class="badge bg-danger"
+                    style="position:absolute; top:-8px; right:-10px; display:none;">
+                </span>
+
+            </div>
+
+            <!-- LOGOUT -->
+            <button class="btn btn-danger" onclick="logout()"> <!-- función global -->
+                Cerrar sesión
+            </button>
 
         </div>
 
     </div>
 
-    <!-- CONTENEDOR -->
-    <div id="contenedor" class="row g-3"></div>
+    <!-- ================= LISTA ================= -->
+    <div id="contenedorMascotas" class="row"></div> <!-- donde se renderizan -->
 
 </div>
 
-<script src="js/utils.js"></script>
-<script src="js/auth.js"></script>
+<!-- ================= MODAL ================= -->
+<div class="modal fade" id="modalAdopcion"> <!-- modal bootstrap -->
+
+    <div class="modal-dialog"> <!-- contenedor modal -->
+
+        <div class="modal-content text-dark"> <!-- contenido -->
+
+            <div class="modal-header"> <!-- header modal -->
+                <h5 class="modal-title">Postular a adopción</h5> <!-- título -->
+                <button class="btn-close" data-bs-dismiss="modal"></button> <!-- cerrar -->
+            </div>
+
+            <div class="modal-body"> <!-- cuerpo -->
+
+                <!-- INPUT edad -->
+                <div class="mb-3">
+                    <label>Edad</label>
+                    <input id="edad" class="form-control"> <!-- input -->
+                </div>
+
+                <!-- INPUT experiencia -->
+                <div class="mb-3">
+                    <label>Experiencia</label>
+                    <textarea id="experiencia" class="form-control"></textarea>
+                </div>
+
+                <!-- INPUT espacio -->
+                <div class="mb-3">
+                    <label>Espacio</label>
+                    <textarea id="espacio" class="form-control"></textarea>
+                </div>
+
+            </div>
+
+            <div class="modal-footer"> <!-- footer -->
+
+                <button class="btn btn-secondary" data-bs-dismiss="modal">
+                    Cancelar
+                </button>
+
+                <button class="btn btn-success" onclick="enviarSolicitud()">
+                    Enviar
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- ================= SCRIPTS ================= -->
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script> <!-- JS bootstrap -->
+<script src="js/utils.js"></script> <!-- funciones UI -->
+<script src="js/auth.js"></script> <!-- auth global -->
 
 <script>
 
-// API endpoint
-const API = "/api/mascotas";
+// ================= TOKEN =================
+const token = localStorage.getItem("token"); // obtenemos token guardado
 
-// contenedor
-const contenedor = document.getElementById("contenedor");
-
-// token
-const token = localStorage.getItem("token");
-
-// user
-let user = null;
-
-try {
-    user = JSON.parse(localStorage.getItem("user"));
-} catch {
-    user = null;
+// ================= VALIDACIÓN =================
+if (!token) { // si no hay token
+    mostrarMensaje("Debes iniciar sesión", "danger"); // aviso
+    setTimeout(()=> window.location.href="index.html",800); // redirección
 }
 
-// rol
-const rol = user?.rol?.toLowerCase()?.trim();
+// ================= ELEMENTOS =================
+const contenedor = document.getElementById("contenedorMascotas"); // contenedor cards
+const contador = document.getElementById("contadorNoti"); // badge
+const campana = document.getElementById("campana"); // icono campana
 
-// botón volver
-const btnVolver = document.getElementById("btnVolver");
+let mascotaSeleccionada = null; // guardamos id seleccionada
 
-if (!rol) {
-
-    btnVolver.style.display = "none";
-
-} else if (rol === "admin") {
-
-    btnVolver.href = "admin.html";
-    btnVolver.textContent = "← Panel Admin";
-
-} else if (rol === "rescatista") {
-
-    btnVolver.href = "rescatista.html";
-    btnVolver.textContent = "← Mis Mascotas";
-
-} else {
-
-    btnVolver.style.display = "none";
-}
-
-
-// ------------------------------------------------------
-// CARGAR MASCOTAS
-// ------------------------------------------------------
-
-async function obtenerMascotas() {
+// ================= NOTIFICACIONES =================
+async function cargarNotificaciones() {
 
     try {
 
-        contenedor.innerHTML = "<p>Cargando...</p>";
+        const res = await fetch("/api/notificaciones", { // petición
+            headers:{ Authorization:"Bearer "+token } // auth
+        });
 
-        const res = await fetch(API);
+        const data = await res.json(); // parse JSON
 
-        const data = await res.json();
+        const noLeidas = (data.data || []).filter(n => !n.leido); // filtramos
 
-        if (!res.ok) throw new Error(data.message);
+        if (noLeidas.length > 0) { // si hay
 
-        const mascotas = data.data || [];
+            contador.style.display = "inline-block"; // mostramos badge
+            contador.textContent = noLeidas.length; // cantidad
+            campana.classList.add("campana-activa"); // animación
 
-        contenedor.innerHTML = "";
+        } else {
 
-        if (!mascotas.length) {
-            contenedor.innerHTML = "<p>No hay mascotas</p>";
+            contador.style.display = "none"; // ocultamos
+            campana.classList.remove("campana-activa"); // quitamos animación
+        }
+
+    } catch (error) {
+
+        console.error(error); // debug silencioso
+    }
+}
+
+// ================= REDIRECCIÓN =================
+function irNotificaciones() {
+    window.location.href = "notificaciones.html"; // navegación
+}
+
+// ================= CARGAR MASCOTAS =================
+async function cargarMascotas() {
+
+    try {
+
+        const res = await fetch("/api/mascotas"); // GET mascotas
+        const data = await res.json(); // parse
+
+        contenedor.innerHTML = ""; // limpiar
+
+        const mascotas = data.data || []; // fallback
+
+        if (!mascotas.length) { // si vacío
+            contenedor.innerHTML = "<p>No hay mascotas disponibles 🐾</p>";
             return;
         }
 
-        mascotas.forEach(m => {
+        mascotas.forEach(m => { // recorrer
 
-            const col = document.createElement("div");
-            col.className = "col-md-4";
+            const div = document.createElement("div"); // crear columna
+            div.className = "col-md-4 mb-4"; // bootstrap
 
-            const adoptado = m.estado === "adoptado";
-
-            // 🔥 FIX imagen correcta
-            const imagen = m.imagen 
-                ? `/uploads/${m.imagen}` 
-                : "img/default.jpg";
-
-            col.innerHTML = `
+            div.innerHTML = `
                 <div class="card p-3 text-white">
 
-                    <!-- Imagen -->
-                    <img src="${imagen}" alt="mascota">
+                    <h5>${m.nombre}</h5> <!-- nombre -->
 
-                    <!-- Nombre -->
-                    <h5>${m.nombre}</h5>
+                    <p>${m.descripcion || "Sin descripción"}</p> <!-- descripción -->
 
-                    <!-- Raza -->
-                    <p><strong>Raza:</strong> ${m.raza || "No definida"}</p>
-
-                    <!-- Edad -->
-                    <p><strong>Edad:</strong> ${m.edad}</p>
-
-                    <!-- Descripción -->
-                    <p>${m.descripcion || ""}</p>
-
-                    <!-- Estado -->
-                    <p><strong>${m.estado}</strong></p>
-
-                    <!-- Botón adoptar -->
-                    <button 
-                        class="btn btn-success mb-2"
-                        onclick="adoptar(${m.id})"
-                        ${adoptado ? "disabled" : ""}
-                    >
+                    <button class="btn btn-success w-100"
+                        onclick="abrirFormulario(${m.id})">
                         Adoptar
                     </button>
-
-                    <!-- Solo rescatista -->
-                    ${rol === "rescatista" ? `
-                        <button 
-                            class="btn btn-primary"
-                            onclick="verPostulantes(${m.id})"
-                        >
-                            Ver postulantes
-                        </button>
-                    ` : ""}
 
                 </div>
             `;
 
-            contenedor.appendChild(col);
+            contenedor.appendChild(div); // insertar
         });
 
     } catch (error) {
 
-        console.error(error);
-        mostrarMensaje(error.message, "danger");
+        console.error(error); // debug
+        mostrarMensaje("Error cargando mascotas", "danger"); // UX
     }
 }
 
+// ================= MODAL =================
+function abrirFormulario(id) {
 
-// ------------------------------------------------------
-// ADOPTAR
-// ------------------------------------------------------
+    mascotaSeleccionada = id; // guardamos id
 
-async function adoptar(id) {
+    new bootstrap.Modal( // abrimos modal
+        document.getElementById("modalAdopcion")
+    ).show();
+}
 
-    if (!token) {
-        mostrarMensaje("Debes iniciar sesión", "warning");
-        return;
-    }
+// ================= ENVIAR SOLICITUD =================
+async function enviarSolicitud() {
 
     try {
 
+        const mensaje = ` 
+Edad: ${edad.value}
+Experiencia: ${experiencia.value}
+Espacio: ${espacio.value}
+        `; // armamos mensaje
+
         const res = await fetch("/api/solicitudes", {
-
-            method: "POST",
-
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: "Bearer " + token
+            method:"POST",
+            headers:{
+                "Content-Type":"application/json",
+                Authorization:"Bearer "+token
             },
-
-            body: JSON.stringify({ mascotaId: id })
+            body: JSON.stringify({
+                mascotaId: mascotaSeleccionada,
+                mensaje
+            })
         });
 
-        const data = await res.json();
+        const data = await res.json(); // parse
 
-        if (!res.ok) throw new Error(data.message);
+        if (!res.ok) throw new Error(data.message); // error backend
 
-        mostrarMensaje("Solicitud enviada 🐾");
+        mostrarMensaje("Postulación enviada 🐾", "success"); // feedback
+
+        setTimeout(()=> location.reload(), 800); // recarga
 
     } catch (error) {
 
-        console.error(error);
-        mostrarMensaje(error.message, "danger");
+        console.error(error); // debug
+        mostrarMensaje(error.message, "danger"); // UX
     }
 }
 
-
-// ------------------------------------------------------
-// REDIRECCIÓN
-// ------------------------------------------------------
-
-function verPostulantes(id) {
-    window.location.href = `postulantes.html?id=${id}`;
-}
-
-// INIT
-obtenerMascotas();
+// ================= INIT =================
+cargarMascotas(); // carga inicial
+cargarNotificaciones(); // carga campana
 
 </script>
 

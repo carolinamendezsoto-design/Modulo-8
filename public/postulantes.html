@@ -1,31 +1,49 @@
-<!-- ===================================================== -->
-<!-- DOCUMENTO HTML5 -->
-<!-- ===================================================== -->
 <!DOCTYPE html>
-
-<!-- Idioma -->
 <html lang="es">
 
 <head>
 
-    <!-- Codificación UTF-8 -->
-    <meta charset="UTF-8">
+<meta charset="UTF-8"> <!-- Codificación -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Responsive -->
 
-    <!-- Responsive -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📋 Postulantes</title>
 
-    <!-- Título -->
-    <title>🐾 Postulantes</title>
+<!-- Bootstrap -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 
-    <!-- Bootstrap -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<!-- Fuente -->
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
 
-    <!-- Fuente -->
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+
+/* Fondo */
+body {
+    font-family:'Poppins', sans-serif;
+}
+
+/* Overlay */
+body::before {
+    content:"";
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,0.6);
+    z-index:-1;
+}
+
+/* Card glass */
+.card {
+    border-radius:20px;
+    background:rgba(255,255,255,0.15);
+    backdrop-filter:blur(12px);
+    border:1px solid rgba(255,255,255,0.2);
+    color:white;
+    box-shadow:0 15px 40px rgba(0,0,0,0.4);
+}
+
+</style>
 
 </head>
 
-<!-- Body con fondo -->
 <body class="p-4 text-white" style="background:url('img/Huellitas_de_Amor.jpg') center/cover fixed;">
 
 <div class="container">
@@ -33,17 +51,14 @@
     <!-- HEADER -->
     <div class="d-flex justify-content-between align-items-center mb-4">
 
-        <!-- Título -->
         <h3>📋 Postulantes</h3>
 
         <div>
 
-            <!-- Botón volver -->
             <a href="mascotas.html" class="btn btn-light btn-sm me-2">
                 ← Volver
             </a>
 
-            <!-- Logout -->
             <button class="btn btn-danger btn-sm" onclick="logout()">
                 Cerrar sesión
             </button>
@@ -52,25 +67,20 @@
 
     </div>
 
-    <!-- CONTENEDOR PRINCIPAL -->
+    <!-- CONTENEDOR -->
     <div id="contenedorPostulantes"></div>
 
 </div>
 
-<!-- Scripts base -->
 <script src="js/utils.js"></script>
 <script src="js/auth.js"></script>
 
 <script>
 
-// --------------------------------------------------
-// VARIABLES GLOBALES
-// --------------------------------------------------
-
-// Obtenemos token desde localStorage
+// ===================== TOKEN =====================
 const token = localStorage.getItem("token");
 
-// Obtenemos usuario (puede fallar → try/catch)
+// ===================== USER =====================
 let user = null;
 
 try {
@@ -79,192 +89,127 @@ try {
     user = null;
 }
 
-// Obtenemos contenedor HTML
-const contenedor = document.getElementById("contenedorPostulantes");
+// ===================== VALIDACIÓN =====================
+if (!token || !user) {
+    mostrarMensaje("Debes iniciar sesión", "danger");
+    setTimeout(() => window.location.href = "index.html", 800);
+}
 
-// --------------------------------------------------
-// OBTENER ID DESDE URL
-// --------------------------------------------------
-
-// Creamos objeto con parámetros de la URL
+// ===================== PARAMS =====================
 const params = new URLSearchParams(window.location.search);
-
-// Obtenemos id de mascota (?id=1)
 const mascotaId = params.get("id");
 
-
-// --------------------------------------------------
-// PROTECCIÓN DE ACCESO
-// --------------------------------------------------
-
-// Si no hay token o usuario
-if (!token || !user) {
-
-    // Mostramos mensaje
-    mostrarMensaje("Debes iniciar sesión", "danger");
-
-    // Redirigimos
-    window.location.href = "index.html";
-}
-
-
-// --------------------------------------------------
-// VALIDAR ID
-// --------------------------------------------------
-
-// Si no viene id en la URL
+// Validación ID
 if (!mascotaId) {
-
     mostrarMensaje("Mascota no especificada", "danger");
-
-    window.location.href = "mascotas.html";
+    setTimeout(() => window.location.href = "mascotas.html", 800);
 }
 
+// ===================== CONTENEDOR =====================
+const contenedor = document.getElementById("contenedorPostulantes");
 
-// --------------------------------------------------
-// CARGAR POSTULANTES
-// --------------------------------------------------
-
-// Función principal
+// ===================== CARGAR =====================
 async function cargarPostulantes() {
 
     try {
 
-        // Mostramos loading
         contenedor.innerHTML = "<p>Cargando postulantes...</p>";
 
-        // Petición al backend
         const res = await fetch(`/api/solicitudes/mascota/${mascotaId}`, {
-
-            // Enviamos token
-            headers: {
-                Authorization: "Bearer " + token
-            }
+            headers: { Authorization: "Bearer " + token }
         });
 
-        // Si token inválido
-        if (res.status === 401) {
-
-            localStorage.clear();
-            window.location.href = "index.html";
-            return;
-        }
-
-        // Convertimos respuesta a JSON
         const data = await res.json();
 
-        // Validamos error
-        if (!res.ok) {
-            throw new Error(data.message || "Error al cargar postulantes");
-        }
+        if (!res.ok) throw new Error(data.message);
 
-        // Normalizamos datos
         const postulantes = data.data || [];
 
-        // Limpiamos contenedor
         contenedor.innerHTML = "";
 
-        // Si no hay postulantes
         if (!postulantes.length) {
-
-            contenedor.innerHTML = "<p>No hay postulantes</p>";
-
+            contenedor.innerHTML = "<p>No hay postulantes aún 🐾</p>";
             return;
         }
 
-        // --------------------------------------------------
-        // RECORRER POSTULANTES
-        // --------------------------------------------------
-
+        // ===================== RENDER =====================
         postulantes.forEach(p => {
 
-            // ⚠️ FIX CRÍTICO
-            // Puede venir como usuario o adoptante
-            const persona = p.usuario || p.adoptante || {};
+            const persona = p.adoptante || {};
 
-            // Creamos card
+            const estadoColor =
+                p.estado === "aprobado" ? "success" :
+                p.estado === "rechazado" ? "danger" : "warning";
+
             const div = document.createElement("div");
 
-            div.className = "card p-3 mb-3 text-dark";
+            div.className = "card p-3 mb-3";
 
             div.innerHTML = `
                 <h5>${persona.nombre || "Sin nombre"}</h5>
 
-                <p><strong>Email:</strong> ${persona.email || "Sin email"}</p>
+                ${
+                    p.estado === "aprobado"
+                    ? `
+                        <p><strong>Email:</strong> ${persona.email}</p>
+                        <p class="text-success fw-bold">🎉 Adoptante seleccionado</p>
+                    `
+                    : `
+                        <p class="text-light">🔒 Email oculto</p>
+                    `
+                }
 
                 <p>${p.mensaje || "Sin mensaje"}</p>
 
+                <span class="badge bg-${estadoColor} mb-2">
+                    ${p.estado}
+                </span>
+
                 <button 
-                    class="btn btn-success"
+                    class="btn btn-success w-100"
                     onclick="seleccionar(${p.id})"
+                    ${p.estado === "aprobado" ? "disabled" : ""}
                 >
                     Seleccionar adoptante
                 </button>
             `;
 
-            // Insertamos en el DOM
             contenedor.appendChild(div);
         });
 
     } catch (error) {
 
-        // Debug
-        console.error("ERROR POSTULANTES:", error);
-
-        // Mensaje usuario
+        console.error(error);
         mostrarMensaje(error.message, "danger");
     }
 }
 
-
-// --------------------------------------------------
-// SELECCIONAR ADOPTANTE
-// --------------------------------------------------
-
-// Función para aprobar adopción
+// ===================== SELECCIONAR =====================
 async function seleccionar(id) {
 
     try {
 
-        // Petición PUT
         const res = await fetch(`/api/solicitudes/seleccionar/${id}`, {
-
-            method: "PUT",
-
-            headers: {
-                Authorization: "Bearer " + token
-            }
+            method:"PUT",
+            headers:{ Authorization:"Bearer "+token }
         });
 
         const data = await res.json();
 
-        // Validamos error
-        if (!res.ok) {
-            throw new Error(data.message || "Error al seleccionar");
-        }
+        if (!res.ok) throw new Error(data.message);
 
-        // Mensaje éxito
-        mostrarMensaje("Adopción completada 🎉");
+        mostrarMensaje("Adopción completada 🎉", "success");
 
-        // Redirección con delay
-        setTimeout(() => {
-            window.location.href = "rescatista.html";
-        }, 1200);
+        setTimeout(cargarPostulantes, 800);
 
     } catch (error) {
 
         console.error(error);
-
         mostrarMensaje(error.message, "danger");
     }
 }
 
-
-// --------------------------------------------------
-// INIT
-// --------------------------------------------------
-
-// Ejecutamos al cargar
+// ===================== INIT =====================
 document.addEventListener("DOMContentLoaded", cargarPostulantes);
 
 </script>

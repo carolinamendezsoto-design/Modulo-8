@@ -2,78 +2,81 @@
 // IMPORTAR SERVICES
 // ------------------------------------------------------
 
-// Service de solicitudes (contiene lógica de negocio)
+// Service de solicitudes (lógica principal)
 const solicitudService = require("../services/solicitud.service");
 
-// Service de mascotas (para actualizar estado en adopción)
+// Service de mascotas (para cambiar estado)
 const mascotaService = require("../services/mascota.service");
 
+// 🔥 NUEVO: service de notificaciones
+const notificacionService = require("../services/notificacion.service");
 
-// ======================================================
+
+// ------------------------------------------------------
 // CREAR SOLICITUD
-// ======================================================
+// ------------------------------------------------------
 
 const createSolicitud = async (req, res, next) => {
 
     try {
 
-        // --------------------------------------------------
-        // EXTRAER DATOS DEL REQUEST
-        // --------------------------------------------------
+        // Extraemos datos del body
+        const { mascotaId, mensaje } = req.body;
 
-        // Obtenemos el ID de la mascota desde el body
-        const { mascotaId } = req.body;
-
-        // Obtenemos el usuario autenticado desde el middleware JWT
+        // Obtenemos usuario desde token
         const usuarioId = req.user.id;
 
-        // --------------------------------------------------
-        // LLAMAR AL SERVICE
-        // --------------------------------------------------
+        // 🔥 VALIDACIÓN DE ROL
+        if (req.user.rol !== "adoptante") {
 
-        // Enviamos datos al service (NO lógica aquí)
+            return res.status(403).json({
+                status: "error",
+                message: "Solo adoptantes pueden postular"
+            });
+        }
+
+        // Creamos solicitud en DB
         const nuevaSolicitud = await solicitudService.createSolicitud({
             usuarioId,
-            mascotaId
+            mascotaId,
+            mensaje
         });
 
-        // --------------------------------------------------
-        // RESPUESTA ESTÁNDAR API
-        // --------------------------------------------------
+        // 🔥 NOTIFICACIÓN AL USUARIO
+        await notificacionService.crearNotificacion(
+            usuarioId,
+            "🐾 Has postulado a una mascota"
+        );
 
-        return res.status(201).json({
+        // Respuesta
+        res.status(201).json({
             status: "success",
-            message: "Solicitud creada correctamente",
             data: nuevaSolicitud
         });
 
     } catch (error) {
 
-        // Delegamos el manejo de errores al middleware global
         next(error);
     }
 };
 
 
-
-// ======================================================
-// OBTENER SOLICITUDES POR MASCOTA
-// ======================================================
+// ------------------------------------------------------
+// OBTENER POSTULANTES
+// ------------------------------------------------------
 
 const getSolicitudesByMascota = async (req, res, next) => {
 
     try {
 
-        // Extraemos ID de la mascota desde params
-        const { mascotaId } = req.params;
+        // ID de mascota
+        const { id } = req.params;
 
-        // Llamamos al service
-        const solicitudes = await solicitudService.getSolicitudesByMascota(mascotaId);
+        // Buscamos postulantes
+        const solicitudes = await solicitudService.getSolicitudesByMascota(id);
 
-        // Respondemos con estructura estándar
-        return res.status(200).json({
+        res.status(200).json({
             status: "success",
-            message: "Solicitudes obtenidas correctamente",
             data: solicitudes
         });
 
@@ -84,128 +87,32 @@ const getSolicitudesByMascota = async (req, res, next) => {
 };
 
 
-
-// ======================================================
-// OBTENER MIS SOLICITUDES (ADOPTANTE)
-// ======================================================
-
-const getMisSolicitudes = async (req, res, next) => {
-
-    try {
-
-        // ID del usuario autenticado
-        const usuarioId = req.user.id;
-
-        // Consultamos sus solicitudes
-        const solicitudes = await solicitudService.getSolicitudesByUsuario(usuarioId);
-
-        return res.status(200).json({
-            status: "success",
-            message: "Mis solicitudes obtenidas correctamente",
-            data: solicitudes
-        });
-
-    } catch (error) {
-
-        next(error);
-    }
-};
-
-
-
-// ======================================================
-// SELECCIONAR ADOPTANTE (FLUJO FINAL DE ADOPCIÓN)
-// ======================================================
+// ------------------------------------------------------
+// SELECCIONAR ADOPTANTE
+// ------------------------------------------------------
 
 const seleccionarAdoptante = async (req, res, next) => {
 
     try {
 
-        // ID de la solicitud a aprobar
+        // ID de solicitud
         const { id } = req.params;
 
-        // --------------------------------------------------
-        // 1. APROBAR SOLICITUD
-        // --------------------------------------------------
+        // 1. aprobamos solicitud
+        const solicitud = await solicitudService.updateSolicitudEstado(id, "aprobado");
 
-        const solicitudAprobada = await solicitudService.updateSolicitudEstado(
-            id,
-            "aprobado"
+        // 2. cambiamos estado mascota
+        await mascotaService.updateEstado(solicitud.mascotaId, "adoptado");
+
+        // 🔥 NOTIFICAMOS AL ADOPTANTE
+        await notificacionService.crearNotificacion(
+            solicitud.adoptanteId,
+            "🎉 Fuiste seleccionado para adoptar una mascota"
         );
 
-        // --------------------------------------------------
-        // 2. CAMBIAR ESTADO DE LA MASCOTA
-        // --------------------------------------------------
-
-        await mascotaService.cambiarEstadoMascota({
-            id: solicitudAprobada.mascotaId,
-            estado: "adoptado"
-        });
-
-        // --------------------------------------------------
-        // RESPUESTA FINAL
-        // --------------------------------------------------
-
-        return res.status(200).json({
+        res.status(200).json({
             status: "success",
-            message: "Adopción completada correctamente",
-            data: solicitudAprobada
-        });
-
-    } catch (error) {
-
-        next(error);
-    }
-};
-
-
-
-// ======================================================
-// RECHAZAR SOLICITUD
-// ======================================================
-
-const rechazarSolicitud = async (req, res, next) => {
-
-    try {
-
-        // ID de la solicitud
-        const { id } = req.params;
-
-        // Actualizamos estado a rechazado
-        const solicitudRechazada = await solicitudService.updateSolicitudEstado(
-            id,
-            "rechazado"
-        );
-
-        return res.status(200).json({
-            status: "success",
-            message: "Solicitud rechazada correctamente",
-            data: solicitudRechazada
-        });
-
-    } catch (error) {
-
-        next(error);
-    }
-};
-
-
-
-// ======================================================
-// OBTENER TODAS LAS SOLICITUDES (ADMIN)
-// ======================================================
-
-const getAllSolicitudes = async (req, res, next) => {
-
-    try {
-
-        // Llamamos al service
-        const solicitudes = await solicitudService.getAllSolicitudes();
-
-        return res.status(200).json({
-            status: "success",
-            message: "Todas las solicitudes obtenidas correctamente",
-            data: solicitudes
+            message: "Adopción completada"
         });
 
     } catch (error) {
@@ -216,14 +123,11 @@ const getAllSolicitudes = async (req, res, next) => {
 
 
 // ------------------------------------------------------
-// EXPORTAR CONTROLADORES
+// EXPORTAR
 // ------------------------------------------------------
 
 module.exports = {
     createSolicitud,
     getSolicitudesByMascota,
-    getMisSolicitudes,
-    seleccionarAdoptante,
-    rechazarSolicitud,
-    getAllSolicitudes
+    seleccionarAdoptante
 };
