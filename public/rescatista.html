@@ -20,7 +20,7 @@
 /* Fondo */
 body {
     font-family:'Poppins', sans-serif; /* fuente */
-    background:url("img/Huellitas_de_Amor.jpg") center/cover fixed; /* fondo */
+    background:url("img/Huellitas_Ultra_Premium.png") center/cover fixed; /* fondo */
     min-height:100vh; /* altura */
     color:white; /* texto */
 }
@@ -36,7 +36,7 @@ body::before {
 
 /* Contenedor principal */
 .container-box {
-    background:rgba(255,255,255,0.15);
+    background:rgba(0,0,0,0.6);
     backdrop-filter:blur(12px);
     border-radius:25px;
     padding:25px;
@@ -54,7 +54,7 @@ body::before {
 /* Cards */
 .card {
     border-radius:20px;
-    background:rgba(255,255,255,0.15);
+    background:rgba(0,0,0,0.6);
     backdrop-filter:blur(12px);
     border:1px solid rgba(255,255,255,0.2);
     box-shadow:0 15px 40px rgba(0,0,0,0.3);
@@ -67,6 +67,18 @@ body::before {
     object-fit:cover;
     border-radius:12px;
     margin-bottom:10px;
+}
+
+/* Animación y campana */
+@keyframes vibrar {
+    0%{transform:rotate(0);}
+    25%{transform:rotate(-10deg);}
+    50%{transform:rotate(10deg);}
+    75%{transform:rotate(-6deg);}
+    100%{transform:rotate(0);}
+}
+.campana-activa {
+    animation:vibrar 0.6s infinite;
 }
 
 </style>
@@ -84,7 +96,16 @@ body::before {
 
             <h3>🐾 Mis Mascotas</h3>
 
-            <div>
+            <div class="d-flex align-items-center">
+
+                <!-- NOMBRE USUARIO -->
+                <span id="nombreUsuario" class="me-3 fw-bold"></span>
+
+                <!-- CAMPANA DE NOTIFICACIONES -->
+                <div id="campana" class="me-3" style="position:relative; cursor:pointer;" onclick="irNotificaciones()">
+                    <span style="font-size:26px;">🔔</span>
+                    <span id="contadorNoti" class="badge bg-danger" style="position:absolute; top:-8px; right:-10px; display:none;"></span>
+                </div>
 
                 <!-- crear -->
                 <a href="crear-mascota.html" class="btn btn-success me-2">
@@ -108,99 +129,8 @@ body::before {
 </div>
 
 <script src="js/utils.js"></script>
-<script src="js/auth.js"></script>
-
-<script>
-
-// ================= TOKEN =================
-const token = localStorage.getItem("token");
-
-// ================= USER =================
-let user = null;
-
-try {
-    user = JSON.parse(localStorage.getItem("user"));
-} catch {
-    user = null;
-}
-
-// ================= ROL =================
-const rol = user?.rol?.toLowerCase()?.trim();
-
-// ================= PROTECCIÓN =================
-if (!token || !user || rol !== "rescatista") {
-    window.location.href = "index.html";
-}
-
-// ================= CARGAR MASCOTAS =================
-async function cargarMascotas() {
-
-    const contenedor = document.getElementById("contenedorMascotas");
-
-    try {
-
-        const res = await fetch("/api/mascotas", {
-            headers:{ Authorization:"Bearer "+token }
-        });
-
-        const data = await res.json();
-
-        const mascotas = (data.data || []).filter(m => m.userId === user.id);
-
-        contenedor.innerHTML = "";
-
-        if (!mascotas.length) {
-            contenedor.innerHTML = "<p>No tienes mascotas aún 🐶</p>";
-            return;
-        }
-
-        mascotas.forEach(m => {
-
-            const imagen = m.imagen 
-                ? `/uploads/${m.imagen}` 
-                : "img/default.jpg";
-
-            contenedor.innerHTML += `
-                <div class="col-md-4">
-                    <div class="card p-3 text-white mb-3">
-
-                        <img src="${imagen}" alt="mascota">
-
-                        <h5>${m.nombre}</h5>
-
-                        <p><strong>Raza:</strong> ${m.raza || "No definida"}</p>
-
-                        <p><strong>Edad:</strong> ${m.edad}</p>
-
-                        <p><strong>${m.estado}</strong></p>
-
-                        <button 
-                            onclick="verPostulantes(${m.id})"
-                            class="btn btn-primary mt-2">
-                            Ver postulantes
-                        </button>
-
-                    </div>
-                </div>
-            `;
-        });
-
-    } catch (error) {
-
-        console.error(error);
-        mostrarMensaje("Error cargando mascotas", "danger");
-    }
-}
-
-// ================= REDIRECCIÓN =================
-function verPostulantes(id) {
-    window.location.href = "postulantes.html?id=" + id;
-}
-
-// ================= INIT =================
-cargarMascotas();
-
-</script>
+<script src="js/auth.js"></script> <!-- script de autenticación -->
+<script src="js/rescatista.js"></script> <!-- script principal de configuración visual para rescatistas -->
 
 </body>
 </html>

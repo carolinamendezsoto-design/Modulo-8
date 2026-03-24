@@ -24,7 +24,7 @@
 /* Fuente global y fondo */
 body {
     font-family:'Poppins', sans-serif; /* tipografía */
-    background:url("img/Huellitas_de_Amor.jpg") center/cover fixed; /* imagen fondo */
+    background:url("img/Huellitas_Ultra_Premium.png") center/cover fixed; /* imagen fondo */
     min-height:100vh; /* asegura altura completa */
 }
 
@@ -58,7 +58,7 @@ body::before {
     border-radius:20px; /* bordes */
     padding:25px; /* espacio interno */
     text-align:center; /* centrado */
-    background:rgba(255,255,255,0.15); /* transparencia */
+    background:rgba(0,0,0,0.6); /* dark transparency */
     backdrop-filter:blur(12px); /* efecto glass */
     border:1px solid rgba(255,255,255,0.2); /* borde */
     color:white; /* texto */
@@ -82,6 +82,18 @@ body::before {
     border-radius:10px; /* bordes suaves */
 }
 
+/* Animación de campana */
+@keyframes vibrar {
+    0%{transform:rotate(0);}
+    25%{transform:rotate(-10deg);}
+    50%{transform:rotate(10deg);}
+    75%{transform:rotate(-6deg);}
+    100%{transform:rotate(0);}
+}
+.campana-activa {
+    animation:vibrar 0.6s infinite;
+}
+
 </style>
 
 </head>
@@ -97,7 +109,13 @@ body::before {
 
         <h2>🐾 Panel Administrador</h2> <!-- título -->
 
-        <div>
+        <div class="d-flex align-items-center">
+
+            <!-- CAMPANA DE NOTIFICACIONES -->
+            <div id="campana" class="me-3" style="position:relative; cursor:pointer;" onclick="irNotificaciones()">
+                <span style="font-size:26px;">🔔</span>
+                <span id="contadorNoti" class="badge bg-danger" style="position:absolute; top:-8px; right:-10px; display:none;"></span>
+            </div>
 
             <!-- Nombre dinámico -->
             <span id="nombreAdmin" class="me-3 fw-bold"></span> <!-- se llena con JS -->
@@ -111,7 +129,31 @@ body::before {
 
     </div>
 
-    <!-- ================= GRID ================= -->
+    <!-- ================= DASHBOARD ESTADÍSTICAS ================= -->
+    <div class="row text-center mb-4" id="adminStats" style="display:none;">
+        <div class="col-md-6 mb-3">
+            <div class="card p-3 shadow-lg" style="background: rgba(46, 204, 113, 0.15); border-color: #2ecc71;">
+                <h2 id="countUsers" class="m-0 text-success fw-bold spinner-border spinner-border-sm text-success mx-auto"></h2>
+                <small class="text-white mt-1">Total Usuarios Registrados</small>
+            </div>
+        </div>
+        <div class="col-md-6 mb-3">
+            <div class="card p-3 shadow-lg" style="background: rgba(52, 152, 219, 0.15); border-color: #3498db;">
+                <h2 id="countPets" class="m-0 text-info fw-bold spinner-border spinner-border-sm text-info mx-auto"></h2>
+                <small class="text-white mt-1">Total Mascotas en Sistema</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= ÚLTIMOS REGISTROS ================= -->
+    <div class="card mb-4 text-start" id="ultimosUsuariosCard" style="display:none; padding-bottom: 5px;">
+        <h5 class="text-white mb-3 border-bottom border-light pb-2">Nuevos Usuarios (Actividad Reciente)</h5>
+        <div id="ultimosUsuariosList">
+            <!-- Cargando por JS... -->
+        </div>
+    </div>
+
+    <!-- ================= GRID ACCESOS DIRECTOS ================= -->
     <div class="grid">
 
         <!-- CARD USUARIOS -->
@@ -165,48 +207,9 @@ body::before {
 
 <!-- ================= SCRIPTS ================= -->
 
-<script src="js/utils.js"></script> <!-- funciones UI -->
-<script src="js/auth.js"></script> <!-- login / logout -->
-
-<script>
-
-// ================= TOKEN =================
-const token = localStorage.getItem("token"); // obtenemos token guardado
-
-// ================= USER =================
-let user = null; // inicializamos variable
-
-try {
-    user = JSON.parse(localStorage.getItem("user")); // intentamos parsear
-} catch {
-    user = null; // fallback si falla
-}
-
-// ================= NORMALIZACIÓN ROL =================
-const rol = user?.rol?.toLowerCase()?.trim(); // aseguramos formato consistente
-
-// ================= PROTECCIÓN =================
-if (!token || !user || rol !== "admin") { // validamos acceso
-
-    mostrarMensaje("Acceso solo admin", "danger"); // mensaje UX
-
-    setTimeout(()=> { // delay para que se vea el mensaje
-        window.location.href = "index.html"; // redirige
-    }, 800);
-}
-
-// ================= MOSTRAR NOMBRE =================
-const nombreAdmin = document.getElementById("nombreAdmin"); // elemento DOM
-
-if (user) { // si existe usuario
-
-    nombreAdmin.textContent = "👤 " + (user.nombre || "Administrador"); // mostramos nombre
-}
-
-// ================= DEBUG OPCIONAL =================
-console.log("Usuario logueado:", user); // útil para revisar datos
-
-</script>
+<script src="js/utils.js"></script> <!-- utilidades y mensajes -->
+<script src="js/auth.js"></script> <!-- manejador de sesiones y cierre de sesión -->
+<script src="js/admin.js"></script> <!-- la lógica completa programada para este panel administrativo -->
 
 </body>
 </html>

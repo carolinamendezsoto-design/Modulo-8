@@ -1,114 +1,211 @@
-// --------------------------------------------------
-// OBTENER TOKEN
-// --------------------------------------------------
+// ------------------------------------------------------
+// 🔐 OBTENER TOKEN Y USUARIO
+// ------------------------------------------------------
 
-// Recuperamos el token desde localStorage
+// Recuperamos el token de acceso desde el almacenamiento local
 const token = localStorage.getItem("token");
 
-// Si no existe token
-if (!token) {
+// Declaramos la variable del usuario que vamos a parsear
+let user = null;
 
-    // Redirigimos al login
+try {
+    // Intentamos convertir el string del usuario guardado a objeto
+    user = JSON.parse(localStorage.getItem("user"));
+} catch {
+    // Si falla, lo dejamos nulo por seguridad
+    user = null;
+}
+
+// Obtenemos el rol del usuario limpiando espacios y pasándolo a minúsculas
+const rol = user?.rol?.toLowerCase()?.trim();
+
+// Verificamos si alguien intenta colarse sin ser rescatista
+if (!token || !user || rol !== "rescatista") {
+    
+    // Si no está autorizado, lo devolvemos al inicio de inmediato
     window.location.href = "index.html";
 }
 
 
-// --------------------------------------------------
-// FUNCIÓN PARA CARGAR MASCOTAS
-// --------------------------------------------------
+// ------------------------------------------------------
+// 🐶 FUNCIÓN PARA CARGAR MIS MASCOTAS
+// ------------------------------------------------------
 
-// Función async
+// Función asíncrona para consultar el listado de mascotas del rescatista
 async function cargarMisMascotas() {
+
+    // Identificamos el contenedor donde se dibujarán las mascotas
+    const contenedor = document.getElementById("contenedorMascotas");
+
+    // Si por alguna razón no existe el contenedor, abortamos
+    if (!contenedor) return;
 
     try {
 
-        // --------------------------------------------------
-        // PETICIÓN AL BACKEND
-        // --------------------------------------------------
+        // Petición hacia el backend para solicitar TODAS las mascotas
+        const res = await fetch("/api/mascotas", {
 
-        const res = await fetch("/api/mascotas/mis-mascotas", {
-
-            // Enviamos token
+            // Pasamos nuestra autorización para demostrar quiénes somos
             headers: {
                 "Authorization": "Bearer " + token
             }
         });
 
-        // Si el token no es válido
+        // Si el token expiró o es inválido, cerramos todo
         if (res.status === 401) {
 
-            // Limpiamos sesión
+            // Borramos rastros de sesión
             localStorage.clear();
-
-            // Redirigimos
+            // Redirigimos para proteger
             window.location.href = "index.html";
-
             return;
         }
 
-        // Convertimos a JSON
+        // Convertimos la respuesta del backend a objeto JSON
         const data = await res.json();
 
-        // Si hay error
+        // En caso de fallar, arrojamos un error para detenernos
         if (!res.ok) {
-
-            throw new Error(data.message || "Error al cargar mascotas");
+            throw new Error(data.message || "Hubo un problema al cargar mascotas");
         }
 
-        // --------------------------------------------------
-        // CONTENEDOR HTML
-        // --------------------------------------------------
-
-        const contenedor = document.getElementById("listaMascotas");
-
-        // Validamos existencia
-        if (!contenedor) return;
-
-        // Limpiamos contenido
+        // Limpiamos el contenedor por completo para evitar clonajes
         contenedor.innerHTML = "";
 
-        // Normalizamos respuesta
-        const mascotas = data.data || data;
+        // Mapeamos el arreglo (el backend devuelve { data: [...] } u ocasionalmente un arreglo directo)
+        const mascotasBackend = data.data || data;
 
-        // Si no hay mascotas
+        // Filtramos para dejar solo las mascotas que nos pertenecen a nosotros
+        const mascotas = mascotasBackend.filter(m => m.userId === user.id);
+
+        // Validamos si nuestro arreglo quedó vacío
         if (!mascotas.length) {
 
-            contenedor.innerHTML = "<p>No tienes mascotas registradas</p>";
-
+            // Enviamos mensaje amistoso
+            contenedor.innerHTML = "<p>No tienes mascotas registradas 🐶</p>";
             return;
         }
 
-        // --------------------------------------------------
-        // RECORRER MASCOTAS
-        // --------------------------------------------------
-
+        // Si tenemos mascotas, las recorremos una por una
         mascotas.forEach(m => {
 
+            // Construimos la ruta de la imagen o asignamos una por defecto
+            const imagenUrl = m.imagen ? `http://localhost:3000/uploads/${m.imagen}` : "img/default.jpg";
+
+            // Creamos un nuevo divisor
             const div = document.createElement("div");
 
-            div.className = "card mb-3 p-3";
+            // Añadimos las clases de Bootstrap para cuadrícula
+            div.className = "col-md-4 mb-4";
 
+            // Armamos el HTML con diseño glassmorphism y etiquetas coloridas
             div.innerHTML = `
-                <h5>${m.nombre}</h5>
-                <p>${m.descripcion || "Sin descripción"}</p>
-                <p>Estado: <strong>${m.estado}</strong></p>
+                <div class="card p-3 text-white h-100 d-flex flex-column">
+
+                    <!-- Fotografía de la mascota -->
+                    <img src="${imagenUrl}" alt="${m.nombre}" class="img-fluid rounded mb-3" style="height: 200px; object-fit: cover; border-radius: 15px;">
+
+                    <!-- Nombre de la mascota -->
+                    <h4 class="fw-bold">${m.nombre}</h4>
+
+                    <!-- Etiquetas informativas rápidas -->
+                    <div class="mb-3">
+                        <span class="badge bg-primary me-1">${m.raza || "No definida"}</span>
+                        <span class="badge bg-info text-dark me-1">${m.edad}</span>
+                        <span class="badge ${m.estado === 'disponible' ? 'bg-success' : 'bg-secondary'}">
+                            ${m.estado.toUpperCase()}
+                        </span>
+                    </div>
+
+                    <!-- Contenido descriptivo secundario -->
+                    <p class="flex-grow-1">${m.descripcion || "Sin descripción."}</p>
+
+                    <!-- Botón para chequear los postulantes -->
+                    <button class="btn btn-primary w-100 fw-bold mt-auto" onclick="verPostulantes(${m.id})">
+                        Ver postulantes
+                    </button>
+
+                </div>
             `;
 
+            // Insertamos la tarjeta final al contenedor visible
             contenedor.appendChild(div);
         });
 
     } catch (error) {
 
-        console.error("ERROR RESCATISTA:", error);
+        // Escribimos en consola los detalles del error para el programador
+        console.error("Error al cargar rescatista:", error);
 
+        // Usamos la función global para notificar al rescatista de la falla
         mostrarMensaje(error.message, "danger");
     }
 }
 
 
-// --------------------------------------------------
-// AUTO EJECUCIÓN
-// --------------------------------------------------
+// ------------------------------------------------------
+// 🔔 CARGAR NOTIFICACIONES
+// ------------------------------------------------------
 
-// Ejecutamos cuando el DOM esté listo
-document.addEventListener("DOMContentLoaded", cargarMisMascotas);
+async function cargarNotificaciones() {
+    try {
+        const res = await fetch("http://localhost:3000/api/notificaciones", {
+            headers: { Authorization: "Bearer " + token }
+        });
+        const data = await res.json();
+        const noLeidas = (data.data || []).filter(n => !n.leido);
+        const contador = document.getElementById("contadorNoti");
+        const campana = document.getElementById("campana");
+
+        if (noLeidas.length > 0) {
+            contador.style.display = "inline-block";
+            contador.textContent = noLeidas.length;
+            campana.classList.add("campana-activa");
+        } else {
+            contador.style.display = "none";
+            campana.classList.remove("campana-activa");
+        }
+    } catch (error) {
+        console.error("Error notificaciones:", error);
+    }
+}
+
+function irNotificaciones() {
+    window.location.href = "notificaciones.html";
+}
+
+// ------------------------------------------------------
+// 🔁 REDIRECCIÓN POSTULANTES
+// ------------------------------------------------------
+
+// Transfiere al usuario a la vista detallada de los postulantes de un animal
+function verPostulantes(id) {
+    
+    // Cambiamos a la nueva pantalla indicando el ID mediante la URL
+    window.location.href = "postulantes.html?id=" + id;
+}
+
+
+// ------------------------------------------------------
+// 🚀 INICIALIZACIÓN AUTOMÁTICA
+// ------------------------------------------------------
+
+// Nos aseguramos de que esto corra apenas el esqueleto web esté listo
+document.addEventListener("DOMContentLoaded", () => {
+    
+    // Buscamos la etiqueta destinada para el nombre en la vista web
+    const etiquetaUsuario = document.getElementById("nombreUsuario");
+    
+    // Validamos que tengamos al usuario y la etiqueta en el HTML
+    if (user && user.nombre && etiquetaUsuario) {
+        // Le inyectamos visualmente el nombre del rescatista logueado
+        etiquetaUsuario.textContent = "👤 " + user.nombre;
+    }
+
+    cargarMisMascotas();
+    cargarNotificaciones(); // Cargamos campana activa
+});
+
+// Hacemos global la función para que funcione el 'onclick' en el HTML
+window.verPostulantes = verPostulantes;
+window.irNotificaciones = irNotificaciones;

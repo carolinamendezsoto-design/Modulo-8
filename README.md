@@ -1,251 +1,170 @@
-# 🐾 Huellitas de Amor API
-
-API RESTful desarrollada con Node.js y Express para la gestión de adopción de mascotas.
-Permite administrar usuarios, mascotas y solicitudes de adopción con autenticación segura mediante JWT.
-
----
-
-## 🚀 Tecnologías utilizadas
-
-* Node.js
-* Express.js
-* Sequelize (ORM)
-* PostgreSQL
-* JSON Web Tokens (JWT)
-* Multer (subida de archivos)
-* Bcrypt (encriptación)
-* HTML + CSS + JS (frontend básico)
+<div align="center">
+  
+  <h1>🐾 Huellitas de Amor API</h1>
+  <p><b>API RESTful profesional construida con Node.js y Express para gestionar la adopción responsable de mascotas.</b></p>
+  
+  <p>
+    <img src="https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white" alt="Node.js">
+    <img src="https://img.shields.io/badge/Express.js-000000?style=for-the-badge&logo=express&logoColor=white" alt="Express">
+    <img src="https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white" alt="PostgreSQL">
+    <img src="https://img.shields.io/badge/Sequelize-52B0E7?style=for-the-badge&logo=sequelize&logoColor=white" alt="Sequelize">
+    <img src="https://img.shields.io/badge/JWT-000000?style=for-the-badge&logo=JSON%20web%20tokens&logoColor=white" alt="JWT">
+  </p>
+</div>
 
 ---
 
-## 📁 Estructura del proyecto
+## 📖 Acerca del Proyecto
 
-```
-src/
-├── controllers/     # Controladores (manejan request/response)
-├── services/        # Lógica de negocio
-├── repositories/    # Acceso a base de datos
-├── models/          # Modelos Sequelize
-├── routes/          # Definición de rutas
-├── middlewares/     # JWT, roles, errores, multer
-├── config/          # Configuración DB
-├── uploads/         # Imágenes subidas
-├── logs/            # Logs del sistema
-└── app.js           # Configuración principal
-```
+**Huellitas de Amor** es el ecosistema Backend definitivo para una plataforma de adopciones. Proporciona una interfaz programática segura para administrar usuarios, mascotas y emparejar familias con animales rescatados mediante un sistema avanzado de postulaciones.
+
+> [!NOTE]
+> Este software fue diseñado exclusivamente para operar dentro de la **Comuna de Puente Alto, Chile (🇨🇱)**, promoviendo el bienestar animal a través de tecnología moderna.
+
+### ✨ Características Principales
+- 🔐 **Autenticación Total:** Sistema JWT seguro con expiración de sesión.
+- 👥 **Control Basado en Roles (RBAC):** Privilegios de Administrador, Rescatista y Adoptante.
+- 🖼️ **Gestión Multi-Media:** Subida controlada de avatares mediante _Multer_.
+- 💾 **Integridad Relacional:** Arquitectura ORM estricta modelando múltiples entidades 1:N y N:M.
 
 ---
 
-## ⚙️ Instalación
+## 🛠️ Instalación y Configuración (Guía Rápida)
 
-1. Clonar el repositorio:
+<details>
+<summary><b>Haz clic aquí para ver las instrucciones paso a paso</b></summary>
+<br>
 
+**1. Clonar el Repositorio**
 ```bash
 git clone https://github.com/carolinamendezsoto-design/Modulo-8.git
 cd Modulo-8
 ```
 
-2. Instalar dependencias:
-
+**2. Descargar Dependencias**
 ```bash
 npm install
 ```
 
-3. Crear archivo `.env`:
-
+**3. Variables de Entorno (`.env`)**
+Configura tu acceso al motor PostgreSQL en la raíz del proyecto:
 ```env
 PORT=3000
-DB_NAME=tu_db
+DB_NAME=tu_base_de_datos
 DB_USER=tu_usuario
-DB_PASSWORD=tu_password
+DB_PASSWORD=tu_contraseña
 DB_HOST=localhost
-JWT_SECRET=tu_secreto_super_seguro
+JWT_SECRET=secreto_jwt_super_seguro
 ```
 
-4. Ejecutar el servidor:
-
+**4. Levantar Servidor**
 ```bash
 npm run dev
 ```
+</details>
 
 ---
 
-## 🔐 Autenticación (JWT)
+## 🔐 Seguridad y Autenticación
 
-### Login
+Toda interacción privada requiere un **Token Bearer** emitido por nuestro orquestador `auth.service`.
 
+> [!IMPORTANT]
+> **Adquisición del Token (Login)**  
+> Enviar **POST** a `/api/auth/login` con `{ "email": "...", "password": "..." }`.
+
+**Uso en Clientes REST (Postman / Frontend):**
 ```http
-POST /api/auth/login
-```
-
-**Body:**
-
-```json
-{
-  "email": "correo@ejemplo.com",
-  "password": "123456"
-}
-```
-
-**Respuesta:**
-
-```json
-{
-  "status": "success",
-  "message": "Login exitoso",
-  "data": {
-    "token": "JWT_TOKEN",
-    "user": {
-      "id": 1,
-      "email": "correo@ejemplo.com",
-      "rol": "admin"
-    }
-  }
-}
-```
-
-👉 Usa el token en headers:
-
-```
-Authorization: Bearer TU_TOKEN
+Authorization: Bearer <TU_TOKEN_JWT>
 ```
 
 ---
 
-## 👤 Roles del sistema
+## 🌐 Endpoints Oficiales
 
-* **admin** → acceso total
-* **rescatista** → gestiona mascotas
-* **adoptante** → solicita adopciones
+_Haz clic en cada categoría para desplegar la tabla de rutas:_
 
----
+<details>
+<summary><b>🐈 Rutas de Mascotas</b></summary>
+<br>
 
-## 🐶 Endpoints principales
+| Método | Endpoint | Privilegio Requerido | Acción |
+| :---: | :--- | :---: | :--- |
+| `GET` | `/api/mascotas` | 🟢 Público | Listar catálogo disponible |
+| `GET` | `/api/mascotas/:id` | 🟢 Público | Ver detalles específicos |
+| `POST` | `/api/mascotas` | 🛡️ Rescatista / Admin | Publicar nueva mascota |
+| `PUT` | `/api/mascotas/:id` | 🛡️ Rescatista / Admin | Actualizar ficha clínica |
+| `DELETE`| `/api/mascotas/:id` | 🛡️ Rescatista / Admin | Dar de baja |
 
-### 👤 Usuarios
+</details>
 
-| Método | Endpoint       | Descripción            |
-| ------ | -------------- | ---------------------- |
-| GET    | /api/users     | Obtener usuarios       |
-| GET    | /api/users/:id | Obtener usuario por ID |
-| POST   | /api/users     | Crear usuario          |
-| PUT    | /api/users/:id | Actualizar usuario     |
-| DELETE | /api/users/:id | Eliminar usuario       |
+<details>
+<summary><b>👤 Rutas de Usuarios</b></summary>
+<br>
 
----
+| Método | Endpoint | Privilegio Requerido | Acción |
+| :---: | :--- | :---: | :--- |
+| `GET` | `/api/users` | 🛡️ Admin | Reporte global de usuarios |
+| `GET` | `/api/users/:id` | 🛡️ Admin | Extraer perfil específico |
+| `POST` | `/api/users` | 🟢 Público | Registrar nueva cuenta |
+| `PUT` | `/api/users/:id` | 🛡️ Admin | Sobrescribir datos |
+| `DELETE`| `/api/users/:id` | 🛡️ Admin | Suspender cuenta |
 
-### 🐾 Mascotas
+</details>
 
-| Método | Endpoint          | Descripción     |
-| ------ | ----------------- | --------------- |
-| GET    | /api/mascotas     | Listar mascotas |
-| GET    | /api/mascotas/:id | Obtener mascota |
-| POST   | /api/mascotas     | Crear mascota   |
-| PUT    | /api/mascotas/:id | Actualizar      |
-| DELETE | /api/mascotas/:id | Eliminar        |
+<details>
+<summary><b>❤️ Rutas de Postulación (Adopción)</b></summary>
+<br>
 
-📌 Permite subir imagen con multer
+| Método | Endpoint | Privilegio Requerido | Acción |
+| :---: | :--- | :---: | :--- |
+| `POST` | `/api/solicitudes` | 🛡️ Adoptante | Iniciar trámite de adopción |
+| `GET` | `/api/solicitudes/mis` | 🛡️ Adoptante | Mis registros de postulación |
+| `GET` | `/api/solicitudes/mascota/:id` | 🛡️ Rescatista | Verificar aplicantes locales |
+| `PUT` | `/api/solicitudes/:id/aprobar` | 🛡️ Admin | Finalizar trámite con éxito |
+| `PUT` | `/api/solicitudes/:id/rechazar` | 🛡️ Admin | Denegar postulación |
 
----
+</details>
 
-### ❤️ Solicitudes de adopción
+<details>
+<summary><b>📸 Carga Binaria (Uploads)</b></summary>
+<br>
 
-| Método | Endpoint                      | Descripción     |
-| ------ | ----------------------------- | --------------- |
-| POST   | /api/solicitudes              | Crear solicitud |
-| GET    | /api/solicitudes/mis          | Mis solicitudes |
-| GET    | /api/solicitudes/mascota/:id  | Ver postulantes |
-| PUT    | /api/solicitudes/:id/aprobar  | Aprobar         |
-| PUT    | /api/solicitudes/:id/rechazar | Rechazar        |
-
----
-
-## 📸 Subida de archivos
-
-```http
-POST /api/upload
-```
-
-* Tipos permitidos: JPG, PNG, WEBP
-* Tamaño máximo: 5MB
+**Ruta:** `POST /api/upload`  
+**Restricciones:** Límite máximo = `5 MB` | Mimetypes admitidos = `.jpg, .png, .webp`
+</details>
 
 ---
 
-## 🛡️ Seguridad
+## 🎓 Justificación Académica (Proyecto Integrador)
 
-* Autenticación con JWT
-* Protección de rutas privadas
-* Middleware de roles
-* Validación de archivos
-* Encriptación de contraseñas
+En acatamiento absoluto a los requerimientos de la métrica (Módulos 6, 7 y 8):
 
----
+> [!TIP]
+> **1. Separación de Rutas y Controladores (Arquitectura)**  
+> Se optó por un patrón **MVC Expandido** (`routes`, `controllers`, `services`, `repositories`, `models`).  
+> **Justificación:** Garantiza el *Principio de Responsabilidad Única*. Las Rutas solo canalizan HTTP; los Controladores extraen y validan los *Params/Body*; los Servicios manejan el álgebra de negocio, y los Repositorios se encargan exclusivamente del diálogo SQL (ORM).
 
-## 📊 Formato de respuestas
+> [!TIP]
+> **2. Validaciones Previas (Datos e Imágenes)**  
+> **Datos:** Correos duplicados o credenciales vacías son interceptados por el Servicio ANTES de llegar a PostgreSQL, evitando bloqueos por *Constraints*.  
+> **Imágenes:** Restringidas severamente mediante un *FileFilter* de `Multer` para imposibilitar inyecciones *Shell* o saturación de almacenamiento.
 
-Todas las respuestas siguen estructura estándar:
+> [!TIP]
+> **3. Criptografía y Seguridad Perimetral**  
+> **¿Por qué proteger las rutas?** Evita el secuestro y manipulación de datos destructivos. Solo "Rescatistas" modifican mascotas, y solo "Administradores" modifican cuentas globales.  
+> **Manejo del Token:** Tras su emisión con `bcrypt`, el frontend encapsula y almacena el JWT persistente en `localStorage`, adjuntándolo transparente y obligatoriamente en la cabecera `Authorization` en futuros requests a las barreras middleware de Express.
 
-```json
-{
-  "status": "success | error",
-  "message": "Descripción",
-  "data": {}
-}
-```
-
----
-
-## 🧠 Arquitectura
-
-El proyecto sigue una arquitectura modular:
-
-* **Controllers** → manejan HTTP
-* **Services** → lógica de negocio
-* **Repositories** → acceso a DB
-* **Middlewares** → seguridad y validaciones
+> [!TIP]
+> **4. Persistencia Plana Integral**  
+> El sistema no solo persiste al motor PostgreSQL; también escribe logs estáticos sobre disco mediante `fs.appendFile` en el `logger.middleware.js`, cumpliendo los requerimientos técnicos de "Registro en Archivos Simples".
 
 ---
 
-## 🧪 Testing
+<br>
 
-Se recomienda usar:
-
-* Postman
-* Thunder Client
-
----
-
-## 💡 Funcionalidades destacadas
-
-* Sistema de roles
-* Flujo completo de adopción
-* Match de mascotas según preferencias
-* Subida de imágenes
-* Arquitectura escalable
-
----
-
-## 👩‍💻 Autor
-
-**Carolina Méndez Soto**
-
-Proyecto desarrollado como trabajo final del módulo backend (Node.js + Express).
-
----
-
-## ⭐ Estado del proyecto
-
-✅ Funcional
-✅ API REST completa
-✅ Lista para frontend o consumo externo
-
----
-
-## 🚀 Mejoras futuras
-
-* Documentación con Swagger
-* Refresh tokens
-* Tests automatizados
-* Deploy en producción
-
----
+<div align="center">
+  <b>👩‍💻 Desarrollado por: Carolina Méndez Soto</b> <br>
+  <i>Proyecto Final de Módulo.</i> <br>
+  💚🐾
+</div>

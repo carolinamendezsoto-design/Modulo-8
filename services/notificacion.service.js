@@ -1,20 +1,20 @@
 // ------------------------------------------------------
-// IMPORTAR MODELO
+// IMPORTAR REPOSITORIO
 // ------------------------------------------------------
 
-const { Notificacion } = require("../models"); // Modelo Sequelize
+// Ahora importamos desde la capa de acceso a datos (Repositorio)
+const notificacionRepository = require("../repositories/notificacion.repository");
 
 
 // ------------------------------------------------------
-// CREAR NOTIFICACIÓN
+// CREAR NOTIFICACIÓN (LÓGICA DE NEGOCIO)
 // ------------------------------------------------------
 
 const crearNotificacion = async (usuarioId, mensaje) => {
-
-    return await Notificacion.create({ // Insert en DB
-        usuarioId, // Usuario destino
-        mensaje    // Texto
-    });
+    
+    // Aquí podríamos agregar reglas de negocio (ej. validaciones extra)
+    // Delegamos la escritura a la base de datos
+    return await notificacionRepository.crearNotificacion(usuarioId, mensaje);
 };
 
 
@@ -24,12 +24,8 @@ const crearNotificacion = async (usuarioId, mensaje) => {
 
 const getNotificaciones = async (usuarioId) => {
 
-    return await Notificacion.findAll({
-
-        where: { usuarioId }, // Filtramos por usuario
-
-        order: [["createdAt", "DESC"]] // Orden más reciente primero
-    });
+    // Delegamos la consulta a la base de datos
+    return await notificacionRepository.getNotificaciones(usuarioId);
 };
 
 
@@ -39,19 +35,13 @@ const getNotificaciones = async (usuarioId) => {
 
 const marcarComoLeidas = async (usuarioId) => {
 
-    await Notificacion.update(
-
-        { leido: true }, // Cambiamos estado
-
-        {
-            where: { usuarioId } // Solo de ese usuario
-        }
-    );
+    // Delegamos la actualización a la base de datos
+    await notificacionRepository.marcarComoLeidas(usuarioId);
 };
 
 
 // ------------------------------------------------------
-// EXPORTAR
+// EXPORTAR SERVICIOS
 // ------------------------------------------------------
 
 module.exports = {

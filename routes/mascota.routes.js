@@ -32,10 +32,10 @@ const upload = require("../middlewares/upload.middleware");   // multer
 
 // GET /api/mascotas/match
 // Mejor práctica REST → no usar /filtro
-router.get(
-    "/match",
-    mascotaController.getMatchMascotas
-);
+// router.get(
+//     "/match",
+//     mascotaController.getMatchMascotas
+// );
 
 
 // ------------------------------------------------------

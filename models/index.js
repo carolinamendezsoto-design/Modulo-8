@@ -11,6 +11,9 @@ const Mascota = require("./mascota.model");
 // Importamos modelo de solicitud (tabla intermedia)
 const Solicitud = require("./solicitud.model");
 
+// Importamos modelo de notificaciones (faltante)
+const Notificacion = require("./notificacion.model");
+
 
 // ------------------------------------------------------
 // RELACIÓN USER → MASCOTAS (1:N)
@@ -39,6 +42,25 @@ Mascota.belongsTo(User, {
     onDelete: "CASCADE",
 
     onUpdate: "CASCADE"
+});
+
+
+// ------------------------------------------------------
+// RELACIÓN USER → NOTIFICACIONES (1:N)
+// ------------------------------------------------------
+
+// Un usuario tiene muchas notificaciones
+User.hasMany(Notificacion, {
+    foreignKey: "usuarioId",
+    as: "notificaciones",
+    onDelete: "CASCADE",
+    onUpdate: "CASCADE"
+});
+
+// Una notificación pertenece a un usuario
+Notificacion.belongsTo(User, {
+    foreignKey: "usuarioId",
+    as: "usuario"
 });
 
 
@@ -126,5 +148,7 @@ module.exports = {
 
     Mascota,
 
-    Solicitud
+    Solicitud,
+
+    Notificacion
 };

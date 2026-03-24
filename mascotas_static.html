@@ -72,7 +72,7 @@ body::before {
         <div class="d-flex align-items-center gap-3"> <!-- contenedor derecha -->
 
             <!-- NOMBRE USUARIO -->
-            <span id="nombreUsuario" class="fw-bold"></span>
+            <span class="fw-bold">👤 Adopta Bot</span>
 
             <!-- CAMPANA -->
             <div id="campana" style="position:relative; cursor:pointer;" onclick="irNotificaciones()">
@@ -97,7 +97,52 @@ body::before {
     </div>
 
     <!-- LISTA MASCOTAS -->
-    <div id="contenedorMascotas" class="row"></div>
+    <div id="contenedorMascotas" class="row">
+                <div class="col-md-4 mb-4">
+                    <div class="card p-3 text-white h-100 d-flex flex-column" style="border-radius:20px; backdrop-filter:blur(12px); background:rgba(0,0,0,0.6); border:1px solid rgba(255,255,255,0.2); box-shadow:0 15px 40px rgba(0,0,0,0.4);">
+                        <img src="http://localhost:3000/uploads/1774304617904-Mirana.webp" class="img-fluid rounded mb-3" style="height: 200px; object-fit: cover; border-radius: 15px;">
+                        <h4 class="fw-bold">Mirana</h4>
+                        <div class="mb-3">
+                            <span class="badge bg-primary me-1">Siberiana Mestiza</span>
+                            <span class="badge bg-info text-dark me-1">8 meses</span>
+                            <span class="badge bg-secondary me-1">Tamaño pequeño</span>
+                            <span class="badge bg-warning text-dark">Energía media</span>
+                        </div>
+                        <p class="flex-grow-1">Mirana es una perrita rescatada sumamente cariñosa. Tiene todas sus vacunas al día y busca una familia paciente que le dé mucho amor. ¡Ojos preciosos!</p>
+                        <button class="btn btn-success w-100 fw-bold mt-auto" style="border-radius:10px;">Adoptar</button>
+                    </div>
+                </div>
+            
+                <div class="col-md-4 mb-4">
+                    <div class="card p-3 text-white h-100 d-flex flex-column" style="border-radius:20px; backdrop-filter:blur(12px); background:rgba(0,0,0,0.6); border:1px solid rgba(255,255,255,0.2); box-shadow:0 15px 40px rgba(0,0,0,0.4);">
+                        <img src="http://localhost:3000/uploads/firu_dog.png" class="img-fluid rounded mb-3" style="height: 200px; object-fit: cover; border-radius: 15px;">
+                        <h4 class="fw-bold">Firu</h4>
+                        <div class="mb-3">
+                            <span class="badge bg-primary me-1">Mestizo</span>
+                            <span class="badge bg-info text-dark me-1">2 años</span>
+                            <span class="badge bg-secondary me-1">Tamaño Mediano</span>
+                            <span class="badge bg-warning text-dark">Energía Alta</span>
+                        </div>
+                        <p class="flex-grow-1">Buen chico</p>
+                        <button class="btn btn-success w-100 fw-bold mt-auto" style="border-radius:10px;">Adoptar</button>
+                    </div>
+                </div>
+            
+                <div class="col-md-4 mb-4">
+                    <div class="card p-3 text-white h-100 d-flex flex-column" style="border-radius:20px; backdrop-filter:blur(12px); background:rgba(0,0,0,0.6); border:1px solid rgba(255,255,255,0.2); box-shadow:0 15px 40px rgba(0,0,0,0.4);">
+                        <img src="http://localhost:3000/uploads/firulais_test.png" class="img-fluid rounded mb-3" style="height: 200px; object-fit: cover; border-radius: 15px;">
+                        <h4 class="fw-bold">Firulais Test</h4>
+                        <div class="mb-3">
+                            <span class="badge bg-primary me-1">Mestizo</span>
+                            <span class="badge bg-info text-dark me-1">2 años</span>
+                            <span class="badge bg-secondary me-1">Tamaño Mediano</span>
+                            <span class="badge bg-warning text-dark">Energía Alta</span>
+                        </div>
+                        <p class="flex-grow-1">Prueba e2e automatizada</p>
+                        <button class="btn btn-success w-100 fw-bold mt-auto" style="border-radius:10px;">Adoptar</button>
+                    </div>
+                </div>
+            </div>
 
 </div>
 
@@ -155,8 +200,8 @@ body::before {
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script> <!-- bootstrap -->
 
 <script src="js/utils.js"></script> <!-- mensajes -->
-<script src="js/auth.js"></script> <!-- script de autenticación -->
-<script src="js/mascota.js"></script> <!-- script principal de configuración visual e interactiva de las mascotas -->
+ <!-- script de autenticación -->
+ <!-- script principal de configuración visual e interactiva de las mascotas -->
 
 </body>
 </html>

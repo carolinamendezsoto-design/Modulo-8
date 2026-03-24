@@ -1,87 +1,73 @@
 // ------------------------------------------------------
-// IMPORTAR DEPENDENCIAS
+// IMPORTAMOS JWT
 // ------------------------------------------------------
 
-const jwt = require("jsonwebtoken"); // manejo de tokens
+const jwt = require("jsonwebtoken"); // Librería que permite verificar y decodificar tokens JWT
 
 
 // ------------------------------------------------------
-// MIDDLEWARE DE AUTENTICACIÓN
+// EXPORTAMOS EL MIDDLEWARE
 // ------------------------------------------------------
 
-const authMiddleware = (req, res, next) => {
+module.exports = (req, res, next) => { // Función middleware (req = request, res = response, next = siguiente middleware)
 
-    // --------------------------------------------------
-    // OBTENER HEADER AUTHORIZATION
-    // --------------------------------------------------
+    try { // Bloque try para capturar errores
 
-    const authHeader = req.headers["authorization"]; // header
+        // --------------------------------------------------
+        // OBTENER HEADER AUTHORIZATION
+        // --------------------------------------------------
 
-    // Si no hay token
-    if (!authHeader) {
-        return res.status(401).json({
-            status: "error",
-            message: "Acceso denegado. Token requerido",
-            data: null
-        });
-    }
+        const authHeader = req.headers.authorization; // Extraemos el header Authorization (ej: "Bearer eyJhbGciOiJIUzI1NiIs...")
 
+        // Validamos si existe el header
+        if (!authHeader) { // Si no viene header
 
-    // --------------------------------------------------
-    // VALIDAR FORMATO
-    // --------------------------------------------------
-
-    const parts = authHeader.split(" "); // "Bearer token"
-
-    if (parts.length !== 2 || parts[0] !== "Bearer") {
-        return res.status(400).json({
-            status: "error",
-            message: "Formato de token inválido",
-            data: null
-        });
-    }
-
-    const token = parts[1]; // extraemos token
-
-
-    // --------------------------------------------------
-    // VERIFICAR TOKEN
-    // --------------------------------------------------
-
-    try {
-
-        // Decodificamos token con clave secreta
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-        // Guardamos usuario en request
-        req.user = decoded;
-
-        // Continuamos flujo
-        next();
-
-    } catch (error) {
-
-        // Token expirado
-        if (error.name === "TokenExpiredError") {
-            return res.status(401).json({
-                status: "error",
-                message: "Token expirado",
-                data: null
+            return res.status(401).json({ // Respondemos error 401 (no autorizado)
+                ok: false, // Indicamos que la operación falló
+                message: "Token no proporcionado" // Mensaje claro
             });
         }
 
-        // Token inválido
-        return res.status(401).json({
-            status: "error",
-            message: "Token inválido",
-            data: null
+        // --------------------------------------------------
+        // EXTRAER TOKEN DEL FORMATO "Bearer TOKEN"
+        // --------------------------------------------------
+
+        const token = authHeader.split(" ")[1]; // Separamos por espacio y tomamos la segunda parte (el token)
+
+        // Validamos si el token existe
+        if (!token) { // Si no hay token válido
+
+            return res.status(401).json({ // Error 401
+                ok: false,
+                message: "Token inválido" // Mensaje claro
+            });
+        }
+
+        // --------------------------------------------------
+        // VERIFICAR TOKEN
+        // --------------------------------------------------
+
+        const decoded = jwt.verify(token, process.env.JWT_SECRET); // Verificamos el token usando la clave secreta
+
+        // --------------------------------------------------
+        // GUARDAR USUARIO EN REQUEST
+        // --------------------------------------------------
+
+        req.user = decoded; // Guardamos el payload del token en req.user para usarlo después en controllers
+
+        // --------------------------------------------------
+        // CONTINUAR FLUJO
+        // --------------------------------------------------
+
+        next(); // Pasamos al siguiente middleware o controlador
+
+    } catch (error) { // Si ocurre cualquier error
+
+        console.error("Error en auth middleware:", error.message); // Mostramos error en consola
+
+        return res.status(401).json({ // Respondemos error 401
+            ok: false,
+            message: "Token inválido o expirado" // Mensaje estándar
         });
     }
 };
-
-
-// ------------------------------------------------------
-// EXPORTAR
-// ------------------------------------------------------
-
-module.exports = authMiddleware;

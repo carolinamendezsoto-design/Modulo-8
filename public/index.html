@@ -20,8 +20,9 @@
 /* Fondo */
 body {
     font-family:'Poppins', sans-serif;
-    background:url("img/Huellitas_de_Amor.jpg") center/cover fixed;
+    background:url("img/Huellitas_Ultra_Premium.png") center/cover fixed;
     display:flex;
+    flex-direction:column;
     align-items:center;
     justify-content:center;
     min-height:100vh;
@@ -41,7 +42,7 @@ body::before {
     border-radius:25px;
     padding:35px;
     max-width:420px;
-    background:rgba(255,255,255,0.15);
+    background:rgba(0,0,0,0.6);
     backdrop-filter:blur(15px);
     border:1px solid rgba(255,255,255,0.2);
     color:white;
@@ -50,6 +51,22 @@ body::before {
 /* Inputs */
 .form-control {
     border-radius:12px;
+}
+
+/* Leyenda Footer */
+.footer-legend {
+    margin-top:20px;
+    max-width:400px;
+    text-align:center;
+    color:rgba(255, 255, 255, 0.7);
+    font-size:0.85rem;
+    letter-spacing:0.5px;
+    z-index:10;
+    pointer-events:none;
+}
+.footer-legend p {
+    margin:0;
+    text-shadow:0 2px 4px rgba(0,0,0,0.8);
 }
 
 </style>
@@ -76,6 +93,11 @@ body::before {
     <!-- LINK -->
     <a href="registro.html">Crear cuenta</a>
 
+</div>
+
+<!-- LEYENDA VERSIÓN Y UBICACIÓN -->
+<div class="footer-legend">
+    <p>Huellitas de Amor v1.0 • Plataforma oficial operando exclusivamente para la comuna de Puente Alto</p>
 </div>
 
 <script src="js/utils.js"></script>

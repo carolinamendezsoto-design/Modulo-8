@@ -2,42 +2,39 @@
 // IMPORTAR REPOSITORY
 // ------------------------------------------------------
 
-const mascotaRepository = require("../repositories/mascota.repository");
+const mascotaRepository = require("../repositories/mascota.repository"); // capa DB
 
 
-// =======================================================
-// OBTENER TODAS LAS MASCOTAS
-// =======================================================
+// ------------------------------------------------------
+// GET MASCOTAS
+// ------------------------------------------------------
 
 const getMascotas = async (query = {}) => {
 
-    if (typeof query !== "object") {
-        const error = new Error("Los filtros deben ser un objeto");
+    if (typeof query !== "object") { // validación
+        const error = new Error("Filtros inválidos");
         error.statusCode = 400;
         throw error;
     }
 
-    const filtros = {};
+    const filtros = {}; // objeto filtros
 
     if (query.estado) filtros.estado = query.estado;
     if (query.energia) filtros.energia = query.energia;
     if (query.porte) filtros.porte = query.porte;
+    if (query.userId) filtros.userId = query.userId; // AISLAMIENTO PARA EVITAR MEZCLA DE MASCOTAS SEGÚN PERFIL
 
-    return await mascotaRepository.getMascotas(filtros);
+    return await mascotaRepository.getMascotas(filtros); // DB
 };
 
 
-// =======================================================
-// OBTENER POR ID
-// =======================================================
+// ------------------------------------------------------
+// GET POR ID
+// ------------------------------------------------------
 
 const getMascotaById = async ({ id }) => {
 
-    if (!id) {
-        const error = new Error("ID requerido");
-        error.statusCode = 400;
-        throw error;
-    }
+    if (!id) throw new Error("ID requerido");
 
     const mascota = await mascotaRepository.getMascotaById(id);
 
@@ -51,27 +48,17 @@ const getMascotaById = async ({ id }) => {
 };
 
 
-// =======================================================
+// ------------------------------------------------------
 // CREAR
-// =======================================================
+// ------------------------------------------------------
 
 const createMascota = async (data) => {
 
-    if (!data || typeof data !== "object") {
-        const error = new Error("Datos inválidos");
-        error.statusCode = 400;
-        throw error;
-    }
-
-    if (!data.nombre) throw new Error("El nombre es obligatorio");
-    if (!data.raza) throw new Error("La raza es obligatoria");
-    if (!data.edad) throw new Error("La edad es obligatoria");
-
-    if (!data.descripcion || data.descripcion.length < 10) {
-        throw new Error("La descripción debe tener al menos 10 caracteres");
-    }
-
-    if (!data.userId) throw new Error("El usuario es obligatorio");
+    if (!data.nombre) throw new Error("Nombre obligatorio");
+    if (!data.raza) throw new Error("Raza obligatoria");
+    if (!data.edad) throw new Error("Edad obligatoria");
+    if (!data.descripcion) throw new Error("Descripción obligatoria");
+    if (!data.userId) throw new Error("Usuario obligatorio");
 
     if (!data.estado) data.estado = "disponible";
 
@@ -79,14 +66,13 @@ const createMascota = async (data) => {
 };
 
 
-// =======================================================
-// ACTUALIZAR
-// =======================================================
+// ------------------------------------------------------
+// UPDATE
+// ------------------------------------------------------
 
 const updateMascota = async ({ id, data }) => {
 
     if (!id) throw new Error("ID requerido");
-    if (!data || typeof data !== "object") throw new Error("Datos inválidos");
 
     const mascota = await mascotaRepository.getMascotaById(id);
 
@@ -96,9 +82,9 @@ const updateMascota = async ({ id, data }) => {
 };
 
 
-// =======================================================
-// ELIMINAR
-// =======================================================
+// ------------------------------------------------------
+// DELETE
+// ------------------------------------------------------
 
 const deleteMascota = async ({ id }) => {
 
@@ -112,35 +98,24 @@ const deleteMascota = async ({ id }) => {
 };
 
 
-// =======================================================
-// 🔥 FUNCIÓN CLAVE (LA QUE NECESITABAS)
-// =======================================================
+// ------------------------------------------------------
+// 🔥 UPDATE ESTADO (CLAVE)
+// ------------------------------------------------------
 
 const updateEstado = async (id, estado) => {
 
-    // Validación
-    if (!id || !estado) {
-        const error = new Error("ID y estado son requeridos");
-        error.statusCode = 400;
-        throw error;
-    }
+    if (!id || !estado) throw new Error("ID y estado requeridos");
 
-    // Llamamos al repository
     const mascota = await mascotaRepository.updateEstadoMascota(id, estado);
 
-    // Validamos resultado
-    if (!mascota) {
-        const error = new Error("Mascota no encontrada");
-        error.statusCode = 404;
-        throw error;
-    }
+    if (!mascota) throw new Error("Mascota no encontrada");
 
     return mascota;
 };
 
 
 // ------------------------------------------------------
-// EXPORTAR
+// EXPORT
 // ------------------------------------------------------
 
 module.exports = {
@@ -149,5 +124,5 @@ module.exports = {
     createMascota,
     updateMascota,
     deleteMascota,
-    updateEstado // ✅ SOLO ESTA
+    updateEstado
 };

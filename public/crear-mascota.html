@@ -20,7 +20,7 @@
 /* Fondo */
 body {
     font-family:'Poppins', sans-serif; /* fuente */
-    background:url("img/Huellitas_de_Amor.jpg") center/cover fixed; /* fondo */
+    background:url("img/Huellitas_Ultra_Premium.png") center/cover fixed; /* fondo */
     display:flex; /* centrado */
     align-items:center;
     justify-content:center;
@@ -41,7 +41,7 @@ body::before {
     border-radius:25px;
     padding:30px;
     max-width:500px;
-    background:rgba(255,255,255,0.15);
+    background:rgba(0,0,0,0.6);
     backdrop-filter:blur(15px);
     border:1px solid rgba(255,255,255,0.2);
     color:white;
@@ -91,10 +91,39 @@ body::before {
             </div>
         </div>
 
-        <!-- otros campos -->
-        <input type="text" id="porte" class="form-control mb-3" placeholder="Porte">
-        <input type="text" id="energia" class="form-control mb-3" placeholder="Energía">
-        <textarea id="descripcion" class="form-control mb-3" placeholder="Descripción"></textarea>
+        <!-- tamaño / porte -->
+        <label class="form-label mb-2 fw-semibold">Tamaño y Porte:</label>
+        <div class="d-flex flex-wrap gap-2 mb-3">
+            <input type="radio" class="btn-check" name="porte" id="porteEG" value="Extra grande" required>
+            <label class="btn btn-outline-light rounded-pill" for="porteEG">Extra grande</label>
+
+            <input type="radio" class="btn-check" name="porte" id="porteG" value="Grande" required>
+            <label class="btn btn-outline-light rounded-pill" for="porteG">Grande</label>
+
+            <input type="radio" class="btn-check" name="porte" id="porteM" value="Mediano" required>
+            <label class="btn btn-outline-light rounded-pill" for="porteM">Mediano</label>
+
+            <input type="radio" class="btn-check" name="porte" id="porteP" value="Pequeño" required>
+            <label class="btn btn-outline-light rounded-pill" for="porteP">Pequeño</label>
+
+            <input type="radio" class="btn-check" name="porte" id="porteT" value="Toy" required>
+            <label class="btn btn-outline-light rounded-pill" for="porteT">Toy</label>
+        </div>
+
+        <!-- energía -->
+        <label class="form-label mb-2 fw-semibold">Nivel de Energía:</label>
+        <div class="d-flex flex-wrap gap-2 mb-3">
+            <input type="radio" class="btn-check" name="energia" id="energiaA" value="Alta" required>
+            <label class="btn btn-outline-light rounded-pill" for="energiaA">Alta</label>
+
+            <input type="radio" class="btn-check" name="energia" id="energiaM" value="Media" required>
+            <label class="btn btn-outline-light rounded-pill" for="energiaM">Media</label>
+
+            <input type="radio" class="btn-check" name="energia" id="energiaB" value="Baja" required>
+            <label class="btn btn-outline-light rounded-pill" for="energiaB">Baja</label>
+        </div>
+        
+        <textarea id="descripcion" class="form-control mb-3" placeholder="Descripción breve..."></textarea>
 
         <!-- preview -->
         <img id="preview">
@@ -113,105 +142,8 @@ body::before {
 </div>
 
 <script src="js/utils.js"></script>
-<script src="js/auth.js"></script>
-
-<script>
-
-// token
-const token = localStorage.getItem("token");
-
-// user
-let user = null;
-
-try {
-    user = JSON.parse(localStorage.getItem("user"));
-} catch {
-    user = null;
-}
-
-// rol
-const rol = user?.rol?.toLowerCase()?.trim();
-
-// protección
-if (!token || !user || rol !== "rescatista") {
-    window.location.href = "index.html";
-}
-
-// preview imagen
-document.getElementById("imagen").addEventListener("change", e => {
-
-    const file = e.target.files[0];
-
-    if (!file) return;
-
-    if (!file.type.startsWith("image/")) {
-        mostrarMensaje("Debe ser una imagen", "warning");
-        return;
-    }
-
-    const preview = document.getElementById("preview");
-
-    preview.src = URL.createObjectURL(file);
-    preview.style.display = "block";
-});
-
-// submit
-document.getElementById("formMascota").addEventListener("submit", async e => {
-
-    e.preventDefault();
-
-    const nombre = nombre.value.trim();
-    const raza = raza.value.trim();
-    const anios = edadAnios.value.trim();
-    const meses = edadMeses.value.trim();
-    const porte = porte.value.trim();
-    const energia = energia.value.trim();
-    const descripcion = descripcion.value.trim();
-
-    if (!nombre || !raza || (!anios && !meses) || !porte || !energia || !descripcion) {
-        mostrarMensaje("Completa todos los campos", "warning");
-        return;
-    }
-
-    const edad = `${anios ? anios+" años":""} ${meses ? meses+" meses":""}`.trim();
-
-    const formData = new FormData();
-
-    formData.append("nombre", nombre);
-    formData.append("raza", raza);
-    formData.append("edad", edad);
-    formData.append("porte", porte);
-    formData.append("energia", energia);
-    formData.append("descripcion", descripcion);
-
-    const file = imagen.files[0];
-    if (file) formData.append("imagen", file);
-
-    try {
-
-        const res = await fetch("/api/mascotas", {
-            method:"POST",
-            headers:{ Authorization:"Bearer "+token },
-            body:formData
-        });
-
-        const data = await res.json();
-
-        if (!res.ok) throw new Error(data.message);
-
-        mostrarMensaje("Mascota publicada 🐾", "success");
-
-        setTimeout(()=> window.location.href="rescatista.html",1000);
-
-    } catch (error) {
-
-        console.error(error);
-        mostrarMensaje(error.message,"danger");
-    }
-
-});
-
-</script>
+<script src="js/auth.js"></script> <!-- script de autenticación para resguardar las rutas -->
+<script src="js/crear-mascota.js"></script> <!-- lógica y validación del formulario para crear la mascota -->
 
 </body>
 </html>

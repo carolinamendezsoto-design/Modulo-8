@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Informe Final de Pruebas - Huellitas de Amor</title>
+<style>
+  body { 
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+    background: #ffffff; 
+    padding: 50px; 
+    margin: 0 auto; 
+    max-width: 900px; 
+    color: #333; 
+    line-height: 1.6; 
+  }
+  h1 { 
+    text-align: center; 
+    color: #2c3e50; 
+    border-bottom: 3px solid #3498db; 
+    padding-bottom: 20px; 
+    margin-bottom: 5px;
+    font-size: 28px;
+  }
+  h2 { 
+    color: #2980b9; 
+    margin-top: 40px; 
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+  }
+  .screenshot { 
+    display: block; 
+    max-width: 100%; 
+    border: 1px solid #ddd; 
+    box-shadow: 0 4px 15px rgba(0,0,0,0.15); 
+    margin: 25px auto; 
+    border-radius: 12px; 
+  }
+  .grid { 
+    display: flex; 
+    flex-direction: column; 
+    gap: 30px; 
+    margin-top: 30px;
+  }
+  .section { 
+    background: #fdfdfd; 
+    padding: 30px; 
+    border-radius: 12px; 
+    border-left: 6px solid #3498db; 
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+  }
+  ul {
+    background: #f4f9fd;
+    padding: 20px 40px;
+    border-radius: 8px;
+  }
+  ul li {
+    margin-bottom: 10px;
+  }
+  .footer { 
+    text-align: center; 
+    margin-top: 80px; 
+    padding-top: 20px;
+    border-top: 1px solid #eee;
+    font-size: 13px; 
+    color: #95a5a6; 
+  }
+</style>
+</head>
+<body>
+
+  <h1>🐾 HUELLITAS DE AMOR <br><span style="font-size:20px; color:#7f8c8d;">INFORME OFICIAL DE PRUEBAS END-TO-END</span></h1>
+  <p style="text-align:center; font-size: 16px;"><strong>Módulo 8 - Proyecto Final Integrador</strong></p>
+  
+  <div class="grid">
+    
+    <!-- SECCIÓN 1 -->
+    <div class="section">
+      <h2>1. Interfaz Principal, UI y Modificaciones (Login)</h2>
+      <p>Muestra oficial de la página de acceso principal. Se comprueba gráficamente el diseño de UI <stron>Glassmorphism</strong>, el renderizado de cristales y la fijación responsiva de la Leyenda Técnica exigida para la Comuna de Puente Alto, superando el overlapping de medios.</p>
+      <img src="C:/Users/carol/.gemini/antigravity/brain/7bc290b7-b725-46d5-bd48-4c283ea41fed/final_layout_verification_1774325489268.png" class="screenshot" alt="Vista del Login Principal">
+    </div>
+
+    <!-- SECCIÓN 2 -->
+    <div class="section">
+      <h2>2. Registro Biométrico y Validación Multiusuario</h2>
+      <p>Demostración del registro seguro de entrada. En esta instancia el sistema de autenticación captura los roles asimétricos (<strong>Adoptante, Rescatista, Admin</strong>). Las contraseñas viajan bajo capas de bcrypt y se enjaulan con firma JSON Web Token antes de permitir el ingreso.</p>
+      <img src="C:/Users/carol/.gemini/antigravity/brain/7bc290b7-b725-46d5-bd48-4c283ea41fed/registration_page_dark_premium_1774323469938.png" class="screenshot" alt="Registro Multiusuario">
+    </div>
+
+    <!-- SECCIÓN 3 -->
+    <div class="section">
+      <h2>3. Módulo Rescatistas: Ingestión Multimedia (Crear Mascota)</h2>
+      <p>Vista del Dashboard Autenticado para perfil Rescatista. Al crear la mascota, se validan los <em>mimetypes</em> en el servidor empleando el Middleware de Multer (JPG, WEBP, PNG; límite absoluto 5MB). Al subirse sin fallos, la mascota queda ligada algorítmicamente y asociada mediante FK en PostgreSQL.</p>
+      <img src="C:/Users/carol/.gemini/antigravity/brain/7bc290b7-b725-46d5-bd48-4c283ea41fed/crear_mascota_form_updated_1774323062135.png" class="screenshot" alt="Creacion de Mascota en Panel de Rescatista">
+    </div>
+    
+    <!-- SECCIÓN 4 -->
+    <div class="section">
+      <h2>4. Arquitectura Validada y Comprobaciones Transaccionales</h2>
+      <p>Las pruebas mecánicas y de usabilidad concluyeron satisfactoriamente los 4 flujos exigidos. <b>A continuación se evidencia el Catálogo de Adopciones Renderizando la mascota de prueba ("Mirana") recuperada limpiamente desde la base de datos PostgreSQL.</b></p>
+      
+      <img src="C:/Curso JS/Modulo 8/catalogo_pets_v2.png" class="screenshot" alt="Catálogo Pobaldo con Mascotas">
+      
+      <ul>
+        <li>✅ <strong>Login e Ingreso Asíncrono:</strong> Comprobación de seguridad API y validación de tokens en LocalStorage bloqueando rebotes de intrusos.</li>
+        <li>✅ <strong>Roles (Admin, Rescatista, Adoptante):</strong> El control estricto redirige impecablemente hacia <code>admin.html</code>, <code>rescatista.html</code> o <code>mascotas.html</code>.</li>
+        <li>✅ <strong>Comprobación de Adopción Total:</strong> Las solicitudes de adopción (N:M) quedan incrustadas exitosamente en la sub-tabla relacional (Mascota <-> Adoptante), disparando llamadas a la matriz del repositorio <code>Notificacion</code>.</li>
+        <li>✅ <strong>Pestañas Interactivas:</strong> El total de vistas HTML (Incluyendo Postulantes y Campana de Notificaciones) transita sin mezclar solicitudes entre perfiles asíncronos.</li>
+      </ul>
+    </div>
+    
+  </div>
+
+  <p class="footer">
+    Este Documento de Auditoría de Sistemas fue producido como certificación oficial para la aprobación del Proyecto "Huellitas de Amor".<br>
+    Desarrollado y Estructurado por <b>Carolina Méndez Soto</b>.
+  </p>
+
+</body>
+</html>

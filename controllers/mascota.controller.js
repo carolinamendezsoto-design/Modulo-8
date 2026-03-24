@@ -1,282 +1,195 @@
 // ------------------------------------------------------
-// IMPORTAR SERVICE
+// IMPORTAMOS SERVICE
 // ------------------------------------------------------
 
-// Importamos la lógica de negocio de mascotas
-const mascotaService = require("../services/mascota.service");
+const mascotaService = require("../services/mascota.service"); // lógica de negocio
 
 
-// =======================================================
-// OBTENER TODAS LAS MASCOTAS
-// =======================================================
+// ------------------------------------------------------
+// GET TODAS LAS MASCOTAS
+// ------------------------------------------------------
 
-const getMascotas = async (req, res, next) => {
+exports.getMascotas = async (req, res) => { // controlador async
 
     try {
 
-        // Llamamos al service pasando filtros (?estado=...)
-        const mascotas = await mascotaService.getMascotas(req.query);
+        const mascotas = await mascotaService.getMascotas(req.query); // pasamos filtros
 
-        // Respuesta estándar
         return res.status(200).json({
-            status: "success",
+            ok: true,
             message: "Mascotas obtenidas correctamente",
             data: mascotas
         });
 
     } catch (error) {
 
-        // Delegamos al middleware global
-        next(error);
+        console.error(error);
+
+        return res.status(error.statusCode || 500).json({
+            ok: false,
+            message: error.message || "Error al obtener mascotas"
+        });
     }
 };
 
 
+// ------------------------------------------------------
+// GET POR ID
+// ------------------------------------------------------
 
-// =======================================================
-// OBTENER MASCOTA POR ID
-// =======================================================
-
-const getMascotaById = async (req, res, next) => {
+exports.getMascotaById = async (req, res) => {
 
     try {
 
-        // Extraemos ID desde params
-        const { id } = req.params;
+        const mascota = await mascotaService.getMascotaById({ id: req.params.id });
 
-        // Validación
-        if (!id) {
-            return res.status(400).json({
-                status: "error",
-                message: "El id es obligatorio",
-                data: null
-            });
-        }
-
-        // Llamamos al service
-        const mascota = await mascotaService.getMascotaById({ id });
-
-        // Respuesta OK
         return res.status(200).json({
-            status: "success",
-            message: "Mascota obtenida correctamente",
+            ok: true,
             data: mascota
         });
 
     } catch (error) {
-        next(error);
-    }
-};
 
+        console.error(error);
 
-
-// =======================================================
-// CREAR MASCOTA (🔥 FIX IMPORTANTE)
-// =======================================================
-
-const createMascota = async (req, res, next) => {
-
-    try {
-
-        // Body de la request
-        const data = req.body;
-
-        // --------------------------------------------------
-        // VALIDACIÓN CORREGIDA
-        // --------------------------------------------------
-
-        // ❌ antes: tipo (no existe en frontend)
-        // ✅ ahora: nombre + raza (correcto)
-        if (!data.nombre || !data.raza) {
-            return res.status(400).json({
-                status: "error",
-                message: "Nombre y raza son obligatorios",
-                data: null
-            });
-        }
-
-        // --------------------------------------------------
-        // USER AUTENTICADO
-        // --------------------------------------------------
-
-        data.userId = req.user.id; // sacamos id del token
-
-        // --------------------------------------------------
-        // IMAGEN (MULTER)
-        // --------------------------------------------------
-
-        if (req.file) {
-            data.imagen = req.file.filename; // guardamos nombre archivo
-        }
-
-        // --------------------------------------------------
-        // CREAR EN SERVICE
-        // --------------------------------------------------
-
-        const mascota = await mascotaService.createMascota(data);
-
-        // --------------------------------------------------
-        // RESPUESTA
-        // --------------------------------------------------
-
-        return res.status(201).json({
-            status: "success",
-            message: "Mascota creada correctamente",
-            data: mascota
+        return res.status(error.statusCode || 500).json({
+            ok: false,
+            message: error.message
         });
-
-    } catch (error) {
-        next(error);
     }
 };
 
 
+// ------------------------------------------------------
+// CREAR MASCOTA
+// ------------------------------------------------------
 
-// =======================================================
-// ACTUALIZAR MASCOTA
-// =======================================================
-
-const updateMascota = async (req, res, next) => {
+exports.createMascota = async (req, res) => {
 
     try {
 
-        const { id } = req.params; // id desde URL
-        const data = req.body;     // datos nuevos
+        const data = req.body; // datos frontend
 
-        // Validación
-        if (!id) {
-            return res.status(400).json({
-                status: "error",
-                message: "El id es obligatorio",
-                data: null
-            });
-        }
-
-        // Imagen opcional
+        // imagen subida
         if (req.file) {
             data.imagen = req.file.filename;
         }
 
-        // Service
-        const mascota = await mascotaService.updateMascota({ id, data });
+        // usuario creador
+        data.userId = req.user.id;
+
+        const nueva = await mascotaService.createMascota(data);
+
+        return res.status(201).json({
+            ok: true,
+            message: "Mascota creada",
+            data: nueva
+        });
+
+    } catch (error) {
+
+        console.error(error);
+
+        return res.status(error.statusCode || 500).json({
+            ok: false,
+            message: error.message
+        });
+    }
+};
+
+
+// ------------------------------------------------------
+// ACTUALIZAR
+// ------------------------------------------------------
+
+exports.updateMascota = async (req, res) => {
+
+    try {
+
+        const data = req.body;
+
+        if (req.file) {
+            data.imagen = req.file.filename;
+        }
+
+        const updated = await mascotaService.updateMascota({
+            id: req.params.id,
+            data
+        });
 
         return res.status(200).json({
-            status: "success",
-            message: "Mascota actualizada correctamente",
+            ok: true,
+            message: "Mascota actualizada",
+            data: updated
+        });
+
+    } catch (error) {
+
+        console.error(error);
+
+        return res.status(error.statusCode || 500).json({
+            ok: false,
+            message: error.message
+        });
+    }
+};
+
+
+// ------------------------------------------------------
+// ELIMINAR
+// ------------------------------------------------------
+
+exports.deleteMascota = async (req, res) => {
+
+    try {
+
+        const result = await mascotaService.deleteMascota({
+            id: req.params.id
+        });
+
+        return res.status(200).json({
+            ok: true,
+            message: result.message
+        });
+
+    } catch (error) {
+
+        console.error(error);
+
+        return res.status(error.statusCode || 500).json({
+            ok: false,
+            message: error.message
+        });
+    }
+};
+
+
+// ------------------------------------------------------
+// 🔥 CAMBIAR ESTADO (FIX CRÍTICO)
+// ------------------------------------------------------
+
+exports.cambiarEstadoMascota = async (req, res) => {
+
+    try {
+
+        const { id } = req.params; // id mascota
+        const { estado } = req.body; // nuevo estado
+
+        const mascota = await mascotaService.updateEstado(id, estado); // usamos service correcto
+
+        return res.status(200).json({
+            ok: true,
+            message: "Estado actualizado",
             data: mascota
         });
 
     } catch (error) {
-        next(error);
-    }
-};
 
+        console.error(error);
 
-
-// =======================================================
-// ELIMINAR MASCOTA
-// =======================================================
-
-const deleteMascota = async (req, res, next) => {
-
-    try {
-
-        const { id } = req.params;
-
-        // Validación
-        if (!id) {
-            return res.status(400).json({
-                status: "error",
-                message: "El id es obligatorio",
-                data: null
-            });
-        }
-
-        // Eliminamos
-        await mascotaService.deleteMascota({ id });
-
-        return res.status(200).json({
-            status: "success",
-            message: "Mascota eliminada correctamente",
-            data: null
+        return res.status(error.statusCode || 500).json({
+            ok: false,
+            message: error.message
         });
-
-    } catch (error) {
-        next(error);
     }
-};
-
-
-
-// =======================================================
-// MATCH DE MASCOTAS
-// =======================================================
-
-const getMatchMascotas = async (req, res, next) => {
-
-    try {
-
-        // Llamamos service con preferencias
-        const mascotas = await mascotaService.getMatchMascotas(req.query);
-
-        return res.status(200).json({
-            status: "success",
-            message: "Match de mascotas obtenido correctamente",
-            data: mascotas
-        });
-
-    } catch (error) {
-        next(error);
-    }
-};
-
-
-
-// =======================================================
-// CAMBIAR ESTADO
-// =======================================================
-
-const cambiarEstadoMascota = async (req, res, next) => {
-
-    try {
-
-        const { id } = req.params;
-        const { estado } = req.body;
-
-        // Validación
-        if (!id || !estado) {
-            return res.status(400).json({
-                status: "error",
-                message: "Id y estado son obligatorios",
-                data: null
-            });
-        }
-
-        // Service
-        const mascota = await mascotaService.cambiarEstadoMascota({
-            id,
-            estado
-        });
-
-        return res.status(200).json({
-            status: "success",
-            message: "Estado actualizado correctamente",
-            data: mascota
-        });
-
-    } catch (error) {
-        next(error);
-    }
-};
-
-
-// EXPORT
-module.exports = {
-    getMascotas,
-    getMascotaById,
-    createMascota,
-    updateMascota,
-    deleteMascota,
-    getMatchMascotas,
-    cambiarEstadoMascota
 };
