@@ -76,7 +76,7 @@
     <!-- SECCIÓN 1 -->
     <div class="section">
       <h2>1. Interfaz Principal, UI y Modificaciones (Login)</h2>
-      <p>Muestra oficial de la página de acceso principal. Se comprueba gráficamente el diseño de UI <stron>Glassmorphism</strong>, el renderizado de cristales y la fijación responsiva de la Leyenda Técnica exigida para la Comuna de Puente Alto, superando el overlapping de medios.</p>
+      <p>Muestra oficial de la página de acceso principal. Se comprueba gráficamente el diseño de UI <strong>Glassmorphism</strong>, el renderizado de cristales y la fijación responsiva de la Leyenda Técnica exigida para la Comuna de Puente Alto, superando el overlapping de medios.</p>
       <img src="C:/Users/carol/.gemini/antigravity/brain/7bc290b7-b725-46d5-bd48-4c283ea41fed/final_layout_verification_1774325489268.png" class="screenshot" alt="Vista del Login Principal">
     </div>
 
@@ -97,9 +97,9 @@
     <!-- SECCIÓN 4 -->
     <div class="section">
       <h2>4. Arquitectura Validada y Comprobaciones Transaccionales</h2>
-      <p>Las pruebas mecánicas y de usabilidad concluyeron satisfactoriamente los 4 flujos exigidos. <b>A continuación se evidencia el Catálogo de Adopciones Renderizando la mascota de prueba ("Mirana") recuperada limpiamente desde la base de datos PostgreSQL.</b></p>
+      <p>Las pruebas mecánicas y de usabilidad concluyeron satisfactoriamente los 4 flujos exigidos. <b>A continuación se evidencia la prueba robótica automatizada interactuando exitosamente con el Catálogo de Adopciones y realizando una Solicitud formal mediante la Interfaz (Frontend).</b></p>
       
-      <img src="C:/Curso JS/Modulo 8/catalogo_pets_v2.png" class="screenshot" alt="Catálogo Pobaldo con Mascotas">
+      <img src="C:/Users/carol/.gemini/antigravity/brain/625f4cfb-f0b0-45f3-880f-ab24c699fcf1/flujo_adopcion_perfecto_1774394307655.webp" class="screenshot" alt="Flujo Interactivo E2E">
       
       <ul>
         <li>✅ <strong>Login e Ingreso Asíncrono:</strong> Comprobación de seguridad API y validación de tokens en LocalStorage bloqueando rebotes de intrusos.</li>
@@ -107,6 +107,13 @@
         <li>✅ <strong>Comprobación de Adopción Total:</strong> Las solicitudes de adopción (N:M) quedan incrustadas exitosamente en la sub-tabla relacional (Mascota <-> Adoptante), disparando llamadas a la matriz del repositorio <code>Notificacion</code>.</li>
         <li>✅ <strong>Pestañas Interactivas:</strong> El total de vistas HTML (Incluyendo Postulantes y Campana de Notificaciones) transita sin mezclar solicitudes entre perfiles asíncronos.</li>
       </ul>
+    </div>
+
+    <!-- SECCIÓN 5 -->
+    <div class="section">
+      <h2>5. Sistema Dinámico de Notificaciones y Campanita</h2>
+      <p>Se testea el correcto flujo interactivo en tiempo real con la integración limpia de rutas. Al postular por un animal, la API guarda una notificación; el Frontend (al recargar) la detecta cruzando el token JWT e inyecta el <em>badge numérico</em> ("🔴 1"), activando la vibración. Al inspeccionarla, el usuario es guiado por un botón dinámico "Volver" dependiente su rol exacto.</p>
+      <img src="C:/Users/carol/.gemini/antigravity/brain/625f4cfb-f0b0-45f3-880f-ab24c699fcf1/.system_generated/click_feedback/click_feedback_1774394469399.png" class="screenshot" alt="Campanita Activa y Badge">
     </div>
     
   </div>

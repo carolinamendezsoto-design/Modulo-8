@@ -42,10 +42,20 @@ const createSolicitud = async (req, res, next) => {
             mensaje
         });
 
+        // 🔥 OBTENER MASCOTA PARA NOTIFICAR AL RESCATISTA
+        const mascota = await mascotaService.getMascotaById({ id: mascotaId });
+        
+        if (mascota && mascota.userId) {
+            await notificacionService.crearNotificacion(
+                mascota.userId,
+                `🐾 ¡Alguien ha postulado para adoptar a ${mascota.nombre}!`
+            );
+        }
+
         // 🔥 NOTIFICACIÓN AL USUARIO
         await notificacionService.crearNotificacion(
             usuarioId,
-            "🐾 Has postulado a una mascota"
+            "🐾 Has postulado a una mascota exitosamente"
         );
 
         // Respuesta

@@ -1,126 +1,137 @@
-// --------------------------------------------------
-// OBTENER TOKEN
-// --------------------------------------------------
+// ===================== BASE URL =====================
+// const API_URL = "http://localhost:3000/api"; // Comentado: Ya se declara en auth.js
 
-// Recuperamos el token guardado en el navegador
+// ===================== TOKEN =====================
 const token = localStorage.getItem("token");
 
-// Si no existe token
-if (!token) {
+// ===================== USER =====================
+let user = null;
 
-    // Redirigimos al login
-    window.location.href = "index.html";
+try {
+    user = JSON.parse(localStorage.getItem("user"));
+} catch {
+    user = null;
 }
 
+// ===================== VALIDACIÓN =====================
+if (!token || !user) {
+    mostrarMensaje("Debes iniciar sesión", "danger");
+    setTimeout(() => window.location.href = "index.html", 800);
+}
 
-// --------------------------------------------------
-// FUNCIÓN PARA CARGAR POSTULANTES
-// --------------------------------------------------
+// ===================== PARAMS =====================
+const params = new URLSearchParams(window.location.search);
+const mascotaId = params.get("id");
 
-// Definimos función async
+// Validación ID
+if (!mascotaId) {
+    mostrarMensaje("Mascota no especificada", "danger");
+    setTimeout(() => window.location.href = "mascotas.html", 800);
+}
+
+// ===================== CONTENEDOR =====================
+const contenedor = document.getElementById("contenedorPostulantes");
+
+// ===================== CARGAR =====================
 async function cargarPostulantes() {
 
     try {
 
-        // --------------------------------------------------
-        // PETICIÓN AL BACKEND
-        // --------------------------------------------------
+        contenedor.innerHTML = "<p>Cargando postulantes...</p>";
 
-        const res = await fetch("/api/solicitudes", {
-
-            // Enviamos token para autenticación
-            headers: {
-                "Authorization": "Bearer " + token
-            }
+        const res = await fetch(`${API_URL}/solicitudes/mascota/${mascotaId}`, {
+            headers: { Authorization: "Bearer " + token }
         });
 
-        // Si el token es inválido
-        if (res.status === 401) {
-
-            // Limpiamos sesión
-            localStorage.clear();
-
-            // Redirigimos al login
-            window.location.href = "index.html";
-
-            return;
-        }
-
-        // Convertimos respuesta a JSON
         const data = await res.json();
 
-        // Si ocurre error
-        if (!res.ok) {
+        if (!res.ok) throw new Error(data.message);
 
-            // Lanzamos error
-            throw new Error(data.message || "Error al cargar postulaciones");
-        }
+        const postulantes = data.data || [];
 
-        // --------------------------------------------------
-        // OBTENER CONTENEDOR HTML
-        // --------------------------------------------------
-
-        const contenedor = document.getElementById("listaPostulantes");
-
-        // Si no existe el contenedor
-        if (!contenedor) return;
-
-        // Limpiamos contenido previo
         contenedor.innerHTML = "";
 
-        // --------------------------------------------------
-        // NORMALIZAR RESPUESTA
-        // --------------------------------------------------
-
-        // Algunos backends envían data.data, otros solo data
-        const postulaciones = data.data || data;
-
-        // Si no hay datos
-        if (!postulaciones.length) {
-
-            // Mostramos mensaje
-            contenedor.innerHTML = "<p>No hay postulaciones</p>";
-
+        if (!postulantes.length) {
+            contenedor.innerHTML = "<p>No hay postulantes aún 🐾</p>";
             return;
         }
 
-        // --------------------------------------------------
-        // RECORRER POSTULACIONES
-        // --------------------------------------------------
+        // ===================== RENDER =====================
+        postulantes.forEach(p => {
 
-        postulaciones.forEach(p => {
+            const persona = p.adoptante || {};
 
-            // Creamos contenedor
+            const estadoColor =
+                p.estado === "aprobado" ? "success" :
+                p.estado === "rechazado" ? "danger" : "warning";
+
             const div = document.createElement("div");
 
-            // Asignamos clases
-            div.className = "card mb-3 p-3";
+            div.className = "card p-3 mb-3";
 
-            // Insertamos contenido dinámico
             div.innerHTML = `
-                <h5>🐶 ${p.mascota?.nombre || "Sin nombre"}</h5>
-                <p>👤 ${p.usuario?.nombre || "Desconocido"}</p>
-                <p>Estado: <strong>${p.estado}</strong></p>
+                <h5>${persona.nombre || "Sin nombre"}</h5>
+
+                ${
+                    p.estado === "aprobado"
+                    ? `
+                        <p><strong>Email:</strong> ${persona.email}</p>
+                        <p class="text-success fw-bold">🎉 Adoptante seleccionado</p>
+                    `
+                    : `
+                        <p class="text-light">🔒 Email oculto</p>
+                    `
+                }
+
+                <p>${p.mensaje || "Sin mensaje"}</p>
+
+                <span class="badge bg-${estadoColor} mb-2">
+                    ${p.estado}
+                </span>
+
+                <button 
+                    class="btn btn-success w-100"
+                    onclick="seleccionar(${p.id})"
+                    ${p.estado === "aprobado" ? "disabled" : ""}
+                >
+                    Seleccionar adoptante
+                </button>
             `;
 
-            // Insertamos en el DOM
             contenedor.appendChild(div);
         });
 
     } catch (error) {
 
-        // Mostramos error en consola
-        console.error("ERROR POSTULANTES:", error);
-
-        // Mostramos mensaje al usuario
+        console.error(error);
         mostrarMensaje(error.message, "danger");
     }
 }
 
+// ===================== SELECCIONAR =====================
+window.seleccionar = async function(id) {
 
-// --------------------------------------------------
-// AUTO EJECUCIÓN
-// --------------------------------------------------
+    try {
 
-// Ejecutamos la función cuando el DOM esté listo
+        const res = await fetch(`${API_URL}/solicitudes/seleccionar/${id}`, {
+            method:"PUT",
+            headers:{ Authorization:"Bearer "+token }
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) throw new Error(data.message);
+
+        mostrarMensaje("Adopción completada 🎉", "success");
+
+        setTimeout(cargarPostulantes, 800);
+
+    } catch (error) {
+
+        console.error(error);
+        mostrarMensaje(error.message, "danger");
+    }
+}
+
+// ===================== INIT =====================
 document.addEventListener("DOMContentLoaded", cargarPostulantes);

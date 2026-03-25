@@ -69,6 +69,9 @@ const mascotaRoutes = require("./routes/mascota.routes");
 // Rutas de solicitudes (adopciones)
 const solicitudRoutes = require("./routes/solicitud.routes");
 
+// Rutas de notificaciones
+const notificacionRoutes = require("./routes/notificacion.routes");
+
 
 // ------------------------------------------------------
 // CREAR APP EXPRESS
@@ -144,6 +147,9 @@ app.use("/api/mascotas", mascotaRoutes);
 
 // Rutas de solicitudes (flujo de adopción)
 app.use("/api/solicitudes", solicitudRoutes);
+
+// Rutas de notificaciones
+app.use("/api/notificaciones", notificacionRoutes);
 
 
 // ------------------------------------------------------

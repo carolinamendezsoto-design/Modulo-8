@@ -3,7 +3,7 @@
 // ------------------------------------------------------
 
 // Definimos la URL base de nuestra API para no repetirla
-const API_URL = "http://localhost:3000/api";
+// const API_URL = "http://localhost:3000/api"; // Comentado: Ya viene global desde auth.js
 
 
 // ------------------------------------------------------

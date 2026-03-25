@@ -127,6 +127,17 @@ _Haz clic en cada categoría para desplegar la tabla de rutas:_
 </details>
 
 <details>
+<summary><b>🔔 Rutas de Notificaciones</b></summary>
+<br>
+
+| Método | Endpoint | Privilegio Requerido | Acción |
+| :---: | :--- | :---: | :--- |
+| `GET` | `/api/notificaciones` | 🛡️ Protegido (JWT) | Listar bandeja de entrada |
+| `PUT` | `/api/notificaciones/leer` | 🛡️ Protegido (JWT) | Marcar alertas como leídas |
+
+</details>
+
+<details>
 <summary><b>📸 Carga Binaria (Uploads)</b></summary>
 <br>
 
